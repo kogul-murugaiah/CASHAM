@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Footer from "../components/Footer";
+import Logo from "../components/Logo";
 
 type Income = {
   id: number;
@@ -142,13 +143,18 @@ const Dashboard = () => {
       <div className="min-h-screen bg-slate-900 pb-24 md:pb-0">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Overview
-            </p>
-            <h1 className="text-3xl font-bold text-slate-100">
-              Dashboard – {currentMonthName} {currentYear}
-            </h1>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-3">
+              <Logo size="md" />
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  Overview
+                </p>
+                <h1 className="text-3xl font-bold text-slate-100">
+                  Dashboard – {currentMonthName} {currentYear}
+                </h1>
+              </div>
+            </div>
           </div>
         </header>
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
+import Logo from "./Logo";
 
 const mobileLinks = [
   { to: "/", label: "Dashboard", icon: HomeIcon },
@@ -150,6 +151,7 @@ const MobileBottomNav = () => {
               {user && (
                 <>
                   <div className="mb-6 flex flex-col items-center">
+                    <Logo size="md" className="mb-4" />
                     <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-2xl font-bold text-white shadow-lg">
                       {getInitials(user.email || "")}
                     </div>

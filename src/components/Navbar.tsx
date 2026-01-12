@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import type { User } from "@supabase/supabase-js";
+import Logo from "./Logo";
 
 const desktopLinks = [
   { to: "/", label: "Dashboard" },
@@ -88,10 +89,8 @@ const Navbar = () => {
       {/* Desktop top nav */}
       <header className="sticky top-0 z-40 hidden w-full bg-slate-900/90 backdrop-blur md:block">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow-sm">
-              CASHAM
-            </div>
+          <div className="flex items-center gap-3">
+            <Logo size="sm" />
             <span className="text-sm font-semibold text-slate-300">
               Expense Tracker
             </span>
