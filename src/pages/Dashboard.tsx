@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Footer from "../components/Footer";
 import Logo from "../components/Logo";
+import { useAccountTypes } from "../hooks/useAccountTypes";
 
 type Income = {
   id: number;
@@ -17,22 +18,14 @@ type Expense = {
   account_type: string;
 };
 
-const ACCOUNT_TYPES = ["SBI", "CASH", "UNION", "INDIAN"];
-
 const formatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
   maximumFractionDigits: 2,
 });
 
-const badgeStyles: Record<string, string> = {
-  SBI: "bg-blue-900/50 text-blue-300 border-blue-700/50",
-  CASH: "bg-amber-900/50 text-amber-300 border-amber-700/50",
-  UNION: "bg-purple-900/50 text-purple-300 border-purple-700/50",
-  INDIAN: "bg-teal-900/50 text-teal-300 border-teal-700/50",
-};
-
 const Dashboard = () => {
+  const { accountTypes } = useAccountTypes();
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +95,7 @@ const Dashboard = () => {
   const monthlyBalance = monthlyIncome - monthlyExpenses;
 
   // Calculate account-wise balances
-  const accountBalances = ACCOUNT_TYPES.map((accountType) => {
+  const accountBalances = accountTypes.map((accountType) => {
     const accountIncome = income
       .filter((inc) => inc.account_type === accountType)
       .reduce((sum, inc) => sum + inc.amount, 0);
@@ -271,7 +264,15 @@ const Dashboard = () => {
                     >
                       <div
                         className={`mb-2 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
-                          badgeStyles[account.accountType] || "border-slate-600 text-slate-300"
+                          account.accountType === "SBI" 
+                            ? "bg-blue-900/50 text-blue-300 border-blue-700/50"
+                            : account.accountType === "CASH"
+                            ? "bg-amber-900/50 text-amber-300 border-amber-700/50"
+                            : account.accountType === "UNION"
+                            ? "bg-purple-900/50 text-purple-300 border-purple-700/50"
+                            : account.accountType === "INDIAN"
+                            ? "bg-teal-900/50 text-teal-300 border-teal-700/50"
+                            : "border-slate-600 text-slate-300"
                         }`}
                       >
                         {account.accountType}

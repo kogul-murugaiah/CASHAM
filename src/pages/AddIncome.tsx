@@ -1,36 +1,31 @@
 import { useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useIncomeSources } from "../hooks/useIncomeSources";
+import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
 import Footer from "../components/Footer";
-
-const ACCOUNT_TYPES = [
-  { label: "INDIAN", value: "INDIAN" },
-  { label: "SBI", value: "SBI" },
-  { label: "UNION", value: "UNION" },
-  { label: "CASH", value: "CASH" },
-];
 
 const initialForm = {
   amount: "",
   date: "",
   source: "",
-  accountType: ACCOUNT_TYPES[0].value,
+  accountType: "",
 };
 
 const AddIncome = () => {
+  const { accountTypes, addAccountType } = useAccountTypes();
+  const { sources, addSource } = useIncomeSources();
   const [form, setForm] = useState(() => {
     const today = new Date().toISOString().slice(0, 10);
     return {
       ...initialForm,
       date: today,
+      accountType: accountTypes[0], // Use first account type from hook
     };
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  const { sources, loading: sourcesLoading, addSource } = useIncomeSources();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -42,6 +37,14 @@ const AddIncome = () => {
   const handleAddSource = async (name: string) => {
     try {
       await addSource(name);
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
+  const handleAddAccountType = async (name: string) => {
+    try {
+      await addAccountType(name);
     } catch (err: any) {
       throw err;
     }
@@ -65,6 +68,12 @@ const AddIncome = () => {
     setLoading(true);
 
     try {
+      // Validate account_type exists in user's account types
+      if (!accountTypes.includes(form.accountType)) {
+        setError(`Invalid account type. Please select from: ${accountTypes.join(', ')}`);
+        return;
+      }
+
       // Get current user
       const {
         data: { user },
@@ -188,7 +197,7 @@ const AddIncome = () => {
                     placeholder="Select a source"
                     onAddNew={handleAddSource}
                     addNewLabel="+ Add new source"
-                    disabled={sourcesLoading}
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -203,19 +212,15 @@ const AddIncome = () => {
                   Account Type
                 </label>
                 <div className="mt-2">
-                  <select
-                    name="accountType"
-                    id="accountType"
+                  <CustomDropdown
                     value={form.accountType}
-                    onChange={handleChange}
-                    className="block w-full rounded-xl border-0 bg-slate-700/50 px-4 py-3 text-slate-200 shadow-sm ring-1 ring-inset ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                  >
-                    {ACCOUNT_TYPES.map((acc) => (
-                      <option key={acc.value} value={acc.value}>
-                        {acc.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(value) => setForm(prev => ({ ...prev, accountType: value }))}
+                    options={accountTypes.map(type => ({ value: type, label: type }))}
+                    placeholder="Select account type"
+                    onAddNew={handleAddAccountType}
+                    addNewLabel="+ Add new account type"
+                    disabled={loading}
+                  />
                 </div>
               </div>
             </div>

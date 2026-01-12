@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useAccountTypes } from "../hooks/useAccountTypes";
 import Footer from "../components/Footer";
 
 type Category = {
@@ -37,7 +38,7 @@ const ACCOUNT_TYPES = [
 
 const formatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
-  currency: "INR",
+  currency: "USD",
   maximumFractionDigits: 2,
 });
 
@@ -49,6 +50,7 @@ const accountBadge: Record<string, string> = {
 };
 
 const Expenses = () => {
+  const { accountTypes } = useAccountTypes();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -326,8 +328,15 @@ const Expenses = () => {
                           <td className="px-6 py-4 text-sm">
                             <span
                               className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
-                                accountBadge[expense.account_type] ||
-                                "border-slate-600 text-slate-300"
+                                expense.account_type === "INDIAN"
+                                  ? "bg-teal-900/50 text-teal-300 border-teal-700/50"
+                                  : expense.account_type === "SBI"
+                                  ? "bg-blue-900/50 text-blue-300 border-blue-700/50"
+                                  : expense.account_type === "UNION"
+                                  ? "bg-purple-900/50 text-purple-300 border-purple-700/50"
+                                  : expense.account_type === "CASH"
+                                  ? "bg-amber-900/50 text-amber-300 border-amber-700/50"
+                                  : "border-slate-600 text-slate-300"
                               }`}
                             >
                               {expense.account_type}
@@ -452,9 +461,9 @@ const Expenses = () => {
                     onChange={handleChange}
                     className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   >
-                    {ACCOUNT_TYPES.map((acc) => (
-                      <option key={acc.value} value={acc.value}>
-                        {acc.label}
+                    {accountTypes.map((accountType) => (
+                      <option key={accountType} value={accountType}>
+                        {accountType}
                       </option>
                     ))}
                   </select>

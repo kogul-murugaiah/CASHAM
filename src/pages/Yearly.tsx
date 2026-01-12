@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useAccountTypes } from "../hooks/useAccountTypes";
 import Footer from "../components/Footer";
 
 type Category = {
@@ -57,6 +58,7 @@ const formatter = new Intl.NumberFormat("en-IN", {
 });
 
 const Yearly = () => {
+  const { accountTypes } = useAccountTypes();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -152,7 +154,7 @@ const Yearly = () => {
   categoryTotals.sort((a, b) => b.total - a.total);
 
   // Calculate account type totals
-  const accountTotals: AccountTotal[] = ACCOUNT_TYPES.map((accountType) => {
+  const accountTotals: AccountTotal[] = accountTypes.map((accountType) => {
     const total = expenses
       .filter((exp) => exp.account_type === accountType)
       .reduce((sum, exp) => sum + exp.amount, 0);
