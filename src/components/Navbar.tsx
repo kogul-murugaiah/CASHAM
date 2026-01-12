@@ -92,7 +92,7 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             <Logo size="sm" />
             <span className="text-sm font-semibold text-slate-300">
-              Expense Tracker
+              CASHAM
             </span>
           </div>
           <div className="flex items-center gap-3">

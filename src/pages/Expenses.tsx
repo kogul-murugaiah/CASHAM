@@ -358,19 +358,19 @@ const Expenses = () => {
         {/* Edit Modal */}
         {isModalOpen && editingData && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-            <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="w-full max-w-2xl rounded-2xl bg-slate-800 p-6 shadow-2xl">
               <div className="mb-4 flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                  <p className="text-xs uppercase tracking-wide text-slate-400">
                     Edit Expense
                   </p>
-                  <h3 className="text-xl font-semibold text-slate-900">
+                  <h3 className="text-xl font-semibold text-slate-100">
                     {editingData.item || "Update expense"}
                   </h3>
                 </div>
                 <button
                   onClick={handleCancel}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200"
+                  className="rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-slate-600"
                 >
                   Close
                 </button>
@@ -378,24 +378,24 @@ const Expenses = () => {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">Date</label>
+                  <label className="text-sm font-medium text-slate-300">Date</label>
                   <input
                     type="date"
                     name="date"
                     value={editingData.date}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">Amount (₹)</label>
+                  <label className="text-sm font-medium text-slate-300">Amount (₹)</label>
                   <input
                     type="number"
                     name="amount"
                     value={editingData.amount}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     min="0"
                     step="0.01"
                     required
@@ -405,36 +405,36 @@ const Expenses = () => {
 
               <div className="grid gap-4 sm:grid-cols-2 mt-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">Item</label>
+                  <label className="text-sm font-medium text-slate-300">Item</label>
                   <input
                     type="text"
                     name="item"
                     value={editingData.item}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">Description</label>
+                  <label className="text-sm font-medium text-slate-300">Description</label>
                   <input
                     type="text"
                     name="description"
                     value={editingData.description}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 mt-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">Category</label>
+                  <label className="text-sm font-medium text-slate-300">Category</label>
                   <select
                     name="category_id"
                     value={editingData.category_id}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   >
                     <option value="">No Category</option>
                     {categories.map((cat) => (
@@ -445,12 +445,12 @@ const Expenses = () => {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-700">Account Type</label>
+                  <label className="text-sm font-medium text-slate-300">Account Type</label>
                   <select
                     name="account_type"
                     value={editingData.account_type}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   >
                     {ACCOUNT_TYPES.map((acc) => (
                       <option key={acc.value} value={acc.value}>
@@ -462,7 +462,7 @@ const Expenses = () => {
               </div>
 
               {error && (
-                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                <div className="mt-3 rounded-lg border border-red-600/30 bg-red-900/50 px-3 py-2 text-sm text-red-300">
                   {error}
                 </div>
               )}
@@ -471,14 +471,14 @@ const Expenses = () => {
                 <button
                   onClick={handleCancel}
                   disabled={saving}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleSave(editingId!)}
                   disabled={saving}
-                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
