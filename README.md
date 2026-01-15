@@ -1,116 +1,119 @@
 # 💰 CASHAM — Expense Tracker App
 
-CASHAM is a modern multi-user finance & expense tracker built using *Vite + React + TypeScript + Tailwind CSS* with *Supabase* as the backend.  
-It provides clean dashboards, income/expense tracking, monthly & yearly insights, and secure multi-user authentication with *Row Level Security (RLS)*.
+CASHAM is a modern, multi-user finance and expense management platform built with the **Vite + React + TypeScript** stack. It leverages **Supabase** for real-time data and secure backend logic, ensuring a seamless and private experience for tracking personal finances.
 
 ---
 
 ## 🚀 Live Demo
-🔗 https://expense-tracker-five-navy.vercel.app/
+🔗 [View Live App](https://expense-tracker-five-navy.vercel.app/)
 
 ---
 
 ## 📌 Features
 
-### ✅ Authentication (Multi-user)
-- Email + Password Login & Signup
-- Email verification support
-- Secure per-user data access using *Supabase RLS policies*
-- User profile identification (shows logged-in email)
-- Logout support (Desktop + Mobile)
+### ✅ Authentication & Security
+* **Multi-user Support:** Secure Email + Password Login & Signup.
+* **Data Isolation:** Built with **Supabase Row Level Security (RLS)** to ensure users can only access their own data.
+* **Session Management:** Persistent login states and secure logout functionality for both Desktop and Mobile.
 
-### ✅ Expense Management
-- Add expenses with:
-  - Item name
-  - Amount
-  - Date
-  - User-specific Category (from categories table)
-  - User-specific Account Type
-  - Optional description
-- Manage expenses (view + edit)
+### ✅ Financial Management
+* **Expense Tracking:** Log expenses with item names, amounts, dates, and optional descriptions.
+* **Income Tracking:** Record earnings with sources and account-specific details.
+* **Custom Master Data:** Users can create and manage their own:
+    * Account Types (e.g., Savings, Credit Card, Cash)
+    * Expense Categories (e.g., Food, Travel, Rent)
+    * Income Sources (e.g., Salary, Freelance)
 
-### ✅ Income Management
-- Add income with:
-  - Amount
-  - Date
-  - User-specific Source (from income_sources table)
-  - User-specific Account Type
+### ✅ Analytics & Insights
+* **Dynamic Dashboard:** Real-time monthly summary cards for Income, Expenses, and Net Balance.
+* **Account-wise Analytics:** Automatic updates as users add or modify account types.
+* **Time-based Views:** Dedicated pages for Monthly and Yearly tracking for long-term financial planning.
 
-### ✅ Analytics Dashboard
-- Monthly summary cards:
-  - Income
-  - Expenses
-  - Balance
-- Account-wise analytics (dynamic per user)
-- Auto-updates when custom accounts are added
-
-### ✅ Monthly / Yearly Insights
-- Monthly tracking by category & account
-- Yearly tracking overview
-
-### ✅ Custom Master Data (Per User)
-- ✅ Custom Account Types (account_types)
-- ✅ Custom Categories (categories)
-- ✅ Custom Income Sources (income_sources)
-- Dropdowns load only the logged-in user’s categories/sources/accounts
-
-### ✅ Mobile Friendly UI
-- Premium dark-themed UI
-- Bottom Navigation Bar
-- Profile sheet and logout inside mobile UI
-- Touch-friendly layout
+### ✅ Mobile-First Design
+* **Premium Dark UI:** Sleek, modern interface using Tailwind CSS.
+* **Intuitive Navigation:** Bottom navigation bar for a native app-like experience on mobile devices.
+* **Touch Optimized:** Large action buttons and smooth transitions.
 
 ---
 
 ## 🛠 Tech Stack
 
-### Frontend
-- Vite
-- React
-- TypeScript
-- Tailwind CSS
-
-### Backend
-- Supabase (Auth + Database + RLS)
-
-### Deployment
-- Vercel
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | Vite, React.js, TypeScript |
+| **Styling** | Tailwind CSS |
+| **Backend/DB** | Supabase (PostgreSQL + RLS) |
+| **Authentication** | Supabase Auth |
+| **Deployment** | Vercel |
 
 ---
 
-## 📂 Pages / Routes
+## 📂 Project Structure & Routes
 
-| Page | Route |
-|------|-------|
-| Dashboard | / |
-| Add Expense | /add |
-| Add Income | /add-income |
-| Monthly | /monthly |
-| Yearly | /yearly |
-| Manage Expenses | /expenses |
-| Login | /login |
-| Signup | /signup |
+| Page | Route | Description |
+| :--- | :--- | :--- |
+| **Dashboard** | `/` | Overview of current month stats and balance. |
+| **Add Expense** | `/add` | Form to log new expenditures. |
+| **Add Income** | `/add-income` | Form to log new earnings. |
+| **Monthly** | `/monthly` | Detailed breakdown of the current month. |
+| **Yearly** | `/yearly` | Annual financial overview. |
+| **Manage** | `/expenses` | View, edit, or delete previous entries. |
 
 ---
 
-## 🔐 Security — Row Level Security (RLS)
+## 🔐 Security (Row Level Security)
 
-CASHAM is built as a *true multi-user app*.  
-All tables use Supabase *RLS policies, ensuring each user can access **only their own data*.
+CASHAM is designed as a **true multi-user application**. Unlike basic trackers, all database tables are protected by PostgreSQL RLS policies. This means even if an API key is exposed, data cannot be leaked between users.
 
-Tables protected with RLS:
-- expenses
-- income
-- account_types
-- categories
-- income_sources
+**Tables Protected:** `expenses`, `income`, `account_types`, `categories`, `income_sources`.
 
 ---
 
-## 🔑 Environment Variables
+## ⚙️ Local Development
 
-Create a .env file in the project root and add:
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/kogul-murugaiah/expense-tracker.git](https://github.com/kogul-murugaiah/expense-tracker.git)
+    cd expense-tracker
+    ```
 
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Variables:**
+    Create a `.env` file in the root directory:
+    ```env
+    VITE_SUPABASE_URL=your_supabase_project_url
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
+
+4.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+
+5.  **Mobile Testing:**
+    To view on your phone (same Wi-Fi), run:
+    ```bash
+    npm run dev -- --host
+    ```
+
+---
+
+## 📌 Future Roadmap
+* [ ] **Interactive Data Viz:** Integration with Recharts for visual spending trends.
+* [ ] **Reports:** Export monthly data to PDF or Excel.
+* [ ] **AI Insights:** Automated spending advice based on ML patterns.
+* [ ] **Budgets:** Set limits for specific categories and receive alerts.
+
+---
+
+## 👨‍💻 Author
+**Kogul M**
+
+[![github](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/kogul-murugaiah)
+
+---
+*If you find this project helpful, please consider giving it a ⭐ star!*
