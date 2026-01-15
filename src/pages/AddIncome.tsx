@@ -115,7 +115,9 @@ const AddIncome = () => {
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             New Record
           </p>
-          <h1 className="text-3xl font-bold text-slate-100">Enter Income</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
+          Enter Income
+        </h1>
           <p className="text-sm text-slate-400">
             Fill in the details below to record a new income.
           </p>

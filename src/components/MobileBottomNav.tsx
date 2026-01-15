@@ -80,18 +80,18 @@ const MobileBottomNav = () => {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 pb-[max(env(safe-area-inset-bottom),14px)]">
         <div className="mx-auto mb-3 flex max-w-md items-center justify-between gap-1 rounded-3xl bg-[#0F172A]/80 px-2 py-2 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl ring-1 ring-slate-800/80">
-          {mobileLinks.map(({ to, label, icon: Icon, fab }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                [
-                  "flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold transition-all duration-200",
-                  isActive
-                    ? "text-blue-300 scale-105"
-                    : "text-slate-400 hover:text-slate-200",
-                ].join(" ")
-              }
+        {mobileLinks.map(({ to, label, icon: Icon, fab }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              [
+                "flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold transition-all duration-200",
+                isActive
+                  ? "text-blue-300 scale-105"
+                  : "text-slate-400 hover:text-slate-200",
+              ].join(" ")
+            }
             >
               {({ isActive }) => (
                 <>
@@ -163,7 +163,7 @@ const MobileBottomNav = () => {
 
                   <div className="my-4 border-t border-slate-700"></div>
 
-                  {/* Monthly Expenses Button */}
+                  {/* Monthly Tracking Button */}
                   <button
                     onClick={() => {
                       navigate("/monthly");
@@ -171,10 +171,10 @@ const MobileBottomNav = () => {
                     }}
                     className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
                   >
-                    Monthly Expenses
+                    Monthly Tracking
                   </button>
 
-                  {/* Yearly Expenses Button */}
+                  {/* Yearly Tracking Button */}
                   <button
                     onClick={() => {
                       navigate("/yearly");
@@ -182,10 +182,10 @@ const MobileBottomNav = () => {
                     }}
                     className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
                   >
-                    Yearly Expenses
+                    Yearly Tracking
                   </button>
 
-                  {/* Manage Expenses Button */}
+                  {/* Edit Expenses Button */}
                   <button
                     onClick={() => {
                       navigate("/expenses");
@@ -193,7 +193,29 @@ const MobileBottomNav = () => {
                     }}
                     className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
                   >
-                    Manage Expenses
+                    Edit Expenses
+                  </button>
+
+                  {/* Edit Income Button */}
+                  <button
+                    onClick={() => {
+                      navigate("/income-editor");
+                      setMobileSheetOpen(false);
+                    }}
+                    className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
+                  >
+                    Edit Income
+                  </button>
+
+                  {/* Back to Dashboard Button */}
+                  <button
+                    onClick={() => {
+                      navigate("/");
+                      setMobileSheetOpen(false);
+                    }}
+                    className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
+                  >
+                    Back to Dashboard
                   </button>
 
                   {/* Logout Button */}
@@ -207,10 +229,10 @@ const MobileBottomNav = () => {
                   {/* Copyright */}
                   <div className="my-4 border-t border-slate-700 pt-4">
                     <p className="text-center text-xs text-slate-500">
-                      © 2026 kogulmurugaiah
+                      Copyright © 2026 CASHAM. All Rights Reserved.
                     </p>
                     <p className="text-center text-xs text-slate-600">
-                      Expense Tracker App
+                      Developed and maintained by Kogul Murugaiah
                     </p>
                   </div>
                 </>

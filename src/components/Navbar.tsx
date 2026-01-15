@@ -8,9 +8,10 @@ const desktopLinks = [
   { to: "/", label: "Dashboard" },
   { to: "/add", label: "Add Expense" },
   { to: "/add-income", label: "Add Income" },
-  { to: "/monthly", label: "Monthly" },
-  { to: "/yearly", label: "Yearly" },
-  { to: "/expenses", label: "Manage Expenses" },
+  { to: "/monthly", label: "Monthly Tracking" },
+  { to: "/yearly", label: "Yearly Tracking" },
+  { to: "/expenses", label: "Edit Expenses" },
+  { to: "/income-editor", label: "Edit Income" },
 ];
 
 // Helper function to get user initials from email

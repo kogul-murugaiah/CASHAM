@@ -227,12 +227,11 @@ const Expenses = () => {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Records
-              </p>
-              <h1 className="text-3xl font-bold text-slate-100">Manage Expenses</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
+                Manage Expenses
+              </h1>
               <p className="text-sm text-slate-400">
-                View and update your expenses with inline editing.
+                View, update and delete your expenses with inline editing.
               </p>
             </div>
             <div className="flex gap-2 text-xs text-slate-400">
@@ -359,7 +358,7 @@ const Expenses = () => {
                   <p className="text-xs uppercase tracking-wide text-slate-400">
                     Edit Expense
                   </p>
-                  <h3 className="text-xl font-semibold text-slate-100">
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
                     {editingData.item || "Update expense"}
                   </h3>
                 </div>

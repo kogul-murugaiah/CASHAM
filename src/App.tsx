@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 import AddExpense from './pages/AddExpense';
 import AddIncome from './pages/AddIncome';
 import Expenses from './pages/Expenses';
+import IncomeEditor from './pages/IncomeEditor';
 import Monthly from './pages/Monthly';
 import Yearly from './pages/Yearly';
 
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/add" element={<AddExpense />} />
                 <Route path="/add-income" element={<AddIncome />} />
                 <Route path="/expenses" element={<Expenses />} />
+                <Route path="/income-editor" element={<IncomeEditor />} />
                 <Route path="/monthly" element={<Monthly />} />
                 <Route path="/yearly" element={<Yearly />} />
               </Routes>

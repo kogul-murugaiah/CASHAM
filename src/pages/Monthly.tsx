@@ -159,7 +159,9 @@ const Monthly = () => {
             <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
               Insights
             </p>
-            <h1 className="text-3xl font-bold text-slate-100">Monthly Expenses</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
+              Monthly Tracking
+            </h1>
             <p className="text-sm text-slate-400">
               Track category and account spend for {monthName} {year}.
             </p>

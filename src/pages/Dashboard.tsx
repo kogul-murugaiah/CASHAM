@@ -143,7 +143,7 @@ const Dashboard = () => {
                 <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                   Overview
                 </p>
-                <h1 className="text-3xl font-bold text-slate-100">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
                   Dashboard – {currentMonthName} {currentYear}
                 </h1>
               </div>
@@ -172,7 +172,7 @@ const Dashboard = () => {
           <>
             {/* Overall Summary Cards */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-8">
-              {/* Monthly Income Card */}
+              {/* Monthly Expenses Card */}
               <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl">
                 <div className="px-5 py-6">
                   <p className="text-sm text-blue-100">Monthly Income</p>
@@ -245,7 +245,7 @@ const Dashboard = () => {
                   <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
                     Accounts
                   </p>
-                  <h2 className="text-xl font-semibold text-slate-100">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
                     Account-wise Balance
                   </h2>
                 </div>
