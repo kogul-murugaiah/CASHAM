@@ -112,9 +112,7 @@ const AddIncome = () => {
       <div className="min-h-screen bg-slate-900 pb-24 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-6">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-            New Record
-          </p>
+          
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
           Enter Income
         </h1>

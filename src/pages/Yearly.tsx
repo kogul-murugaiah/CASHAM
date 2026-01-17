@@ -176,8 +176,8 @@ const Yearly = () => {
               Yearly Tracking
             </h1>
             <p className="text-sm text-slate-400">
-                Track  your yearly spending
-              </p>
+              Track category and account spend for {selectedYear}.
+            </p>
           </div>
           <input
             type="number"
