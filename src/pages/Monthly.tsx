@@ -170,7 +170,7 @@ const Monthly = () => {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full max-w-xs rounded-lg border border-slate-600 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="w-full max-w-xs rounded-lg border border-slate-600 bg-slate-700/50 px-4 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer [&::-webkit-calendar-picker-indicator]:text-white [&::-webkit-calendar-picker-indicator]:bg-slate-600 [&::-webkit-calendar-picker-indicator]:hover:bg-slate-500"
           />
         </div>
 

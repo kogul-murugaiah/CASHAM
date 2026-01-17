@@ -228,7 +228,7 @@ const Expenses = () => {
           <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
-                Manage Expenses
+                Edit Expenses
               </h1>
               <p className="text-sm text-slate-400">
                 View, update and delete your expenses with inline editing.
