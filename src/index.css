@@ -4,7 +4,7 @@
  * All rights reserved.
  * 
  * Developer: kogulmurugaiah
- * Description: Global styles for the expense tracking application
+ * Description: Global styles for expense tracking application
  */
 
 @tailwind base;
@@ -15,5 +15,10 @@
   /* Dark theme base styles */
   body {
     @apply bg-slate-900 text-slate-100;
+  }
+  
+  /* Debug style to verify CSS is loading */
+  .debug-css {
+    @apply bg-red-500 text-white p-4;
   }
 }
