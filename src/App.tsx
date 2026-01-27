@@ -18,10 +18,8 @@ import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
 import AddExpense from './pages/AddExpense';
 import AddIncome from './pages/AddIncome';
-import Expenses from './pages/Expenses';
-import IncomeEditor from './pages/IncomeEditor';
-import Monthly from './pages/Monthly';
-import Yearly from './pages/Yearly';
+import ExpenseTracking from './pages/ExpenseTracking';
+import IncomeTracking from './pages/IncomeTracking';
 
 function App() {
   return (
@@ -51,10 +49,8 @@ function App() {
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/add" element={<AddExpense />} />
                       <Route path="/add-income" element={<AddIncome />} />
-                      <Route path="/expenses" element={<Expenses />} />
-                      <Route path="/income-editor" element={<IncomeEditor />} />
-                      <Route path="/monthly" element={<Monthly />} />
-                      <Route path="/yearly" element={<Yearly />} />
+                      <Route path="/expense-tracking" element={<ExpenseTracking />} />
+                      <Route path="/income-tracking" element={<IncomeTracking />} />
                     </Routes>
                   </div>
                   <Footer />

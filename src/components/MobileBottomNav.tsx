@@ -163,48 +163,26 @@ const MobileBottomNav = () => {
 
                   <div className="my-4 border-t border-slate-700"></div>
 
-                  {/* Monthly Tracking Button */}
+                  {/* Income Tracking Button */}
                   <button
                     onClick={() => {
-                      navigate("/monthly");
+                      navigate("/income-tracking");
                       setMobileSheetOpen(false);
                     }}
-                    className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
+                    className="w-full rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-6 py-4 text-base font-bold text-emerald-400 transition duration-200 active:bg-emerald-500/20 mb-3"
                   >
-                    Monthly Tracking
+                    Income Tracking
                   </button>
 
-                  {/* Yearly Tracking Button */}
+                  {/* Expense Tracking Button */}
                   <button
                     onClick={() => {
-                      navigate("/yearly");
+                      navigate("/expense-tracking");
                       setMobileSheetOpen(false);
                     }}
-                    className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
+                    className="w-full rounded-xl bg-blue-600/10 border border-blue-500/20 px-6 py-4 text-base font-bold text-blue-400 transition duration-200 active:bg-blue-600/20 mb-3"
                   >
-                    Yearly Tracking
-                  </button>
-
-                  {/* Edit Expenses Button */}
-                  <button
-                    onClick={() => {
-                      navigate("/expenses");
-                      setMobileSheetOpen(false);
-                    }}
-                    className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
-                  >
-                    Edit Expenses
-                  </button>
-
-                  {/* Edit Income Button */}
-                  <button
-                    onClick={() => {
-                      navigate("/income-editor");
-                      setMobileSheetOpen(false);
-                    }}
-                    className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
-                  >
-                    Edit Income
+                    Expense Tracking
                   </button>
 
                   {/* Back to Dashboard Button */}
