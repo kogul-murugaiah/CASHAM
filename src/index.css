@@ -1,6 +1,8 @@
 /*
  * Expense Tracker App
  */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +10,10 @@
 @layer base {
   body {
     @apply bg-slate-950 text-slate-50 font-sans antialiased selection:bg-blue-500/30 selection:text-blue-200;
+  }
+
+  :root {
+    --font-heading: 'Outfit', sans-serif;
   }
 }
 

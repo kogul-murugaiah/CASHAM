@@ -138,7 +138,7 @@ const AddExpense = () => {
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <header className="mb-8 animate-fade-in text-center">
           <div className="inline-flex items-center justify-center p-3 bg-red-500/10 rounded-2xl mb-4">
-            <span className="text-2xl">💸</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>
           </div>
           <h1 className="text-3xl font-bold font-heading text-white mb-2">
             Add Expense

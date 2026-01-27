@@ -1,6 +1,6 @@
 # 💰 CASHAM — Expense Tracker App
 
-CASHAM is a modern, multi-user finance and expense management platform built with the **Vite + React + TypeScript** stack. It leverages **Supabase** for real-time data and secure backend logic, ensuring a seamless and private experience for tracking personal finances.
+CASHAM is a modern, premium multi-user finance and expense management platform built with the **Vite + React + TypeScript** stack. It leverages **Supabase** for real-time data and secure backend logic, ensuring a high-end, private experience for tracking personal finances with a mobile-first philosophy.
 
 ---
 
@@ -11,28 +11,26 @@ CASHAM is a modern, multi-user finance and expense management platform built wit
 
 ## 📌 Features
 
+### ✅ Premium UI/UX
+* **High-End Aesthetics:** Sleek dark mode interface featuring glassmorphism and subtle micro-animations.
+* **Premium Typography:** Integrated with the **Outfit** Google Font for a modern, tech-forward look.
+* **Refined Iconography:** Professional SVG icons replace emojis for a mature user experience.
+
 ### ✅ Authentication & Security
 * **Multi-user Support:** Secure Email + Password Login & Signup.
-* **Data Isolation:** Built with **Supabase Row Level Security (RLS)** to ensure users can only access their own data.
-* **Session Management:** Persistent login states and secure logout functionality for both Desktop and Mobile.
+* **Data Isolation:** Powered by **Supabase Row Level Security (RLS)** to guarantee individual user privacy.
+* **Dynamic Header:** Personalized mobile header showing user initials and email.
 
 ### ✅ Financial Management
-* **Expense Tracking:** Log expenses with item names, amounts, dates, and optional descriptions.
-* **Income Tracking:** Record earnings with sources and account-specific details.
-* **Custom Master Data:** Users can create and manage their own:
-    * Account Types (e.g., Savings, Credit Card, Cash)
-    * Expense Categories (e.g., Food, Travel, Rent)
-    * Income Sources (e.g., Salary, Freelance)
-
-### ✅ Analytics & Insights
-* **Dynamic Dashboard:** Real-time monthly summary cards for Income, Expenses, and Net Balance.
-* **Account-wise Analytics:** Automatic updates as users add or modify account types.
-* **Time-based Views:** Dedicated pages for Monthly and Yearly tracking for long-term financial planning.
+* **Unified Tracking:** Dedicated pages for total control over **Expense** and **Income** history.
+* **Inline Management:** "Edit" and "Delete" entries directly within history tables via glassy modals.
+* **Excel Export:** Download your financial history to a professional Excel format for external reporting.
+* **Custom Master Data:** personalized setup for Account Types, Expense Categories, and Income Sources.
 
 ### ✅ Mobile-First Design
-* **Premium Dark UI:** Sleek, modern interface using Tailwind CSS.
-* **Intuitive Navigation:** Bottom navigation bar for a native app-like experience on mobile devices.
-* **Touch Optimized:** Large action buttons and smooth transitions.
+* **Dual Header System:** Specialized top and bottom navigation bars for native-app ergonomics.
+* **Quick Access Hub:** Centralized FAB (+) for instant "one-tap" record entries.
+* **Balanced Navigation:** 5-tab bottom layout: **Home**, **Expense**, **Add (+)**, **Income**, and **More**.
 
 ---
 
@@ -41,10 +39,11 @@ CASHAM is a modern, multi-user finance and expense management platform built wit
 | Layer | Technology |
 | :--- | :--- |
 | **Frontend** | Vite, React.js, TypeScript |
-| **Styling** | Tailwind CSS |
+| **Styling** | Tailwind CSS v4, Glassmorphism |
+| **Fonts** | Outfit (Google Fonts) |
 | **Backend/DB** | Supabase (PostgreSQL + RLS) |
 | **Authentication** | Supabase Auth |
-| **Deployment** | Vercel |
+| **Utilities** | XLSX (Excel Export), React Icons (Feather) |
 
 ---
 
@@ -52,18 +51,17 @@ CASHAM is a modern, multi-user finance and expense management platform built wit
 
 | Page | Route | Description |
 | :--- | :--- | :--- |
-| **Dashboard** | `/` | Overview of current month stats and balance. |
-| **Add Expense** | `/add` | Form to log new expenditures. |
-| **Add Income** | `/add-income` | Form to log new earnings. |
-| **Monthly** | `/monthly` | Detailed breakdown of the current month. |
-| **Yearly** | `/yearly` | Annual financial overview. |
-| **Manage** | `/expenses` | View, edit, or delete previous entries. |
+| **Dashboard** | `/dashboard` | Monthly summary cards and account-wise balance. |
+| **Add Expense** | `/add` | Quick form to log new spending. |
+| **Add Income** | `/add-income` | Quick form to log new earnings. |
+| **Expense Tracker** | `/expense-tracking` | Detailed history, trends, and itemized deletions/edits. |
+| **Income Tracker** | `/income-tracking` | Detailed history, sources, and itemized deletions/edits. |
 
 ---
 
 ## 🔐 Security (Row Level Security)
 
-CASHAM is designed as a **true multi-user application**. Unlike basic trackers, all database tables are protected by PostgreSQL RLS policies. This means even if an API key is exposed, data cannot be leaked between users.
+CASHAM is designed as a **true multi-user application**. All database tables are protected by PostgreSQL RLS policies. This means data is isolated at the database level, preventing any leaks between different users even if API keys are exposed.
 
 **Tables Protected:** `expenses`, `income`, `account_types`, `categories`, `income_sources`.
 
@@ -73,7 +71,7 @@ CASHAM is designed as a **true multi-user application**. Unlike basic trackers, 
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/kogul-murugaiah/expense-tracker.git](https://github.com/kogul-murugaiah/expense-tracker.git)
+    git clone https://github.com/kogul-murugaiah/expense-tracker.git
     cd expense-tracker
     ```
 
@@ -99,14 +97,6 @@ CASHAM is designed as a **true multi-user application**. Unlike basic trackers, 
     ```bash
     npm run dev -- --host
     ```
-
----
-
-## 📌 Future Roadmap
-* [ ] **Interactive Data Viz:** Integration with Recharts for visual spending trends.
-* [ ] **Reports:** Export monthly data to PDF or Excel.
-* [ ] **AI Insights:** Automated spending advice based on ML patterns.
-* [ ] **Budgets:** Set limits for specific categories and receive alerts.
 
 ---
 

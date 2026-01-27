@@ -294,7 +294,9 @@ const IncomeTracking = () => {
                 <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between animate-fade-in">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <span className="p-2 bg-emerald-500/10 rounded-lg text-xl">💰</span>
+                            <span className="p-2 bg-emerald-500/10 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>
+                            </span>
                             <h1 className="text-3xl font-bold font-heading text-white">Income Tracking</h1>
                         </div>
                         <p className="text-slate-400">
@@ -362,7 +364,7 @@ const IncomeTracking = () => {
                         {records.length === 0 ? (
                             <div className="glass-card p-12 text-center border-emerald-500/10">
                                 <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">📈</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-2">No Records Found</h3>
                                 <p className="text-slate-400">No income data for the selected period.</p>

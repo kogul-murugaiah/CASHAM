@@ -44,7 +44,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Navbar />
-                  <div className="flex-1">
+                  <div className="flex-1 pt-[72px] md:pt-0">
                     <Routes>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/add" element={<AddExpense />} />

@@ -314,7 +314,9 @@ const ExpenseTracking = () => {
                 <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between animate-fade-in">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <span className="p-2 bg-blue-500/10 rounded-lg text-xl">💸</span>
+                            <span className="p-2 bg-blue-500/10 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>
+                            </span>
                             <h1 className="text-3xl font-bold font-heading text-white">Expense Tracking</h1>
                         </div>
                         <p className="text-slate-400">
@@ -382,7 +384,7 @@ const ExpenseTracking = () => {
                         {expenses.length === 0 ? (
                             <div className="glass-card p-12 text-center border-blue-500/10">
                                 <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">📊</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><line x1="18" x2="18" y1="20" y2="10" /><line x1="12" x2="12" y1="20" y2="4" /><line x1="6" x2="6" y1="20" y2="14" /></svg>
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-2">No Expenses Found</h3>
                                 <p className="text-slate-400">No data for the selected period.</p>
