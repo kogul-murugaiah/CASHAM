@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useIncomeSources } from "../hooks/useIncomeSources";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
-import Footer from "../components/Footer";
+// import Footer from "../components/Footer";
 
 const initialForm = {
   amount: "",
@@ -111,46 +111,47 @@ const AddIncome = () => {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-slate-900 pb-24 md:pb-0">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-6">
-          
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
-          Enter Income
-        </h1>
-          <p className="text-sm text-slate-400">
-            Fill in the details below to record a new income.
+    <div className="pb-24 pt-8 md:pb-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        <header className="mb-8 animate-fade-in text-center">
+          <div className="inline-flex items-center justify-center p-3 bg-emerald-500/10 rounded-2xl mb-4">
+            <span className="text-2xl">💰</span>
+          </div>
+          <h1 className="text-3xl font-bold font-heading text-white mb-2">
+            Record Income
+          </h1>
+          <p className="text-slate-400">
+            Log your earnings to keep your balance updated.
           </p>
         </header>
 
         {error && (
-          <div className="mb-4 rounded-2xl border border-red-600/30 bg-red-900/50 px-4 py-3 text-red-300">
+          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm text-center">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-4 rounded-2xl border border-green-600/30 bg-green-900/50 px-4 py-3 text-green-300">
+          <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300 text-sm text-center">
             {success}
           </div>
         )}
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl bg-slate-800 p-6 shadow-sm ring-1 ring-slate-700 space-y-6"
+          className="glass-card p-6 sm:p-8 space-y-6 animate-fade-in relative overflow-hidden"
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="amount"
-                className="block text-sm font-medium leading-6 text-slate-200"
-              >
+          {/* Subtle glow effect */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+          <div className="grid gap-6 sm:grid-cols-2 relative z-10">
+            <div className="space-y-2">
+              <label htmlFor="amount" className="block text-sm font-medium text-slate-300">
                 Amount
               </label>
-              <div className="relative mt-2 rounded-xl shadow-sm">
+              <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <span className="text-slate-400 sm:text-sm">₹</span>
+                  <span className="text-slate-400">₹</span>
                 </div>
                 <input
                   type="number"
@@ -158,7 +159,7 @@ const AddIncome = () => {
                   id="amount"
                   value={form.amount}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border-0 bg-slate-700/50 px-4 py-3 pl-10 text-slate-200 shadow-sm ring-1 ring-inset ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                  className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -166,125 +167,91 @@ const AddIncome = () => {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 mt-3">
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="date"
-                  className="block text-sm font-medium leading-6 text-slate-200"
-                >
-                  Date
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="date"
-                    name="date"
-                    id="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="block w-full rounded-xl border-0 bg-slate-700/50 px-4 py-3 text-slate-200 shadow-sm ring-1 ring-inset ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="source"
-                  className="block text-sm font-medium leading-6 text-slate-200"
-                >
-                  Source
-                </label>
-                <div className="mt-2">
-                  <CustomDropdown
-                    value={form.source}
-                    onChange={(value) => setForm(prev => ({ ...prev, source: value }))}
-                    options={sources.map(source => ({ value: source.id, label: source.name }))}
-                    placeholder="Select a source"
-                    onAddNew={handleAddSource}
-                    addNewLabel="+ Add new source"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 mt-3">
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="accountType"
-                  className="block text-sm font-medium leading-6 text-slate-200"
-                >
-                  Account Type
-                </label>
-                <div className="mt-2">
-                  <CustomDropdown
-                    value={form.accountType}
-                    onChange={(value) => setForm(prev => ({ ...prev, accountType: value }))}
-                    options={accountTypes.map(type => ({ value: type, label: type }))}
-                    placeholder="Select account type"
-                    onAddNew={handleAddAccountType}
-                    addNewLabel="+ Add new account type"
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium leading-6 text-slate-200"
-              >
-                Description (Optional)
+            <div className="space-y-2">
+              <label htmlFor="date" className="block text-sm font-medium text-slate-300">
+                Date
               </label>
-              <div className="mt-2">
-                <textarea
-                  name="description"
-                  id="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  maxLength={300}
-                  rows={3}
-                  className="block w-full rounded-xl border-0 bg-slate-700/50 px-4 py-3 text-slate-200 shadow-sm ring-1 ring-inset ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6 resize-none"
-                  placeholder="Add a description for this income record..."
-                />
-                <div className="mt-1 text-xs text-slate-400">
-                  {form.description.length}/300 characters
-                </div>
-              </div>
+              <input
+                type="date"
+                name="date"
+                id="date"
+                value={form.date}
+                onChange={handleChange}
+                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
+                required
+              />
             </div>
 
-            {error && (
-              <div className="mt-3 rounded-lg border border-red-600/30 bg-red-900/50 px-3 py-2 text-sm text-red-300">
-                {error}
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setForm(initialForm);
-                  setError("");
-                  setSuccess("");
-                }}
-                className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700/50"
-              >
-                Clear
-              </button>
-              <button
-                type="submit"
+            <div className="space-y-2">
+              <label htmlFor="source" className="block text-sm font-medium text-slate-300">
+                Source
+              </label>
+              <CustomDropdown
+                value={form.source}
+                onChange={(value) => setForm(prev => ({ ...prev, source: value }))}
+                options={sources.map(source => ({ value: source.id, label: source.name }))}
+                placeholder="Select source"
+                onAddNew={handleAddSource}
+                addNewLabel="+ Add new source"
                 disabled={loading}
-                className="rounded-lg bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? "Saving..." : "Save Income"}
-              </button>
+              />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="accountType" className="block text-sm font-medium text-slate-300">
+                Account Type
+              </label>
+              <CustomDropdown
+                value={form.accountType}
+                onChange={(value) => setForm(prev => ({ ...prev, accountType: value }))}
+                options={accountTypes.map(type => ({ value: type, label: type }))}
+                placeholder="Select account"
+                onAddNew={handleAddAccountType}
+                addNewLabel="+ Add new account type"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 relative z-10">
+            <label htmlFor="description" className="block text-sm font-medium text-slate-300">
+              Description (Optional)
+            </label>
+            <textarea
+              name="description"
+              id="description"
+              value={form.description}
+              onChange={handleChange}
+              maxLength={300}
+              rows={3}
+              className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none resize-none"
+              placeholder="Details..."
+            />
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3 relative z-10">
+            <button
+              type="button"
+              onClick={() => {
+                setForm(initialForm);
+                setError("");
+                setSuccess("");
+              }}
+              className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+            >
+              Clear
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary rounded-xl px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-600 hover:bg-emerald-500"
+            >
+              {loading ? "Adding..." : "Add Income"}
+            </button>
           </div>
         </form>
       </div>
     </div>
-    <Footer />
-    </>
   );
 };
 

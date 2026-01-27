@@ -46,21 +46,27 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col p-4 pb-24 md:pb-4">
-      <div className="flex-1 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-950 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
+      {/* Background Mesh */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
+
+      <div className="flex-1 flex items-center justify-center relative z-10">
         <div className="w-full max-w-md">
           {/* Branding */}
-          <div className="text-center mb-8">
-            <Logo size="xl" className="mx-auto mb-4" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent">
+          <div className="text-center mb-8 animate-fade-in">
+            <div className="inline-block p-4 rounded-full bg-white/5 backdrop-blur-sm mb-4 border border-white/10 shadow-lg shadow-blue-500/10">
+              <Logo size="xl" className="mx-auto" />
+            </div>
+            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
               CASHAM
             </h1>
           </div>
 
           {/* Login Card */}
-          <div className="bg-slate-800 rounded-xl shadow-lg p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-100 mb-2">
+          <div className="glass-card p-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-bold text-white mb-2 font-heading">
                 Welcome back
               </h2>
               <p className="text-slate-400 text-sm">
@@ -68,12 +74,12 @@ const Login = () => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
-              <div>
+              <div className="space-y-2">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-slate-300 mb-1"
+                  className="block text-sm font-medium text-slate-300"
                 >
                   Email
                 </label>
@@ -82,18 +88,18 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-4 py-3 border border-slate-600 rounded-lg bg-slate-700/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="name@example.com"
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   required
                   disabled={loading}
                 />
               </div>
 
               {/* Password */}
-              <div>
+              <div className="space-y-2">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-slate-300 mb-1"
+                  className="block text-sm font-medium text-slate-300"
                 >
                   Password
                 </label>
@@ -104,14 +110,14 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full px-4 py-3 border border-slate-600 rounded-lg bg-slate-700/50 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
+                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all pr-12"
                     required
                     disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
                     disabled={loading}
                   >
                     {showPassword ? (
@@ -155,7 +161,7 @@ const Login = () => {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                <div className="glass-card bg-red-500/10 border-red-500/20 p-3 text-red-300 text-sm text-center">
                   {error}
                 </div>
               )}
@@ -164,17 +170,17 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-blue-500/20"
               >
                 {loading ? "Logging in..." : "Log In"}
               </button>
 
               {/* Sign Up Link */}
-              <div className="text-center text-sm text-slate-600">
+              <div className="text-center text-sm text-slate-400">
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="text-blue-600 font-semibold hover:text-blue-700"
+                  className="text-blue-400 font-bold hover:text-blue-300 transition-colors"
                 >
                   Sign up
                 </Link>
@@ -185,7 +191,7 @@ const Login = () => {
       </div>
 
       {/* Copyright Text */}
-      <div className="text-center space-y-1 pb-4">
+      <div className="text-center space-y-1 pb-4 relative z-10 opacity-50 hover:opacity-100 transition-opacity">
         <p className="text-xs text-slate-500">
           Copyright © 2026 CASHAM. All Rights Reserved.
         </p>

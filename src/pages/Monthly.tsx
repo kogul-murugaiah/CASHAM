@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAccountTypes } from "../hooks/useAccountTypes";
-import Footer from "../components/Footer";
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid
+} from 'recharts';
+// import Footer from "../components/Footer"; // Removing Footer to match Dashboard style (App layout)
 
 type Category = {
   id: number;
@@ -28,10 +32,10 @@ type AccountTotal = {
   total: number;
 };
 
-const formatter = new Intl.NumberFormat("en-IN", {
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 0,
 });
 
 const Monthly = () => {
@@ -133,93 +137,146 @@ const Monthly = () => {
   const grandTotal = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
 
   const [year, month] = selectedMonth.split("-").map(Number);
   const monthName = monthNames[month - 1];
 
   return (
-    <>
-      <div className="min-h-screen bg-slate-900 pb-24 md:pb-0">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="pb-24 pt-8 md:pb-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
           <div>
-            
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
+            <p className="text-slate-400 font-medium text-sm uppercase tracking-wider">Analysis</p>
+            <h1 className="text-3xl font-bold font-heading text-white">
               Monthly Tracking
             </h1>
-            <p className="text-sm text-slate-400">
-              Track category and account spend for {monthName} {year}.
+            <p className="text-slate-400 mt-1">
+              Detailed breakdown for <span className="text-white font-semibold">{monthName} {year}</span>
             </p>
           </div>
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full max-w-xs rounded-lg border border-slate-600 bg-slate-700/50 px-4 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer [&::-webkit-calendar-picker-indicator]:text-white [&::-webkit-calendar-picker-indicator]:bg-slate-600 [&::-webkit-calendar-picker-indicator]:hover:bg-slate-500"
+            style={{ colorScheme: "dark" }}
+            className="w-full max-w-xs rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-all hover:bg-slate-800/50"
           />
         </div>
 
-        {loading && (
-          <div className="grid gap-4 md:grid-cols-3">
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-3">
             {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="h-24 animate-pulse rounded-2xl bg-slate-800 shadow-sm ring-1 ring-slate-700"
-              />
+              <div key={i} className="h-32 animate-pulse rounded-3xl bg-slate-800/50" />
             ))}
           </div>
-        )}
-
-        {error && (
-          <div className="mb-4 rounded-2xl border border-red-600/30 bg-red-900/50 px-4 py-3 text-red-300">
+        ) : error ? (
+          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-6 text-red-300">
             {error}
           </div>
-        )}
-
-        {!loading && !error && (
-          <>
+        ) : (
+          <div className="space-y-8 animate-fade-in">
             {expenses.length === 0 ? (
-              <div className="rounded-2xl bg-slate-800 p-10 text-center shadow-sm ring-1 ring-slate-700">
+              <div className="glass-card p-12 text-center">
+                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📅</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">No Expenses Found</h3>
                 <p className="text-slate-400">
-                  No expenses found for {monthName} {year}
+                  You haven't recorded any expenses for {monthName} {year} yet.
                 </p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <>
                 {/* Grand Total Card */}
-                <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg">
-                  <div className="px-6 py-6 sm:px-8">
-                    <p className="text-sm text-blue-100">
-                      Total Expenses for {monthName} {year}
+                <div className="glass-card p-8 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border-blue-500/30 relative overflow-hidden">
+                  <div className="relative z-10">
+                    <p className="text-sm font-medium text-blue-200 mb-2">
+                      Total Spendings
                     </p>
-                    <div className="mt-2 text-4xl font-semibold">
-                      {formatter.format(grandTotal)}
+                    <div className="text-5xl font-bold text-white font-heading tracking-tight">
+                      {currencyFormatter.format(grandTotal)}
+                    </div>
+                  </div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                </div>
+
+                {/* Charts Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Category Breakdown Chart */}
+                  <div className="glass-card p-6">
+                    <h3 className="text-lg font-bold text-white mb-6 font-heading">Category Breakdown</h3>
+                    <div className="h-[300px] w-full flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categoryTotals.filter(c => c.total > 0).map(c => ({ name: c.categoryName, value: c.total }))}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                          >
+                            {categoryTotals.filter(c => c.total > 0).map((_, index) => {
+                              const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1'];
+                              return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />;
+                            })}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                            itemStyle={{ color: '#f8fafc' }}
+                            formatter={(value: any) => currencyFormatter.format(value)}
+                          />
+                          <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Daily Trend Chart */}
+                  <div className="glass-card p-6">
+                    <h3 className="text-lg font-bold text-white mb-6 font-heading">Daily Spend Trend</h3>
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={(() => {
+                          const daysInMonth = new Date(year, month, 0).getDate();
+                          return Array.from({ length: daysInMonth }, (_, i) => {
+                            const day = i + 1;
+                            const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                            const total = expenses
+                              .filter(e => e.date === dateStr)
+                              .reduce((sum, e) => sum + e.amount, 0);
+                            return { day, total };
+                          });
+                        })()}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
+                          <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                          <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                            itemStyle={{ color: '#f8fafc' }}
+                            formatter={(value: any) => currencyFormatter.format(value)}
+                            labelFormatter={(label) => `${monthName} ${label}`}
+                          />
+                          <Line type="monotone" dataKey="total" stroke="#06b6d4" strokeWidth={3} dot={{ r: 4, fill: '#06b6d4', strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                  {/* Category Totals */}
-                  <div className="overflow-hidden rounded-2xl bg-slate-800 shadow-sm ring-1 ring-slate-700">
-                    <div className="border-b border-slate-600 bg-slate-700 px-6 py-4">
-                      <h2 className="text-lg font-semibold text-slate-100">
-                        Category-wise Totals
+                  {/* Category Totals List */}
+                  <div className="glass-card p-0 overflow-hidden">
+                    <div className="border-b border-white/5 bg-slate-900/40 px-6 py-4">
+                      <h2 className="text-lg font-bold text-white font-heading">
+                        Category Details
                       </h2>
                     </div>
-                    <div className="divide-y divide-slate-600">
+                    <div className="divide-y divide-white/5">
                       {categoryTotals.length === 0 ? (
                         <div className="px-6 py-8 text-center text-slate-400">
                           No category data available
@@ -233,19 +290,19 @@ const Monthly = () => {
                           return (
                             <div
                               key={cat.categoryId}
-                              className="px-6 py-4 transition hover:bg-slate-700"
+                              className="px-6 py-4 transition hover:bg-white/5"
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <div className="text-sm font-semibold text-slate-100">
+                                  <div className="text-sm font-semibold text-slate-200">
                                     {cat.categoryName}
                                   </div>
-                                  <div className="text-xs text-slate-400">
+                                  <div className="text-xs text-slate-500">
                                     {percentage}% of total
                                   </div>
                                 </div>
-                                <div className="text-lg font-semibold text-slate-100">
-                                  {formatter.format(cat.total)}
+                                <div className="text-base font-bold text-white">
+                                  {currencyFormatter.format(cat.total)}
                                 </div>
                               </div>
                             </div>
@@ -255,14 +312,14 @@ const Monthly = () => {
                     </div>
                   </div>
 
-                  {/* Account Type Totals */}
-                  <div className="overflow-hidden rounded-2xl bg-slate-800 shadow-sm ring-1 ring-slate-700">
-                    <div className="border-b border-slate-600 bg-slate-700 px-6 py-4">
-                      <h2 className="text-lg font-semibold text-slate-100">
-                        Account-type Totals
+                  {/* Account Type Totals List */}
+                  <div className="glass-card p-0 overflow-hidden">
+                    <div className="border-b border-white/5 bg-slate-900/40 px-6 py-4">
+                      <h2 className="text-lg font-bold text-white font-heading">
+                        Account Details
                       </h2>
                     </div>
-                    <div className="divide-y divide-slate-600">
+                    <div className="divide-y divide-white/5">
                       {accountTotals.length === 0 ? (
                         <div className="px-6 py-8 text-center text-slate-400">
                           No account data available
@@ -276,19 +333,19 @@ const Monthly = () => {
                           return (
                             <div
                               key={acc.accountType}
-                              className="px-6 py-4 transition hover:bg-slate-700"
+                              className="px-6 py-4 transition hover:bg-white/5"
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <div className="text-sm font-semibold text-slate-100">
+                                  <div className="text-sm font-semibold text-slate-200">
                                     {acc.accountType}
                                   </div>
-                                  <div className="text-xs text-slate-400">
+                                  <div className="text-xs text-slate-500">
                                     {percentage}% of total
                                   </div>
                                 </div>
-                                <div className="text-lg font-semibold text-slate-100">
-                                  {formatter.format(acc.total)}
+                                <div className="text-base font-bold text-white">
+                                  {currencyFormatter.format(acc.total)}
                                 </div>
                               </div>
                             </div>
@@ -298,14 +355,12 @@ const Monthly = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
-    <Footer />
-    </>
   );
 };
 

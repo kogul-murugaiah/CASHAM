@@ -80,18 +80,18 @@ const MobileBottomNav = () => {
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 pb-[max(env(safe-area-inset-bottom),14px)]">
         <div className="mx-auto mb-3 flex max-w-md items-center justify-between gap-1 rounded-3xl bg-[#0F172A]/80 px-2 py-2 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl ring-1 ring-slate-800/80">
-        {mobileLinks.map(({ to, label, icon: Icon, fab }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              [
-                "flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold transition-all duration-200",
-                isActive
-                  ? "text-blue-300 scale-105"
-                  : "text-slate-400 hover:text-slate-200",
-              ].join(" ")
-            }
+          {mobileLinks.map(({ to, label, icon: Icon, fab }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                [
+                  "flex flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold transition-all duration-200",
+                  isActive
+                    ? "text-blue-300 scale-105"
+                    : "text-slate-400 hover:text-slate-200",
+                ].join(" ")
+              }
             >
               {({ isActive }) => (
                 <>
@@ -137,7 +137,7 @@ const MobileBottomNav = () => {
           {/* Sheet */}
           <div
             ref={mobileSheetRef}
-            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl bg-slate-900 shadow-2xl ring-1 ring-slate-700/80 md:hidden pb-[max(env(safe-area-inset-bottom),0px)]"
+            className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl bg-slate-900/90 backdrop-blur-xl shadow-2xl ring-1 ring-slate-700/80 md:hidden pb-[max(env(safe-area-inset-bottom),0px)]"
             style={{
               animation: "slideUp 0.3s ease-out",
             }}
@@ -146,7 +146,7 @@ const MobileBottomNav = () => {
             <div className="p-6">
               {/* Drag handle */}
               <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-slate-600"></div>
-              
+
               {/* User Info */}
               {user && (
                 <>

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useIncomeSources } from "../hooks/useIncomeSources";
-import Footer from "../components/Footer";
 
 type Income = {
   id: string;
@@ -27,6 +26,12 @@ type EditingIncome = {
   description: string;
 };
 
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+
 const IncomeEditor = () => {
   const { accountTypes } = useAccountTypes();
   const { sources } = useIncomeSources();
@@ -41,12 +46,6 @@ const IncomeEditor = () => {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingData, setEditingData] = useState<EditingIncome | null>(null);
-
-  const formatter = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  });
 
   // Fetch income records
   const fetchIncome = async () => {
@@ -165,87 +164,80 @@ const IncomeEditor = () => {
   }, [selectedMonth]);
 
   return (
-    <>
-      <div className="min-h-screen bg-slate-900 pb-24 md:pb-0">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <header className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
-                Edit Income
-              </h1>
-              <p className="text-sm text-slate-400">
-                View and update your income records with inline editing.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full max-w-xs rounded-lg border border-slate-600 bg-slate-700/50 px-4 py-2 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer [&::-webkit-calendar-picker-indicator]:text-white [&::-webkit-calendar-picker-indicator]:bg-slate-600 [&::-webkit-calendar-picker-indicator]:hover:bg-slate-500"
+    <div className="pb-24 pt-8 md:pb-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between animate-fade-in">
+          <div>
+            <h1 className="text-3xl font-bold font-heading text-white mb-2">
+              Edit Income
+            </h1>
+            <p className="text-slate-400">
+              Manage and update your earnings log.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+            />
+            <span className="rounded-xl bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 border border-white/10">
+              {income.length} records
+            </span>
+          </div>
+        </header>
+
+        {loading && (
+          <div className="grid gap-3 animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="h-16 rounded-xl bg-slate-800/50"
               />
-              <span className="rounded-full bg-slate-700 px-3 py-1 text-xs text-slate-400">
-                {income.length} records
-              </span>
-            </div>
-          </header>
+            ))}
+          </div>
+        )}
 
-          {/* Messages */}
-          {error && (
-            <div className="mb-4 rounded-2xl border border-red-600/30 bg-red-900/50 px-4 py-3 text-red-300">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 rounded-2xl border border-green-600/30 bg-green-900/50 px-4 py-3 text-green-300">
-              {success}
-            </div>
-          )}
+        {error && !saving && (
+          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm">
+            {error}
+          </div>
+        )}
 
-          {/* Loading state */}
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-slate-400">Loading income records...</div>
-            </div>
-          ) : income.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <p className="text-slate-400">No income records found.</p>
-                <p className="text-sm text-slate-500 mt-2">
-                  Add your first income record to get started.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-slate-800 shadow-sm ring-1 ring-slate-700">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-700/50">
+        {success && (
+          <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300 text-sm">
+            {success}
+          </div>
+        )}
+
+        {!loading && (
+          <div className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/5 bg-slate-900/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Source</th>
+                    <th className="px-6 py-4">Description</th>
+                    <th className="px-6 py-4">Account</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {income.length === 0 ? (
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wide text-slate-300">
-                        Date
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wide text-slate-300">
-                        Amount
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wide text-slate-300">
-                        Source
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wide text-slate-300">
-                        Description
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wide text-slate-300">
-                        Account Type
-                      </th>
-                      <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wide text-slate-300">
-                        Actions
-                      </th>
+                      <td
+                        colSpan={6}
+                        className="px-6 py-12 text-center text-slate-500"
+                      >
+                        No income records found for this month.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-700">
-                    {income.map((record) => (
-                      <tr key={record.id} className="hover:bg-slate-700/30 transition-colors">
+                  ) : (
+                    income.map((record) => (
+                      <tr key={record.id} className="hover:bg-white/5 transition-colors group">
                         {editingId === record.id ? (
                           <>
                             <td className="px-6 py-4">
@@ -257,7 +249,7 @@ const IncomeEditor = () => {
                                     prev ? { ...prev, date: e.target.value } : null
                                   )
                                 }
-                                className="rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full min-w-[120px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                               />
                             </td>
                             <td className="px-6 py-4">
@@ -269,7 +261,7 @@ const IncomeEditor = () => {
                                     prev ? { ...prev, amount: e.target.value } : null
                                   )
                                 }
-                                className="rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full min-w-[100px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                 step="0.01"
                                 min="0"
                               />
@@ -282,18 +274,18 @@ const IncomeEditor = () => {
                                     prev ? { ...prev, source_id: e.target.value } : null
                                   )
                                 }
-                                className="rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full min-w-[140px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 appearance-none"
                               >
-                                <option value="">Select source</option>
                                 {sources.map((source) => (
-                                  <option key={source.id} value={source.id}>
+                                  <option key={source.id} value={source.id} className="bg-slate-900">
                                     {source.name}
                                   </option>
                                 ))}
                               </select>
                             </td>
                             <td className="px-6 py-4">
-                              <textarea
+                              <input
+                                type="text"
                                 value={editingData?.description || ""}
                                 onChange={(e) =>
                                   setEditingData((prev) =>
@@ -301,9 +293,7 @@ const IncomeEditor = () => {
                                   )
                                 }
                                 maxLength={300}
-                                rows={2}
-                                className="w-full rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
-                                placeholder="Add description..."
+                                className="w-full min-w-[200px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                               />
                             </td>
                             <td className="px-6 py-4">
@@ -314,27 +304,26 @@ const IncomeEditor = () => {
                                     prev ? { ...prev, account_type: e.target.value } : null
                                   )
                                 }
-                                className="rounded-lg bg-slate-700 border border-slate-600 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full min-w-[120px] rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 appearance-none"
                               >
-                                <option value="">Select account type</option>
                                 {accountTypes.map((type) => (
-                                  <option key={type} value={type}>
+                                  <option key={type} value={type} className="bg-slate-900">
                                     {type}
                                   </option>
                                 ))}
                               </select>
                             </td>
-                            <td className="px-6 py-4 text-right">
+                            <td className="px-6 py-4 text-right whitespace-nowrap">
                               <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="mr-2 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="mr-2 inline-flex items-center rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50"
                               >
-                                {saving ? "Saving..." : "Save"}
+                                Save
                               </button>
                               <button
                                 onClick={handleCancel}
-                                className="rounded-lg bg-slate-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+                                className="inline-flex items-center rounded-lg bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-white/10 hover:text-white transition-all"
                               >
                                 Cancel
                               </button>
@@ -342,68 +331,64 @@ const IncomeEditor = () => {
                           </>
                         ) : (
                           <>
-                            <td className="px-6 py-4 text-sm text-slate-300">
-                              {new Date(record.date).toLocaleDateString()}
+                            <td className="px-6 py-4 text-sm text-slate-400 whitespace-nowrap">
+                              {new Date(record.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                             </td>
-                            <td className="px-6 py-4 text-sm font-medium text-slate-100">
-                              {formatter.format(record.amount)}
+                            <td className="px-6 py-4 text-sm font-bold text-emerald-400 font-mono">
+                              {currencyFormatter.format(record.amount)}
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-300">
+                            <td className="px-6 py-4 text-sm text-white">
                               {record.income_sources?.name || "Unknown"}
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-300">
-                              {record.description ? (
-                                <span className="max-w-xs truncate" title={record.description}>
-                                  {record.description}
-                                </span>
-                              ) : (
-                                <span className="text-slate-500">-</span>
-                              )}
+                            <td className="px-6 py-4 text-sm text-slate-500 max-w-xs truncate">
+                              {record.description || "-"}
                             </td>
                             <td className="px-6 py-4">
                               <span
-                                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
-                                  record.account_type === "SBI"
-                                    ? "bg-blue-900/50 text-blue-300 border-blue-700/50"
+                                className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold bg-opacity-10 ${record.account_type === "SBI"
+                                    ? "bg-blue-500 text-blue-300 border-blue-500/20"
                                     : record.account_type === "CASH"
-                                    ? "bg-amber-900/50 text-amber-300 border-amber-700/50"
-                                    : record.account_type === "UNION"
-                                    ? "bg-purple-900/50 text-purple-300 border-purple-700/50"
-                                    : record.account_type === "INDIAN"
-                                    ? "bg-teal-900/50 text-teal-300 border-teal-700/50"
-                                    : "border-slate-600 text-slate-300"
-                                }`}
+                                      ? "bg-amber-500 text-amber-300 border-amber-500/20"
+                                      : record.account_type === "UNION"
+                                        ? "bg-purple-500 text-purple-300 border-purple-500/20"
+                                        : record.account_type === "INDIAN"
+                                          ? "bg-teal-500 text-teal-300 border-teal-500/20"
+                                          : "bg-slate-500 text-slate-300 border-slate-500/20"
+                                  }`}
                               >
                                 {record.account_type}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={() => handleEdit(record)}
-                                className="mr-2 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(record.id)}
-                                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-                              >
-                                Delete
-                              </button>
+                            <td className="px-6 py-4 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleEdit(record)}
+                                  className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all"
+                                  title="Edit"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(record.id)}
+                                  className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                  title="Delete"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                </button>
+                              </div>
                             </td>
                           </>
                         )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-      <Footer />
-    </>
+    </div>
   );
 };
 

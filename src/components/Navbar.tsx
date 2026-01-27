@@ -8,10 +8,10 @@ const desktopLinks = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/add", label: "Add Expense" },
   { to: "/add-income", label: "Add Income" },
-  { to: "/monthly", label: "Monthly Tracking" },
-  { to: "/yearly", label: "Yearly Tracking" },
-  { to: "/expenses", label: "Edit Expenses" },
-  { to: "/income-editor", label: "Edit Income" },
+  { to: "/monthly", label: "Monthly" },
+  { to: "/yearly", label: "Yearly" },
+  { to: "/expenses", label: "Expenses" },
+  { to: "/income-editor", label: "Income" },
 ];
 
 // Helper function to get user initials from email
@@ -86,28 +86,30 @@ const Navbar = () => {
   };
 
   return (
-    <>
-      {/* Desktop top nav */}
-      <header className="sticky top-0 z-40 hidden w-full bg-slate-900/90 backdrop-blur md:block">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Logo size="sm" />
-            <span className="text-sm font-semibold text-slate-300">
+    <nav className="glass-nav border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16 items-center">
+          {/* Logo Section */}
+          <div className="flex items-center gap-2">
+            <Logo size="md" />
+            <span className="text-xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 hidden md:block">
               CASHAM
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <ul className="flex flex-wrap items-center gap-2 sm:gap-3">
+
+          <div className="flex items-center gap-4">
+            {/* Desktop Links - NO WRAP to prevent layout breakage */}
+            <ul className="flex items-center gap-1 lg:gap-2">
               {desktopLinks.map((link) => (
                 <li key={link.to}>
                   <NavLink
                     to={link.to}
                     className={({ isActive }) =>
                       [
-                        "rounded-full px-3 py-2 text-sm font-semibold transition duration-200",
+                        "rounded-full px-3 py-2 text-sm font-semibold transition duration-200 whitespace-nowrap",
                         isActive
-                          ? "bg-slate-700 text-slate-100 shadow-sm"
-                          : "text-slate-400 hover:bg-slate-800/70 hover:text-white",
+                          ? "bg-slate-700/50 text-white shadow-sm border border-white/10"
+                          : "text-slate-400 hover:bg-slate-800/50 hover:text-white",
                       ].join(" ")
                     }
                   >
@@ -116,24 +118,24 @@ const Navbar = () => {
                 </li>
               ))}
             </ul>
+
             {/* User Profile Dropdown */}
             {!loading && user && (
               <div className="relative" ref={desktopDropdownRef}>
                 <button
                   onClick={() => setDesktopDropdownOpen(!desktopDropdownOpen)}
-                  className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-400 transition duration-200 hover:bg-slate-800/70 hover:text-white"
+                  className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-400 transition duration-200 hover:bg-slate-800/50 hover:text-white"
                   aria-label="User menu"
                   aria-expanded={desktopDropdownOpen}
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-xs font-bold text-white shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-xs font-bold text-white shadow-sm ring-2 ring-slate-900">
                     {getInitials(user.email || "")}
                   </div>
                   <span className="hidden sm:inline-block">
                     {truncateEmail(user.email || "")}
                   </span>
                   <svg
-                    className={`h-4 w-4 transition-transform ${desktopDropdownOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform ${desktopDropdownOpen ? "rotate-180" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
@@ -143,10 +145,10 @@ const Navbar = () => {
                   </svg>
                 </button>
                 {desktopDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-slate-900 shadow-lg ring-1 ring-slate-700/80 backdrop-blur-xl">
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900/90 shadow-xl ring-1 ring-white/10 backdrop-blur-xl animate-fade-in">
                     <div className="p-4">
                       <div className="mb-3 flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-sm font-bold text-white shadow-sm ring-2 ring-white/5">
                           {getInitials(user.email || "")}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -156,10 +158,10 @@ const Navbar = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="my-3 border-t border-slate-700"></div>
+                      <div className="my-3 border-t border-white/5"></div>
                       <button
                         onClick={handleLogout}
-                        className="w-full rounded-lg bg-red-600/30 px-4 py-2 text-sm font-semibold text-red-300 transition duration-200 hover:bg-red-600/40"
+                        className="w-full rounded-lg bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition duration-200 hover:bg-red-500/20"
                       >
                         Logout
                       </button>
@@ -169,9 +171,9 @@ const Navbar = () => {
               </div>
             )}
           </div>
-        </nav>
-      </header>
-    </>
+        </div>
+      </div>
+    </nav>
   );
 };
 
