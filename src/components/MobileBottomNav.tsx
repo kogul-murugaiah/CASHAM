@@ -5,7 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import Logo from "./Logo";
 
 const mobileLinks = [
-  { to: "/", label: "Dashboard", icon: HomeIcon },
+  { to: "/dashboard", label: "Dashboard", icon: HomeIcon },
   { to: "/add", label: "Expense", icon: MinusIcon },
   { to: "/add-income", label: "Income", icon: PlusIcon, fab: true },
 ];
@@ -210,7 +210,7 @@ const MobileBottomNav = () => {
                   {/* Back to Dashboard Button */}
                   <button
                     onClick={() => {
-                      navigate("/");
+                      navigate("/dashboard");
                       setMobileSheetOpen(false);
                     }}
                     className="w-full rounded-xl bg-slate-800/50 px-6 py-4 text-base font-semibold text-slate-200 transition duration-200 active:bg-slate-700/50 mb-3"
