@@ -5,7 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import Logo from "./Logo";
 
 const desktopLinks = [
-  { to: "/", label: "Dashboard" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/add", label: "Add Expense" },
   { to: "/add-income", label: "Add Income" },
   { to: "/monthly", label: "Monthly Tracking" },
@@ -132,9 +132,8 @@ const Navbar = () => {
                     {truncateEmail(user.email || "")}
                   </span>
                   <svg
-                    className={`h-4 w-4 transition-transform ${
-                      desktopDropdownOpen ? "rotate-180" : ""
-                    }`}
+                    className={`h-4 w-4 transition-transform ${desktopDropdownOpen ? "rotate-180" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"

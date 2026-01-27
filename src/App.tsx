@@ -14,6 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import LandingPage from './pages/LandingPage';
 import AddExpense from './pages/AddExpense';
 import AddIncome from './pages/AddIncome';
 import Expenses from './pages/Expenses';
@@ -25,6 +26,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route
@@ -34,7 +36,7 @@ function App() {
               <Navbar />
               <MobileBottomNav />
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/add" element={<AddExpense />} />
                 <Route path="/add-income" element={<AddIncome />} />
                 <Route path="/expenses" element={<Expenses />} />
