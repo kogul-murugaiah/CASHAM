@@ -72,7 +72,7 @@ const MobileBottomNav = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setMobileSheetOpen(false);
-    navigate("/login");
+    navigate("/");
   };
 
   return (

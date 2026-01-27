@@ -82,7 +82,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setDesktopDropdownOpen(false);
-    navigate("/login");
+    navigate("/");
   };
 
   return (
