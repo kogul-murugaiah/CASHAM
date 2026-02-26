@@ -78,6 +78,7 @@ const Dashboard = () => {
           // Handle unauthorized if necessary (ProtectedRoute usually catches this)
         } else {
           setError(err.message || "Failed to fetch data");
+          console.error("Dashboard fetch error:", err);
         }
       } finally {
         setLoading(false);
@@ -227,7 +228,8 @@ const Dashboard = () => {
           </div>
         ) : error ? (
           <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-6 text-red-300">
-            {error}
+            <p className="font-bold mb-1">Error Loading Data</p>
+            <p className="text-sm opacity-80">{error}</p>
           </div>
         ) : (
           <div className="space-y-8 animate-fade-in">

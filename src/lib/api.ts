@@ -21,13 +21,12 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
         try {
             const errorData = await response.json();
             errorMessage = errorData.error || errorData.message || errorMessage;
-
-            // Handle Supabase 401 error object structure just in case
-            if (errorData.message && !errorData.error) {
-                errorMessage = errorData.message;
-            }
         } catch (e) {
-            errorMessage = response.statusText;
+            errorMessage = `${response.status} ${response.statusText}`;
+            try {
+                const text = await response.text();
+                if (text && text.length < 100) errorMessage += `: ${text}`;
+            } catch (t) { }
         }
 
         // Redirect to login on 401 if it's not the /auth/user or /auth/login endpoint
