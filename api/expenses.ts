@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabase.js';
-import { getUserFromRequest } from '../_lib/auth.js';
+import { supabaseAdmin } from './_lib/supabase.js';
+import { getUserFromRequest } from './_lib/auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = await getUserFromRequest(req);
