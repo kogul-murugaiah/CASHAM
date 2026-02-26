@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../_lib/supabase';
-import { getUserFromRequest } from '../_lib/auth';
+import { supabaseAdmin } from '../_lib/supabase.js';
+import { getUserFromRequest } from '../_lib/auth.js';
 
 const MONTH_NAMES = [
     "January", "February", "March", "April", "May", "June",

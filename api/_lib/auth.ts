@@ -1,6 +1,5 @@
-import { VercelRequest } from '@vercel/node';
 import * as cookie from 'cookie';
-import { supabaseAuthClient } from './supabase';
+import { supabaseAuthClient } from './supabase.js';
 
 export async function getUserFromRequest(req: VercelRequest) {
     const cookies = cookie.parse(req.headers.cookie || '');
