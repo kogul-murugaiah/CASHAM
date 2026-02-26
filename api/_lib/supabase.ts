@@ -4,7 +4,12 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("Missing SUPABASE config. env:", {
+    if (process.env.NODE_ENV === 'production') {
+        console.error("CRITICAL: Missing SUPABASE config in production!");
+    } else {
+        console.warn("Missing SUPABASE config. Using placeholders for development.");
+    }
+    console.debug("Env status:", {
         VITE_SUPABASE_URL: !!process.env.VITE_SUPABASE_URL,
         SUPABASE_URL: !!process.env.SUPABASE_URL,
         SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY
