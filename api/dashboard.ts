@@ -109,36 +109,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             return res.status(200).json({ income: incomeData || [], expenses: expenseData || [] });
         } catch (error: any) {
-            return res.status(500).json({ error: error.message });
-        }
-    }
-
-    else if (req.method === 'POST') {
-        // Sync Carryover: delete current month's carryover
-        try {
-            const year = parseInt(req.body.year) || new Date().getFullYear();
-            const month = parseInt(req.body.month) || new Date().getMonth() + 1;
-            const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
-
-            const { data: source } = await supabaseAdmin
-                .from("income_sources")
-                .select("id")
-                .eq("user_id", user.id)
-                .eq("name", "Balance Carryover")
-                .single();
-
-            if (source) {
-                await supabaseAdmin
-                    .from("income")
-                    .delete()
-                    .eq("user_id", user.id)
-                    .eq("source_id", source.id)
-                    .eq("date", startDate);
-            }
-
-            return res.status(200).json({ success: true });
-        } catch (error: any) {
-            return res.status(500).json({ error: error.message });
+            console.error("Dashboard API Error:", error);
+            return res.status(500).json({
+                error: error.message || "Internal Server Error",
+                code: error.code,
+                details: error.details,
+                hint: error.hint,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
 
