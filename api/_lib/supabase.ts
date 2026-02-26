@@ -16,6 +16,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
     });
 }
 
+console.log("Supabase clients initialization start");
+
 // Admin client for database operations, bypassing RLS
 export const supabaseAdmin = createClient(
     supabaseUrl || 'https://placeholder.supabase.co',
@@ -29,6 +31,7 @@ export const supabaseAdmin = createClient(
 );
 
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+console.log("Supabase Anon Key length:", supabaseAnonKey?.length || 0);
 
 // Auth client for verifying JWT tokens
 export const supabaseAuthClient = createClient(
@@ -41,3 +44,4 @@ export const supabaseAuthClient = createClient(
         }
     }
 );
+console.log("Supabase clients initialized");

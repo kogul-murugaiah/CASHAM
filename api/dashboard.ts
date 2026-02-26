@@ -8,7 +8,10 @@ const MONTH_NAMES = [
 ];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    console.log("Dashboard fetch request triggered");
     const user = await getUserFromRequest(req);
+    console.log("User auth result:", user ? "Authenticated" : "Unauthorized");
+
     if (!user) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
