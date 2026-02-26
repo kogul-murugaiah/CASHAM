@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
             const { startDate, endDate } = req.query;
             let query = supabaseAdmin
-                .from('incomes')
+                .from('income')
                 .select(`
           id,
           amount,
@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
             const { amount, date, source, description, source_id, account_type } = req.body;
             const { data, error } = await supabaseAdmin
-                .from('incomes')
+                .from('income')
                 .insert([{
                     user_id: user.id,
                     amount,
@@ -77,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!id) return res.status(400).json({ error: 'Missing income id' });
 
             const { data, error } = await supabaseAdmin
-                .from('incomes')
+                .from('income')
                 .update({
                     amount,
                     date,
@@ -104,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!id) return res.status(400).json({ error: 'Missing income id' });
 
             const { error } = await supabaseAdmin
-                .from('incomes')
+                .from('income')
                 .delete()
                 .eq('id', id)
                 .eq('user_id', user.id);
