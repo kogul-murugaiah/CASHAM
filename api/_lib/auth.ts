@@ -1,3 +1,4 @@
+import { VercelRequest } from '@vercel/node';
 import * as cookie from 'cookie';
 import { supabaseAuthClient } from './supabase.js';
 

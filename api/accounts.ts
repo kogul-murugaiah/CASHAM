@@ -62,7 +62,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (error) throw error;
             return res.status(200).json({ success: true });
         } catch (error: any) {
-            return res.status(500).json({ error: error.message });
+            console.error("Accounts API Error:", error);
+            return res.status(500).json({
+                error: error.message || "Internal Server Error",
+                code: error.code
+            });
         }
     }
 

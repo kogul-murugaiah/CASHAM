@@ -228,8 +228,22 @@ const Dashboard = () => {
           </div>
         ) : error ? (
           <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-6 text-red-300">
-            <p className="font-bold mb-1">Error Loading Data</p>
-            <p className="text-sm opacity-80">{error}</p>
+            <p className="font-bold mb-1 font-heading text-lg">System Error</p>
+            <div className="bg-black/20 p-4 rounded-xl space-y-2 mt-4 border border-red-500/10">
+              <p className="text-sm">Message: <span className="text-white font-medium">{error}</span></p>
+              {loading === false && (
+                <div className="text-[10px] text-slate-500 mt-2 uppercase tracking-widest flex flex-col gap-1">
+                  <p>Check console for technical details</p>
+                  <p>Verify SUPABASE_SERVICE_ROLE_KEY on Vercel</p>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+            >
+              Retry Connection
+            </button>
           </div>
         ) : (
           <div className="space-y-8 animate-fade-in">
