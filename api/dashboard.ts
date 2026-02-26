@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // 2. Fetch current month data
             let { data: incomeData, error: incomeError } = await supabaseAdmin
-                .from("incomes")
+                .from("income")
                 .select("id, amount, date, account_type, source_id")
                 .eq("user_id", user.id)
                 .gte("date", startDate)
@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const prevYear = month === 1 ? year - 1 : year;
                 const prevStart = `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`;
 
-                const { data: prevInc } = await supabaseAdmin.from("incomes").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", startDate);
+                const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", startDate);
                 const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", startDate);
 
                 const carries: any[] = [];
@@ -95,10 +95,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 });
 
                 if (carries.length > 0) {
-                    await supabaseAdmin.from("incomes").insert(carries);
+                    await supabaseAdmin.from("income").insert(carries);
                     // Re-fetch current month income
                     const { data: newIncome } = await supabaseAdmin
-                        .from("incomes")
+                        .from("income")
                         .select("id, amount, date, account_type, source_id")
                         .eq("user_id", user.id)
                         .gte("date", startDate)
@@ -129,7 +129,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (source) {
                 await supabaseAdmin
-                    .from("incomes")
+                    .from("income")
                     .delete()
                     .eq("user_id", user.id)
                     .eq("source_id", source.id)
