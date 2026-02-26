@@ -423,6 +423,7 @@ const IncomeTracking = () => {
                                                     <th className="px-6 py-4">Date</th>
                                                     <th className="px-6 py-4">Source</th>
                                                     <th className="px-6 py-4">Account</th>
+                                                    <th className="px-6 py-4">Description</th>
                                                     <th className="px-6 py-4 text-right">Amount</th>
                                                     <th className="px-6 py-4 text-center">Actions</th>
                                                 </tr>
@@ -433,6 +434,9 @@ const IncomeTracking = () => {
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{new Date(rec.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{rec.income_sources?.name || "Unknown"}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-[10px] text-slate-500 uppercase tracking-tight">{rec.account_type}</td>
+                                                        <td className="px-6 py-4 text-sm text-slate-400 max-w-[200px] truncate" title={rec.description || ""}>
+                                                            {rec.description || "-"}
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-emerald-400 font-mono">{currencyFormatter.format(rec.amount)}</td>
                                                         <td className="px-6 py-4 text-center">
                                                             <div className="flex items-center justify-center gap-2 transition-all">

@@ -443,6 +443,7 @@ const ExpenseTracking = () => {
                                                     <th className="px-6 py-4">Item</th>
                                                     <th className="px-6 py-4">Category</th>
                                                     <th className="px-6 py-4">Account</th>
+                                                    <th className="px-6 py-4">Description</th>
                                                     <th className="px-6 py-4 text-right">Amount</th>
                                                     <th className="px-6 py-4 text-center">Actions</th>
                                                 </tr>
@@ -458,6 +459,9 @@ const ExpenseTracking = () => {
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 uppercase tracking-tighter">{exp.account_type}</td>
+                                                        <td className="px-6 py-4 text-sm text-slate-400 max-w-[150px] truncate" title={exp.description || ""}>
+                                                            {exp.description || "-"}
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-white font-mono">{currencyFormatter.format(exp.amount)}</td>
                                                         <td className="px-6 py-4 text-center">
                                                             <div className="flex items-center justify-center gap-2 transition-all">

@@ -271,6 +271,7 @@ const AddExpense = () => {
                       <th className="px-6 py-4">Date</th>
                       <th className="px-6 py-4">Item</th>
                       <th className="px-6 py-4">Category</th>
+                      <th className="px-6 py-4">Description</th>
                       <th className="px-6 py-4 text-right">Amount</th>
                     </tr>
                   </thead>
@@ -291,6 +292,9 @@ const AddExpense = () => {
                           ) : (
                             <span className="text-slate-600">-</span>
                           )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 truncate max-w-[150px]" title={expense.description || ""}>
+                          {expense.description || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm font-bold text-right text-red-400 font-mono">
                           -₹{expense.amount.toFixed(2)}
