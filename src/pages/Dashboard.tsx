@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 // import Footer from "../components/Footer"; // Footer is in App layout now? No, App.tsx has MobileBottomNav but Footer is likely for Landing Page. Keeping it out of Dashboard for clean look? Or keep it?
 // Let's keep Footer for now if it was there, but typically Dashboard doesn't have a big footer. 
 // Actually, let's remove Footer from Dashboard to keep it "App-like".
@@ -63,99 +63,22 @@ const Dashboard = () => {
       setError(null);
 
       try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+        const userData = await api.get('/api/auth/user');
+        if (!userData?.user) throw new Error("User not authenticated");
 
-        if (userError) throw userError;
-        if (!user) throw new Error("User not authenticated");
+        setUserEmail(userData.user.email ?? null);
 
-        setUserEmail(user.email ?? null);
+        const data = await api.get(`/api/dashboard?year=${currentYear}&month=${currentMonth}`);
 
-        const startDate = `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`;
-        const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-        const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-        const endDate = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
-
-        // Fetch income sources to find/create "Balance Carryover"
-        let { data: sources } = await supabase
-          .from("income_sources")
-          .select("id, name")
-          .eq("user_id", user.id)
-          .eq("name", "Balance Carryover")
-          .single();
-
-        if (!sources) {
-          const { data: newSource, error: createError } = await supabase
-            .from("income_sources")
-            .insert({ name: "Balance Carryover", user_id: user.id })
-            .select()
-            .single();
-          if (!createError) sources = newSource;
-        }
-
-        const { data: incomeData, error: incomeError } = await supabase
-          .from("income")
-          .select("id, amount, date, account_type, source_id")
-          .eq("user_id", user.id)
-          .gte("date", startDate)
-          .lt("date", endDate);
-
-        if (incomeError) throw incomeError;
-
-        const { data: expenseData, error: expenseError } = await supabase
-          .from("expenses")
-          .select("id, amount, date, account_type")
-          .eq("user_id", user.id)
-          .gte("date", startDate)
-          .lt("date", endDate);
-
-        if (expenseError) throw expenseError;
-
-        setIncome(incomeData || []);
-        setExpenses(expenseData || []);
-
-        // Carryover Logic: If looking at a month and no carryover exists, check previous month
-        const hasCarryover = (incomeData || []).some(inc => inc.source_id === sources?.id);
-
-        if (!hasCarryover && sources) {
-          const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-          const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-          const prevStart = `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`;
-          const prevEnd = startDate;
-
-          const { data: prevInc } = await supabase.from("income").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", prevEnd);
-          const { data: prevExp } = await supabase.from("expenses").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", prevEnd);
-
-          const carries: any[] = [];
-          accountTypes.forEach(acc => {
-            const bal = (prevInc || []).filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0) -
-              (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
-            if (bal > 0) {
-              carries.push({
-                user_id: user.id,
-                amount: bal,
-                date: startDate,
-                account_type: acc,
-                source_id: sources.id,
-                description: `Auto-carryover from ${MONTH_NAMES[prevMonth - 1]} ${prevYear}`
-              });
-            }
-          });
-
-          if (carries.length > 0) {
-            const { error: insertError } = await supabase.from("income").insert(carries);
-            if (!insertError) {
-              // Re-fetch current month data
-              const { data: newIncome } = await supabase.from("income").select("id, amount, date, account_type, source_id").eq("user_id", user.id).gte("date", startDate).lt("date", endDate);
-              setIncome(newIncome || []);
-            }
-          }
-        }
+        setIncome(data.income || []);
+        setExpenses(data.expenses || []);
 
       } catch (err: any) {
-        setError(err.message || "Failed to fetch data");
+        if (err.status === 401) {
+          // Handle unauthorized if necessary (ProtectedRoute usually catches this)
+        } else {
+          setError(err.message || "Failed to fetch data");
+        }
       } finally {
         setLoading(false);
       }
@@ -225,20 +148,7 @@ const Dashboard = () => {
   const handleSyncCarryover = async () => {
     setSyncing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: source } = await supabase.from("income_sources").select("id").eq("user_id", user.id).eq("name", "Balance Carryover").single();
-      if (!source) return;
-
-      const startDate = `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`;
-
-      // Remove existing carryover for this month
-      await supabase.from("income").delete().eq("user_id", user.id).eq("source_id", source.id).eq("date", startDate);
-
-      // Trigger re-fetch which will re-apply carryover
-      setCurrentMonth(prev => prev); // dummy state update to trigger useEffect? better to just call a fetch function
-      // Actually, let's just reload
+      await api.post('/api/dashboard', { year: currentYear, month: currentMonth });
       window.location.reload();
     } catch (e) {
       console.error(e);

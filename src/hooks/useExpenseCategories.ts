@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import type { User } from '@supabase/supabase-js';
+import { api } from '../lib/api';
 
 export interface Category {
   id: number;
@@ -12,56 +11,38 @@ export interface Category {
 
 export const useExpenseCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-
-  // Get current user
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    
-    getCurrentUser();
-  }, []);
 
   // Fetch user-specific categories with retry logic
   const fetchCategories = async (retryCount = 0) => {
-    if (!user) return;
-
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch user-specific categories
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('name');
-
-      if (error) throw error;
+      const data = await api.get('/api/categories');
 
       const types = data || [];
-      
+
       if (types.length === 0 && retryCount < 6) {
         // If no categories exist yet, retry after 500ms
         setTimeout(() => fetchCategories(retryCount + 1), 500);
         return;
       }
-      
+
       setCategories(types);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch categories');
+      if (err.status === 401) {
+        resetToDefaults();
+      } else {
+        setError(err.message || 'Failed to fetch categories');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const addCategory = async (name: string) => {
-    if (!user) throw new Error('User not authenticated');
-    
     const trimmedName = name.trim();
     if (!trimmedName) {
       throw new Error('Category name cannot be empty');
@@ -79,18 +60,7 @@ export const useExpenseCategories = () => {
     }
 
     try {
-      // Insert new category for current user
-      const { data, error } = await supabase
-        .from('categories')
-        .insert({
-          name: trimmedName,
-          user_id: user.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      const data = await api.post('/api/categories', { name: trimmedName });
       setCategories(prev => [...prev, data]);
       return data;
     } catch (err: any) {
@@ -102,29 +72,11 @@ export const useExpenseCategories = () => {
   const resetToDefaults = () => {
     setCategories([]);
     setError(null);
-    setUser(null);
   };
 
-  // Fetch on mount and auth change
+  // Fetch on mount
   useEffect(() => {
-    if (user) {
-      fetchCategories();
-    }
-  }, [user]);
-
-  // Listen for auth changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        resetToDefaults();
-      }
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
+    fetchCategories();
   }, []);
 
   return {

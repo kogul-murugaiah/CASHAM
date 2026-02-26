@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
-import type { User } from "@supabase/supabase-js";
+import { api } from "../lib/api";
 import Logo from "./Logo";
 
 const desktopLinks = [
@@ -12,7 +11,6 @@ const desktopLinks = [
   { to: "/income-tracking", label: "Income Tracker" },
 ];
 
-// Helper function to get user initials from email
 const getInitials = (email: string): string => {
   const parts = email.split("@")[0];
   if (parts.length >= 2) {
@@ -21,7 +19,6 @@ const getInitials = (email: string): string => {
   return parts.substring(0, 1).toUpperCase();
 };
 
-// Helper function to truncate email
 const truncateEmail = (email: string, maxLength: number = 20): string => {
   if (email.length <= maxLength) return email;
   return email.substring(0, maxLength - 3) + "...";
@@ -29,35 +26,28 @@ const truncateEmail = (email: string, maxLength: number = 20): string => {
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [desktopDropdownOpen, setDesktopDropdownOpen] = useState(false);
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user on mount and listen for auth changes
   useEffect(() => {
     const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
+      try {
+        const data = await api.get('/api/auth/user');
+        setUser(data?.user || null);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    // We can't listen to auth changes easily without polling or broadcasting, 
+    // but a page refresh or navigation usually handles this in MPA/SPA hybrids.
   }, []);
 
-  // Close desktop dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -78,8 +68,13 @@ const Navbar = () => {
   }, [desktopDropdownOpen]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await api.post('/api/auth/logout');
+    } catch {
+      // Ignore
+    }
     setDesktopDropdownOpen(false);
+    setUser(null);
     navigate("/");
   };
 

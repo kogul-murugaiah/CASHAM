@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import * as XLSX from 'xlsx';
 import {
@@ -88,15 +88,8 @@ const ExpenseTracking = () => {
         setError(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
             // Fetch categories
-            const { data: categoriesData } = await supabase
-                .from("categories")
-                .select("*")
-                .eq("user_id", user.id)
-                .order("name");
+            const categoriesData = await api.get('/api/categories');
             setCategories(categoriesData || []);
 
             let startDate, endDate;
@@ -113,27 +106,7 @@ const ExpenseTracking = () => {
                 endDate = `${year + 1}-01-01`;
             }
 
-            const { data, error } = await supabase
-                .from("expenses")
-                .select(`
-          id,
-          amount,
-          date,
-          item,
-          description,
-          category_id,
-          account_type,
-          categories (
-            id,
-            name
-          )
-        `)
-                .eq("user_id", user.id)
-                .gte("date", startDate)
-                .lt("date", endDate)
-                .order("date", { ascending: false });
-
-            if (error) throw error;
+            const data = await api.get(`/api/expenses?startDate=${startDate}&endDate=${endDate}`);
 
             const typedData = (data || []).map((exp: any) => ({
                 ...exp,
@@ -144,7 +117,9 @@ const ExpenseTracking = () => {
 
             setExpenses(typedData);
         } catch (err: any) {
-            setError(err.message || "Failed to fetch expenses");
+            if (err.status !== 401) {
+                setError(err.message || "Failed to fetch expenses");
+            }
         } finally {
             setLoading(false);
         }
@@ -183,15 +158,7 @@ const ExpenseTracking = () => {
 
         try {
             setError(null);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
-            const { error } = await supabase
-                .from("expenses")
-                .delete()
-                .eq("id", id)
-                .eq("user_id", user.id);
-            if (error) throw error;
+            await api.delete(`/api/expenses?id=${id}`);
             setSuccess("Expense deleted successfully");
             setExpenses(prev => prev.filter(e => e.id !== id));
             setTimeout(() => setSuccess(null), 3000);
@@ -212,23 +179,15 @@ const ExpenseTracking = () => {
         setError(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
-            const { error } = await supabase
-                .from("expenses")
-                .update({
-                    date: editingData.date,
-                    item: editingData.item.trim(),
-                    description: editingData.description.trim() || null,
-                    amount: Number(editingData.amount),
-                    account_type: editingData.account_type,
-                    category_id: editingData.category_id ? Number(editingData.category_id) : null,
-                })
-                .eq("id", editingId)
-                .eq("user_id", user.id);
-
-            if (error) throw error;
+            await api.put('/api/expenses', {
+                id: editingId,
+                date: editingData.date,
+                item: editingData.item.trim(),
+                description: editingData.description.trim() || null,
+                amount: Number(editingData.amount),
+                account_type: editingData.account_type,
+                category_id: editingData.category_id ? Number(editingData.category_id) : null,
+            });
 
             setSuccess("Expense updated successfully");
             setIsModalOpen(false);

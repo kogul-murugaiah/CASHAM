@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import * as XLSX from 'xlsx';
 import {
@@ -81,15 +81,8 @@ const IncomeTracking = () => {
         setError(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
             // Fetch sources
-            const { data: sourcesData } = await supabase
-                .from("income_sources")
-                .select("*")
-                .eq("user_id", user.id)
-                .order("name");
+            const sourcesData = await api.get('/api/sources');
             setSources(sourcesData || []);
 
             let startDate, endDate;
@@ -106,26 +99,7 @@ const IncomeTracking = () => {
                 endDate = `${year + 1}-01-01`;
             }
 
-            const { data, error } = await supabase
-                .from("income")
-                .select(`
-          id,
-          source_id,
-          amount,
-          date,
-          account_type,
-          description,
-          income_sources (
-            id,
-            name
-          )
-        `)
-                .eq("user_id", user.id)
-                .gte("date", startDate)
-                .lt("date", endDate)
-                .order("date", { ascending: false });
-
-            if (error) throw error;
+            const data = await api.get(`/api/incomes?startDate=${startDate}&endDate=${endDate}`);
 
             const typedData = (data || []).map((rec: any) => ({
                 ...rec,
@@ -136,7 +110,9 @@ const IncomeTracking = () => {
 
             setRecords(typedData);
         } catch (err: any) {
-            setError(err.message || "Failed to fetch records");
+            if (err.status !== 401) {
+                setError(err.message || "Failed to fetch records");
+            }
         } finally {
             setLoading(false);
         }
@@ -174,15 +150,7 @@ const IncomeTracking = () => {
 
         try {
             setError(null);
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
-            const { error } = await supabase
-                .from("income")
-                .delete()
-                .eq("id", id)
-                .eq("user_id", user.id);
-            if (error) throw error;
+            await api.delete(`/api/incomes?id=${id}`);
             setSuccess("Income record deleted");
             setRecords(prev => prev.filter(r => r.id !== id));
             setTimeout(() => setSuccess(null), 3000);
@@ -203,22 +171,14 @@ const IncomeTracking = () => {
         setError(null);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
-
-            const { error } = await supabase
-                .from("income")
-                .update({
-                    date: editingData.date,
-                    source_id: Number(editingData.source_id),
-                    description: editingData.description.trim() || null,
-                    amount: Number(editingData.amount),
-                    account_type: editingData.account_type,
-                })
-                .eq("id", editingId)
-                .eq("user_id", user.id);
-
-            if (error) throw error;
+            await api.put('/api/incomes', {
+                id: editingId,
+                date: editingData.date,
+                source_id: Number(editingData.source_id),
+                description: editingData.description.trim() || null,
+                amount: Number(editingData.amount),
+                account_type: editingData.account_type,
+            });
 
             setSuccess("Income updated successfully");
             setIsModalOpen(false);

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import { useIncomeSources } from "../hooks/useIncomeSources";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
@@ -76,27 +76,14 @@ const AddIncome = () => {
         return;
       }
 
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("You must be logged in to add income");
-      }
-
-      // Insert income with user_id
-      const { error } = await supabase.from("income").insert({
+      await api.post('/api/incomes', {
         amount: Number(form.amount),
         date: form.date,
         source: sources.find(s => s.id === form.source)?.name || "Unknown",
         source_id: form.source,
         account_type: form.accountType,
         description: form.description.trim() || null,
-        user_id: user.id,
       });
-
-      if (error) throw error;
 
       setSuccess("Income added successfully");
       setForm({

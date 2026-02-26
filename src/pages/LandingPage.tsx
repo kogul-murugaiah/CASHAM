@@ -1,16 +1,20 @@
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { api } from '../lib/api';
 
 const LandingPage = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                setIsAuthenticated(true);
+            try {
+                const data = await api.get('/api/auth/user');
+                if (data?.user) {
+                    setIsAuthenticated(true);
+                }
+            } catch (err) {
+                // Not authenticated
             }
         };
         checkAuth();

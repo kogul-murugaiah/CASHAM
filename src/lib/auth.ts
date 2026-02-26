@@ -1,20 +1,16 @@
-import { supabase } from "./supabaseClient";
+import { api } from "./api";
 
 /**
  * Get the current authenticated user
  * @returns User object or null if not authenticated
  */
 export const getCurrentUser = async () => {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
+  try {
+    const data = await api.get('/api/auth/user');
+    return data?.user || null;
+  } catch (error) {
     return null;
   }
-
-  return user;
 };
 
 /**

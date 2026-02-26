@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import type { User } from '@supabase/supabase-js';
+import { api } from '../lib/api';
 
 export interface IncomeSource {
   id: string;
@@ -11,56 +10,38 @@ export interface IncomeSource {
 
 export const useIncomeSources = () => {
   const [sources, setSources] = useState<IncomeSource[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-
-  // Get current user
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    
-    getCurrentUser();
-  }, []);
 
   // Fetch user-specific income sources with retry logic
   const fetchSources = async (retryCount = 0) => {
-    if (!user) return;
-
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch user-specific income sources
-      const { data, error } = await supabase
-        .from('income_sources')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('name');
-
-      if (error) throw error;
+      const data = await api.get('/api/sources');
 
       const types = data || [];
-      
+
       if (types.length === 0 && retryCount < 6) {
         // If no sources exist yet, retry after 500ms
         setTimeout(() => fetchSources(retryCount + 1), 500);
         return;
       }
-      
+
       setSources(types);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch income sources');
+      if (err.status === 401) {
+        resetToDefaults();
+      } else {
+        setError(err.message || 'Failed to fetch income sources');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const addSource = async (name: string) => {
-    if (!user) throw new Error('User not authenticated');
-    
     const trimmedName = name.trim();
     if (!trimmedName) {
       throw new Error('Source name cannot be empty');
@@ -78,18 +59,7 @@ export const useIncomeSources = () => {
     }
 
     try {
-      // Insert new income source for current user
-      const { data, error } = await supabase
-        .from('income_sources')
-        .insert({
-          name: trimmedName,
-          user_id: user.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      const data = await api.post('/api/sources', { name: trimmedName });
       setSources(prev => [...prev, data]);
       return data;
     } catch (err: any) {
@@ -101,29 +71,11 @@ export const useIncomeSources = () => {
   const resetToDefaults = () => {
     setSources([]);
     setError(null);
-    setUser(null);
   };
 
-  // Fetch on mount and auth change
+  // Fetch on mount
   useEffect(() => {
-    if (user) {
-      fetchSources();
-    }
-  }, [user]);
-
-  // Listen for auth changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        resetToDefaults();
-      }
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
+    fetchSources();
   }, []);
 
   return {

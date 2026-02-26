@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import Logo from "../components/Logo";
 
 const Login = () => {
@@ -14,11 +14,13 @@ const Login = () => {
   // Redirect if already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        navigate("/dashboard", { replace: true });
+      try {
+        const data = await api.get('/api/auth/user');
+        if (data?.user) {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (err) {
+        // Not authenticated
       }
     };
     checkAuth();
@@ -30,12 +32,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
+      await api.post('/api/auth/login', { email, password });
 
       navigate("/dashboard");
     } catch (err: any) {

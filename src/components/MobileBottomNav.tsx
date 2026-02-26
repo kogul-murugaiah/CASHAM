@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
-import type { User } from "@supabase/supabase-js";
+import { api } from "../lib/api";
 import Logo from "./Logo";
 import {
   FiHome,
@@ -19,7 +18,7 @@ import {
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hubOpen, setHubOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -28,17 +27,16 @@ const MobileBottomNav = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
+      try {
+        const data = await api.get('/api/auth/user');
+        setUser(data?.user || null);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   // Close hub/profile on route change
@@ -62,7 +60,12 @@ const MobileBottomNav = () => {
   }, [hubOpen, profileOpen]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await api.post('/api/auth/logout');
+    } catch {
+      // Ignore error
+    }
+    setUser(null);
     navigate("/");
   };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import Logo from "../components/Logo";
 
 const Signup = () => {
@@ -17,11 +17,13 @@ const Signup = () => {
   // Redirect if already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        navigate("/dashboard", { replace: true });
+      try {
+        const data = await api.get('/api/auth/user');
+        if (data?.user) {
+          navigate("/dashboard", { replace: true });
+        }
+      } catch (err) {
+        // Not authenticated
       }
     };
     checkAuth();
@@ -46,16 +48,13 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      // Show success message instead of redirecting
-      setSuccess("Account created successfully! Please check your email and click the verification link to activate your account.");
-
+      const data = await api.post('/api/auth/signup', { email, password });
+      if (data.message && data.message.includes('verification')) {
+        setSuccess("Account created successfully! Please check your email and click the verification link to activate your account.");
+      } else {
+        // Attempt to log them in automatically or navigate
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to create account");
     } finally {

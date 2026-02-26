@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
@@ -34,28 +34,8 @@ const AddExpense = () => {
   // Fetch recent expenses
   const fetchRecentExpenses = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("expenses")
-        .select(`
-          id,
-          created_at,
-          date,
-          item,
-          amount,
-          categories (
-            id,
-            name
-          )
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-      setRecentExpenses(data || []);
+      const data = await api.get('/api/expenses');
+      setRecentExpenses(data?.slice(0, 5) || []);
     } catch (err: any) {
       console.error("Error fetching recent expenses:", err);
     }
@@ -98,27 +78,14 @@ const AddExpense = () => {
     setLoading(true);
 
     try {
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("You must be logged in to add expenses");
-      }
-
-      // Insert expense with user_id
-      const { error } = await supabase.from("expenses").insert({
+      await api.post('/api/expenses', {
         amount: Number(form.amount),
         date: form.date,
         item: form.item || null,
         description: form.description || null,
         category_id: form.category_id,
         account_type: form.accountType,
-        user_id: user.id,
       });
-
-      if (error) throw error;
 
       setSuccess("Expense added successfully");
       setForm({
