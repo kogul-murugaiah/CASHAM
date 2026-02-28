@@ -96,14 +96,23 @@ const MobileBottomNav = () => {
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <button
           onClick={() => setHubOpen(!hubOpen)}
-          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl shadow-blue-500/30 transition-all duration-300 ${hubOpen
-              ? "bg-slate-700 rotate-45 scale-95"
-              : "bg-gradient-to-br from-blue-500 to-indigo-600 hover:scale-110 active:scale-95"
+          className={`relative flex items-center gap-2.5 px-6 py-3.5 rounded-full font-bold text-white text-sm font-heading transition-all duration-300 shadow-2xl ${hubOpen
+              ? "bg-slate-700 shadow-slate-900/50 scale-95"
+              : "bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 shadow-blue-500/40 hover:shadow-blue-500/60 hover:scale-105 active:scale-95"
             }`}
         >
-          <FiPlus size={26} className="text-white" strokeWidth={2.5} />
+          {!hubOpen && (
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-30 blur-md animate-pulse pointer-events-none" />
+          )}
+          <FiPlus
+            size={20}
+            strokeWidth={2.5}
+            className={`transition-transform duration-300 ${hubOpen ? "rotate-45" : ""}`}
+          />
+          <span>{hubOpen ? "Close" : "Add"}</span>
         </button>
       </div>
+
     </>
   );
 };

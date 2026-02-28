@@ -170,17 +170,16 @@ const Sidebar = () => {
             </aside>
 
             {/* ── MOBILE TOP BAR ──────────────────────────────────────────────── */}
-            <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-5 py-4 bg-slate-950/80 backdrop-blur-2xl border-b border-white/5">
-                <div className="flex items-center gap-3">
-                    <Logo size="sm" />
-                    <span className="text-lg font-bold font-heading text-white">CASHAM</span>
-                </div>
+            <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3.5 bg-slate-950/80 backdrop-blur-2xl border-b border-white/5">
+                {/* Hamburger LEFT — drawer opens from left, so button is on left */}
                 <button
                     onClick={() => setMobileOpen(true)}
-                    className="p-2 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white active:bg-white/10 transition-all"
+                    className="p-2 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white active:bg-white/10 transition-all flex-shrink-0"
                 >
                     <FiMenu size={20} />
                 </button>
+                <Logo size="sm" className="flex-shrink-0" />
+                <span className="text-lg font-bold font-heading text-white">CASHAM</span>
             </header>
 
             {/* ── MOBILE DRAWER OVERLAY ───────────────────────────────────────── */}
