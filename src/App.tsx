@@ -8,7 +8,7 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import MobileBottomNav from './components/MobileBottomNav';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -45,20 +45,26 @@ function App() {
               path="/*"
               element={
                 <ProtectedRoute>
-                  <Navbar />
-                  <div className="flex-1 pt-[72px] md:pt-0">
-                    <Routes>
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/add" element={<AddExpense />} />
-                      <Route path="/add-income" element={<AddIncome />} />
-                      <Route path="/expense-tracking" element={<ExpenseTracking />} />
-                      <Route path="/income-tracking" element={<IncomeTracking />} />
-                      <Route path="/add-investment" element={<AddInvestment />} />
-                      <Route path="/investment-tracking" element={<InvestmentTracking />} />
-                    </Routes>
+                  {/* Sidebar (desktop fixed left + mobile drawer) */}
+                  <Sidebar />
+
+                  {/* Main content — offset by sidebar width on desktop, top bar on mobile */}
+                  <div className="flex-1 md:ml-[240px] pt-[64px] md:pt-0 min-h-screen flex flex-col transition-all duration-300">
+                    <div className="flex-1">
+                      <Routes>
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/add" element={<AddExpense />} />
+                        <Route path="/add-income" element={<AddIncome />} />
+                        <Route path="/expense-tracking" element={<ExpenseTracking />} />
+                        <Route path="/income-tracking" element={<IncomeTracking />} />
+                        <Route path="/add-investment" element={<AddInvestment />} />
+                        <Route path="/investment-tracking" element={<InvestmentTracking />} />
+                      </Routes>
+                    </div>
+                    <Footer />
+                    {/* Mobile: only the FAB quick-entry button */}
+                    <MobileBottomNav />
                   </div>
-                  <Footer />
-                  <MobileBottomNav />
                 </ProtectedRoute>
               }
             />
@@ -70,3 +76,4 @@ function App() {
 }
 
 export default App;
+
