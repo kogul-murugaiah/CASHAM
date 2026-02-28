@@ -12,8 +12,8 @@ import {
   FiTrendingUp,
   FiTrendingDown,
   FiChevronDown,
-  FiUser
 } from "react-icons/fi";
+
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
@@ -225,16 +225,17 @@ const MobileBottomNav = () => {
             )}
           </NavLink>
 
-          {/* Profile Link (Replacing Dummy) */}
-          <button
-            onClick={() => setProfileOpen(true)}
-            className={`flex-1 flex flex-col items-center gap-1.5 transition-all duration-300 ${profileOpen ? 'text-indigo-400 scale-110' : 'text-slate-500 hover:text-slate-300'}`}
-          >
-            <div className={`p-2 rounded-2xl transition-all ${profileOpen ? 'bg-indigo-500/15 shadow-inner' : ''}`}>
-              <FiUser size={22} strokeWidth={profileOpen ? 2.5 : 2} />
-            </div>
-            <span className={`text-[10px] font-bold uppercase tracking-widest font-heading transition-all ${profileOpen ? 'opacity-100' : 'opacity-60'}`}>More</span>
-          </button>
+          {/* Investments */}
+          <NavLink to="/investment-tracking" className="flex-1 group">
+            {({ isActive }) => (
+              <div className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive ? 'text-amber-400 scale-110' : 'text-slate-500 group-hover:text-slate-300'}`}>
+                <div className={`p-2 rounded-2xl transition-all ${isActive ? 'bg-amber-500/15 shadow-inner' : ''}`}>
+                  <FiTrendingUp size={22} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+                <span className={`text-[10px] font-bold uppercase tracking-widest font-heading transition-all ${isActive ? 'opacity-100' : 'opacity-60'}`}>Invest</span>
+              </div>
+            )}
+          </NavLink>
 
         </div>
       </nav>
