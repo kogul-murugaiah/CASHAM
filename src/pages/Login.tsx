@@ -6,6 +6,7 @@ import Logo from "../components/Logo";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +14,14 @@ const Login = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
+    // Load remembered email
+    const remembered = localStorage.getItem("casham_remember_me") === "true";
+    const savedEmail = localStorage.getItem("casham_saved_email") || "";
+    if (remembered && savedEmail) {
+      setRememberMe(true);
+      setEmail(savedEmail);
+    }
+
     const checkAuth = async () => {
       try {
         const data = await api.get('/api/auth/user');
@@ -31,9 +40,17 @@ const Login = () => {
     setError("");
     setLoading(true);
 
+    // Save or clear remembered email
+    if (rememberMe) {
+      localStorage.setItem("casham_remember_me", "true");
+      localStorage.setItem("casham_saved_email", email);
+    } else {
+      localStorage.removeItem("casham_remember_me");
+      localStorage.removeItem("casham_saved_email");
+    }
+
     try {
       await api.post('/api/auth/login', { email, password });
-
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message || "Failed to log in");
@@ -86,6 +103,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
+                  autoComplete="username"
                   className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                   required
                   disabled={loading}
@@ -107,6 +125,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                     className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all pr-12"
                     required
                     disabled={loading}
@@ -155,6 +174,30 @@ const Login = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Remember Me */}
+              <label className="flex items-center gap-3 cursor-pointer group select-none">
+                <div className="relative flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    id="remember-me"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="sr-only peer"
+                    disabled={loading}
+                  />
+                  <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-slate-900/50 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
+                    {rememberMe && (
+                      <svg className="w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
+                  Remember my email
+                </span>
+              </label>
 
               {/* Error Message */}
               {error && (
