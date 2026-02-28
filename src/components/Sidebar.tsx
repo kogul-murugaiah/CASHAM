@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { api } from "../lib/api";
 import Logo from "./Logo";
+import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
+    FiSun, FiMoon,
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -35,8 +37,9 @@ const NAV_GROUPS = [
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [collapsed, setCollapsed] = useState(false); // desktop
-    const [mobileOpen, setMobileOpen] = useState(false); // mobile drawer
+    const { theme, toggleTheme } = useTheme();
+    const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
     const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -120,8 +123,26 @@ const Sidebar = () => {
                 ))}
             </nav>
 
-            {/* User + Logout */}
+            {/* Theme toggle + User + Logout */}
             <div className="border-t border-white/5 p-3 space-y-1">
+                {/* Theme toggle */}
+                <button
+                    onClick={toggleTheme}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-all border border-transparent hover:border-white/5 ${isCollapsed ? "justify-center" : ""}`}
+                    title={isCollapsed ? (theme === "dark" ? "Switch to Light" : "Switch to Dark") : undefined}
+                >
+                    {theme === "dark" ? (
+                        <FiSun size={16} strokeWidth={1.8} className="flex-shrink-0 text-amber-400" />
+                    ) : (
+                        <FiMoon size={16} strokeWidth={1.8} className="flex-shrink-0 text-indigo-400" />
+                    )}
+                    {!isCollapsed && (
+                        <span className="text-sm font-medium font-heading">
+                            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                        </span>
+                    )}
+                </button>
+
                 {user && (
                     <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/3 ${isCollapsed ? "justify-center" : ""}`}>
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">

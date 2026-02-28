@@ -8,6 +8,7 @@
  */
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
 import MobileBottomNav from './components/MobileBottomNav';
 import Footer from './components/Footer';
@@ -25,53 +26,55 @@ import InvestmentTracking from './pages/InvestmentTracking';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-100 font-sans">
-        {/* Ambient Background Mesh */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] animate-float"></div>
-          <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute bottom-[-10%] left-[20%] w-[35%] h-[35%] bg-purple-500/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '4s' }}></div>
-        </div>
+    <ThemeProvider>
+      <BrowserRouter>
+        <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-100 font-sans">
+          {/* Ambient Background Mesh */}
+          <div className="fixed inset-0 z-0 pointer-events-none">
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] animate-float"></div>
+            <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute bottom-[-10%] left-[20%] w-[35%] h-[35%] bg-purple-500/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '4s' }}></div>
+          </div>
 
-        {/* Content */}
-        <div className="relative z-10 w-full min-h-screen flex flex-col">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+          {/* Content */}
+          <div className="relative z-10 w-full min-h-screen flex flex-col">
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
 
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  {/* Sidebar (desktop fixed left + mobile drawer) */}
-                  <Sidebar />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    {/* Sidebar (desktop fixed left + mobile drawer) */}
+                    <Sidebar />
 
-                  {/* Main content — offset by sidebar width on desktop, top bar on mobile */}
-                  <div className="flex-1 md:ml-[240px] pt-[64px] md:pt-0 min-h-screen flex flex-col transition-all duration-300">
-                    <div className="flex-1">
-                      <Routes>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/add" element={<AddExpense />} />
-                        <Route path="/add-income" element={<AddIncome />} />
-                        <Route path="/expense-tracking" element={<ExpenseTracking />} />
-                        <Route path="/income-tracking" element={<IncomeTracking />} />
-                        <Route path="/add-investment" element={<AddInvestment />} />
-                        <Route path="/investment-tracking" element={<InvestmentTracking />} />
-                      </Routes>
+                    {/* Main content — offset by sidebar width on desktop, top bar on mobile */}
+                    <div className="flex-1 md:ml-[240px] pt-[64px] md:pt-0 min-h-screen flex flex-col transition-all duration-300">
+                      <div className="flex-1">
+                        <Routes>
+                          <Route path="/dashboard" element={<Dashboard />} />
+                          <Route path="/add" element={<AddExpense />} />
+                          <Route path="/add-income" element={<AddIncome />} />
+                          <Route path="/expense-tracking" element={<ExpenseTracking />} />
+                          <Route path="/income-tracking" element={<IncomeTracking />} />
+                          <Route path="/add-investment" element={<AddInvestment />} />
+                          <Route path="/investment-tracking" element={<InvestmentTracking />} />
+                        </Routes>
+                      </div>
+                      <Footer />
+                      {/* Mobile: only the FAB quick-entry button */}
+                      <MobileBottomNav />
                     </div>
-                    <Footer />
-                    {/* Mobile: only the FAB quick-entry button */}
-                    <MobileBottomNav />
-                  </div>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </div>
         </div>
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
