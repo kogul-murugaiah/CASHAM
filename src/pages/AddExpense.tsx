@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
-// import Footer from "../components/Footer"; // Removed Footer to match app-like layout
+
 
 const initialForm = {
   amount: "",

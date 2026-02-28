@@ -9,6 +9,7 @@ const desktopLinks = [
   { to: "/add-income", label: "Add Income" },
   { to: "/expense-tracking", label: "Expense Tracker" },
   { to: "/income-tracking", label: "Income Tracker" },
+  { to: "/investment-tracking", label: "Investments" },
 ];
 
 const getInitials = (email: string): string => {

@@ -78,11 +78,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                 const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", startDate);
                 const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", user.id).gte("date", prevStart).lt("date", startDate);
+                // Option B: investment 'buy' outflows reduce the carryover balance
+                const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", user.id).eq("action", "buy").gte("date", prevStart).lt("date", startDate);
 
                 const carries: any[] = [];
                 accountTypes.forEach(acc => {
                     const bal = (prevInc || []).filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0) -
-                        (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
+                        (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0) -
+                        (prevInv || []).filter(v => v.account_type === acc).reduce((s, v) => s + v.amount, 0);
                     if (bal > 0) {
                         carries.push({
                             user_id: user.id,

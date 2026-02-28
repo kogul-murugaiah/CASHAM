@@ -141,7 +141,7 @@ const MobileBottomNav = () => {
               <h3 className="text-2xl font-bold text-white font-heading">Quick Entry</h3>
               <button onClick={() => setHubOpen(false)} className="text-slate-400 p-1.5 bg-white/5 rounded-xl hover:text-white transition-colors"><FiX size={20} /></button>
             </div>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => navigate('/add')}
                 className="flex flex-col items-center gap-4 p-5 rounded-[2.5rem] bg-red-500/5 border border-red-500/10 active:bg-red-500/20 transition-all group"
@@ -159,6 +159,15 @@ const MobileBottomNav = () => {
                   <FiArrowDownLeft size={28} />
                 </div>
                 <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-widest font-heading">Income</span>
+              </button>
+              <button
+                onClick={() => navigate('/add-investment')}
+                className="flex flex-col items-center gap-4 p-5 rounded-[2.5rem] bg-amber-500/5 border border-amber-500/10 active:bg-amber-500/20 transition-all group"
+              >
+                <div className="w-14 h-14 rounded-3xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 transition-transform">
+                  <FiTrendingUp size={28} />
+                </div>
+                <span className="text-[11px] font-bold text-amber-300 uppercase tracking-widest font-heading">Invest</span>
               </button>
             </div>
           </div>

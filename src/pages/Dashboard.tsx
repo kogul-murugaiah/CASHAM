@@ -50,6 +50,7 @@ const Dashboard = () => {
   const { accountTypes } = useAccountTypes();
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [totalInvested, setTotalInvested] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -72,6 +73,17 @@ const Dashboard = () => {
 
         setIncome(data.income || []);
         setExpenses(data.expenses || []);
+
+        // Fetch investment totals for the selected month
+        try {
+          const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+          const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+          const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+          const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+          const invData = await api.get(`/api/investments?startDate=${startDate}&endDate=${endDate}`);
+          const bought = (invData || []).filter((i: any) => i.action === 'buy').reduce((s: number, i: any) => s + i.amount, 0);
+          setTotalInvested(bought);
+        } catch { setTotalInvested(0); }
 
       } catch (err: any) {
         if (err.status === 401) {
@@ -247,7 +259,7 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-8 animate-fade-in">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {/* Income */}
               <div className="glass-card p-6 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -290,6 +302,21 @@ const Dashboard = () => {
                 <div className={`mt-4 flex items-center text-xs w-fit px-2 py-1 rounded-lg ${monthlyBalance >= 0 ? "text-green-300 bg-green-500/10" : "text-orange-300 bg-orange-500/10"}`}>
                   <span className={`w-2 h-2 rounded-full mr-2 animate-pulse ${monthlyBalance >= 0 ? "bg-green-400" : "bg-orange-400"}`}></span>
                   {monthlyBalance >= 0 ? "Healthy" : "Deficit"}
+                </div>
+              </div>
+
+              {/* Total Invested */}
+              <div className="glass-card p-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <div className="w-24 h-24 rounded-full bg-amber-500 blur-2xl"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-400">Total Invested</p>
+                <div className="mt-2 text-3xl font-bold text-amber-400 font-heading">
+                  {currencyFormatter.format(totalInvested)}
+                </div>
+                <div className="mt-4 flex items-center text-xs text-amber-300 bg-amber-500/10 w-fit px-2 py-1 rounded-lg">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 mr-2 animate-pulse"></span>
+                  Portfolio
                 </div>
               </div>
             </div>

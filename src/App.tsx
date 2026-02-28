@@ -20,6 +20,8 @@ import AddExpense from './pages/AddExpense';
 import AddIncome from './pages/AddIncome';
 import ExpenseTracking from './pages/ExpenseTracking';
 import IncomeTracking from './pages/IncomeTracking';
+import AddInvestment from './pages/AddInvestment';
+import InvestmentTracking from './pages/InvestmentTracking';
 
 function App() {
   return (
@@ -51,6 +53,8 @@ function App() {
                       <Route path="/add-income" element={<AddIncome />} />
                       <Route path="/expense-tracking" element={<ExpenseTracking />} />
                       <Route path="/income-tracking" element={<IncomeTracking />} />
+                      <Route path="/add-investment" element={<AddInvestment />} />
+                      <Route path="/investment-tracking" element={<InvestmentTracking />} />
                     </Routes>
                   </div>
                   <Footer />
