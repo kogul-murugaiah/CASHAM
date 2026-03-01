@@ -29,8 +29,6 @@ const NAV_GROUPS = [
         items: [
             { to: "/add", icon: FiMinusCircle, label: "Add Expense" },
             { to: "/add-income", icon: FiPlusCircle, label: "Add Income" },
-            { to: "/add-asset", icon: FiTrendingUp, label: "Add Asset" },
-            { to: "/add-liability", icon: FiMinusCircle, label: "Add Liability" },
         ],
     },
     {
