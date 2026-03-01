@@ -25,8 +25,9 @@ const AddExpense = lazy(() => import('./pages/AddExpense'));
 const AddIncome = lazy(() => import('./pages/AddIncome'));
 const ExpenseTracking = lazy(() => import('./pages/ExpenseTracking'));
 const IncomeTracking = lazy(() => import('./pages/IncomeTracking'));
-const AddInvestment = lazy(() => import('./pages/AddInvestment'));
-const InvestmentTracking = lazy(() => import('./pages/InvestmentTracking'));
+const Assets = lazy(() => import('./pages/Assets'));
+const Liabilities = lazy(() => import('./pages/Liabilities'));
+const NetWorth = lazy(() => import('./pages/NetWorth'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -75,8 +76,9 @@ function App() {
                             <Route path="/add-income" element={<AddIncome />} />
                             <Route path="/expense-tracking" element={<ExpenseTracking />} />
                             <Route path="/income-tracking" element={<IncomeTracking />} />
-                            <Route path="/add-investment" element={<AddInvestment />} />
-                            <Route path="/investment-tracking" element={<InvestmentTracking />} />
+                            <Route path="/assets" element={<Assets />} />
+                            <Route path="/liabilities" element={<Liabilities />} />
+                            <Route path="/net-worth" element={<NetWorth />} />
                           </Routes>
                         </Suspense>
                       </div>

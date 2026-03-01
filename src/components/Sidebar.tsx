@@ -17,11 +17,18 @@ const NAV_GROUPS = [
         ],
     },
     {
+        label: "Wealth",
+        items: [
+            { to: "/assets", icon: FiTrendingUp, label: "Assets" },
+            { to: "/liabilities", icon: FiMinusCircle, label: "Liabilities" },
+            { to: "/net-worth", icon: FiBarChart2, label: "Net Worth" },
+        ],
+    },
+    {
         label: "Add Transaction",
         items: [
             { to: "/add", icon: FiMinusCircle, label: "Add Expense" },
             { to: "/add-income", icon: FiPlusCircle, label: "Add Income" },
-            { to: "/add-investment", icon: FiTrendingUp, label: "Add Investment" },
         ],
     },
     {
@@ -29,7 +36,6 @@ const NAV_GROUPS = [
         items: [
             { to: "/expense-tracking", icon: FiList, label: "Expense Tracker" },
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
-            { to: "/investment-tracking", icon: FiBarChart2, label: "Investments" },
         ],
     },
 ];
