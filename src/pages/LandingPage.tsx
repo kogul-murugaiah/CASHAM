@@ -66,49 +66,169 @@ const LandingPage = () => {
             </nav>
 
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 overflow-hidden">
+            <section className="relative pt-40 pb-32 md:pt-48 md:pb-40 overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900 pointer-events-none"></div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
 
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 border border-blue-500/20 text-blue-300 text-sm font-medium mb-8 animate-fade-in-up">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                        </span>
-                        Smart Expense Tracking
-                    </div>
+                {/* Immersive Ambient Glows */}
+                <div className="absolute top-[5%] left-[10%] w-[40%] h-[40%] bg-blue-600/15 rounded-full blur-[120px] pointer-events-none animate-float-slow"></div>
+                <div className="absolute bottom-[10%] right-[10%] w-[35%] h-[45%] bg-purple-600/15 rounded-full blur-[120px] pointer-events-none animate-float-delayed"></div>
 
-                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
-                        Master Your <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">
-                            Financial Life
-                        </span>
-                    </h1>
-                    <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        Effortlessly track expenses, visualize your spending habits, and securely manage your budget with Casham.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        {isAuthenticated ? (
-                            <Link
-                                to="/dashboard"
-                                className="w-full sm:w-auto px-8 py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40"
-                            >
-                                Go to Dashboard
-                            </Link>
-                        ) : (
-                            <Link
-                                to="/signup"
-                                className="w-full sm:w-auto px-8 py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40"
-                            >
-                                Get Started Free
-                            </Link>
-                        )}
-                        <button
-                            onClick={() => scrollToSection('features')}
-                            className="w-full sm:w-auto px-8 py-4 rounded-full bg-slate-800 text-slate-200 font-bold text-lg hover:bg-slate-700 transition-all border border-slate-700"
-                        >
-                            Learn More
-                        </button>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-16 lg:gap-8 items-center">
+                        {/* Left Column - Text Content */}
+                        <div className="text-left animate-fade-in-up">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-900/30 border border-blue-500/20 text-blue-600 dark:text-blue-300 text-sm font-semibold mb-8 shadow-sm">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600 dark:bg-blue-500"></span>
+                                </span>
+                                Intelligent Expense Tracking
+                            </div>
+
+                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+                                Master Your <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400">
+                                    Financial Life
+                                </span>
+                            </h1>
+                            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed max-w-xl pr-4">
+                                Effortlessly track expenses, visualize your spending habits, and securely manage your budget with Casham. A completely modern standard for personal finance.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row gap-4 items-center sm:justify-start">
+                                {isAuthenticated ? (
+                                    <Link
+                                        to="/dashboard"
+                                        className="w-full sm:w-auto px-8 py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 text-center"
+                                    >
+                                        Go to Dashboard
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to="/signup"
+                                        className="w-full sm:w-auto px-8 py-4 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 text-center"
+                                    >
+                                        Start for Free
+                                    </Link>
+                                )}
+                                <button
+                                    onClick={() => scrollToSection('features')}
+                                    className="w-full sm:w-auto px-8 py-4 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all border border-slate-300 dark:border-slate-700 shadow-sm"
+                                >
+                                    See How it Works
+                                </button>
+                            </div>
+
+                            {/* Trust badges/Features inline */}
+                            <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800/50 flex flex-wrap gap-x-8 gap-y-4 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                    100% Free & Secure
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                    Bank-grade Encryption
+                                </div>
+                                <div className="flex items-center gap-2 hidden sm:flex">
+                                    <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                    Instant Insights
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column - Dashboard Mockup */}
+                        <div className="relative mx-auto w-full max-w-lg lg:max-w-[110%] xl:max-w-[120%] lg:ml-4 animate-float-slow mt-8 lg:mt-0 xl:-mr-12">
+                            {/* Decorative background glow behind the mockup */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120%] bg-gradient-to-tr from-blue-500/20 to-purple-500/20 blur-[80px] -z-10 rounded-full"></div>
+
+                            {/* The Glass Mockup Frame */}
+                            <div className="rounded-2xl border border-white/40 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl shadow-blue-900/10 dark:shadow-blue-900/40 overflow-hidden transform lg:rotate-[-2deg] hover:rotate-0 transition-transform duration-500 hover:scale-[1.02]">
+                                {/* Mockup Header */}
+                                <div className="h-12 border-b border-slate-200/50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center px-4 gap-2">
+                                    <div className="flex gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                                        <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                    </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="h-5 max-w-[240px] bg-slate-200/50 dark:bg-slate-800 rounded mx-auto flex items-center px-2">
+                                            <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                            <span className="text-[10px] text-slate-400 ml-1.5 font-medium tracking-wider">app.casham.com</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mockup Body */}
+                                <div className="p-5 sm:p-6 bg-slate-50/30 dark:bg-transparent">
+                                    {/* Top stats row */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                                        <div className="p-4 rounded-xl border border-white dark:border-white/5 bg-white dark:bg-slate-800/80 shadow-sm">
+                                            <div className="text-[10px] sm:text-xs text-slate-500 mb-1 font-bold tracking-wider">NET WORTH</div>
+                                            <div className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white mb-2">₹1,24,500</div>
+                                            <div className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 dark:bg-green-500/10 dark:text-green-400 px-1.5 py-0.5 rounded">
+                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                                                12.5%
+                                            </div>
+                                        </div>
+                                        <div className="p-4 rounded-xl border border-white dark:border-white/5 bg-white dark:bg-slate-800/80 shadow-sm">
+                                            <div className="text-[10px] sm:text-xs text-slate-500 mb-1 font-bold tracking-wider">MONTHLY SPEND</div>
+                                            <div className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white mb-2">₹45,200</div>
+                                            <div className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 dark:bg-red-500/10 dark:text-red-400 px-1.5 py-0.5 rounded">
+                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                                                4.2%
+                                            </div>
+                                        </div>
+                                        <div className="p-4 rounded-xl border border-white dark:border-white/5 bg-white dark:bg-slate-800/80 shadow-sm col-span-2 sm:col-span-1">
+                                            <div className="text-[10px] sm:text-xs text-slate-500 mb-1 font-bold tracking-wider flex justify-between">
+                                                <span>SAVINGS GOAL</span>
+                                                <span className="text-blue-600 dark:text-blue-400">68%</span>
+                                            </div>
+                                            <div className="text-sm font-bold text-slate-800 dark:text-white mb-3">Emergency Fund</div>
+                                            <div className="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-2 overflow-hidden shadow-inner">
+                                                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full w-[68%] relative">
+                                                    <div className="absolute inset-0 bg-white/20 w-full animate-[pulse_2s_ease-in-out_infinite]"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Chart area */}
+                                    <div className="h-48 sm:h-56 rounded-xl border border-white dark:border-white/5 bg-white dark:bg-slate-800/80 p-5 flex items-end gap-2 sm:gap-3 relative overflow-hidden shadow-sm">
+                                        <div className="absolute top-5 left-5 right-5 flex justify-between items-center z-10">
+                                            <div className="text-xs font-bold tracking-wider text-slate-500">CASH FLOW TRACKING</div>
+                                            <div className="flex gap-2">
+                                                <div className="w-5 h-1.5 rounded bg-slate-200 dark:bg-slate-700"></div>
+                                                <div className="w-5 h-1.5 rounded bg-slate-200 dark:bg-slate-700"></div>
+                                                <div className="w-5 h-1.5 rounded bg-slate-200 dark:bg-slate-700"></div>
+                                            </div>
+                                        </div>
+
+                                        {/* Chart Grid Lines */}
+                                        <div className="absolute top-12 bottom-6 left-0 right-0 flex flex-col justify-between pointer-events-none px-5">
+                                            <div className="w-full h-px bg-slate-100 dark:bg-slate-700/30"></div>
+                                            <div className="w-full h-px bg-slate-100 dark:bg-slate-700/30"></div>
+                                            <div className="w-full h-px bg-slate-100 dark:bg-slate-700/30"></div>
+                                            <div className="w-full h-px bg-slate-100 dark:bg-slate-700/30"></div>
+                                        </div>
+
+                                        {/* Fake bars */}
+                                        <div className="w-full h-[30%] bg-blue-500/90 rounded-t border-t border-blue-400 relative group"><div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-800 text-white text-[10px] px-2 py-1 rounded transition-opacity hidden sm:block">Jun</div></div>
+                                        <div className="w-full h-[60%] bg-purple-500/90 rounded-t border-t border-purple-400 relative group"><div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-800 text-white text-[10px] px-2 py-1 rounded transition-opacity hidden sm:block">Jul</div></div>
+                                        <div className="w-full h-[45%] bg-blue-500/90 rounded-t border-t border-blue-400 relative group"><div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-800 text-white text-[10px] px-2 py-1 rounded transition-opacity hidden sm:block">Aug</div></div>
+                                        <div className="w-full h-[85%] bg-indigo-500/90 rounded-t border-t border-indigo-400 relative group"><div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-800 text-white text-[10px] px-2 py-1 rounded transition-opacity hidden sm:block">Sep</div></div>
+                                        <div className="w-full h-[35%] bg-blue-500/90 rounded-t border-t border-blue-400 relative group hidden sm:block"><div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-800 text-white text-[10px] px-2 py-1 rounded transition-opacity hidden sm:block">Oct</div></div>
+                                        <div className="w-full h-[70%] bg-purple-500/90 rounded-t border-t border-purple-400 relative group hidden sm:block"><div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-slate-800 text-white text-[10px] px-2 py-1 rounded transition-opacity hidden sm:block">Nov</div></div>
+
+                                        {/* Floating pill over chart */}
+                                        <div className="absolute top-[40%] right-10 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md shadow-xl rounded-full px-3 py-1.5 flex items-center gap-2 border border-slate-100 dark:border-slate-700/50 animate-bounce cursor-default">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-ping absolute"></div>
+                                            <div className="w-2 h-2 rounded-full bg-green-500 relative z-10"></div>
+                                            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">Live Sync</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

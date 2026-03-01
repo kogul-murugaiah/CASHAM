@@ -256,7 +256,9 @@ html.light .bg-slate-800\/50 {
 html.light .landing-page,
 html.light .landing-page .bg-slate-900,
 html.light .landing-page section.bg-slate-900 {
-  background-color: #ffffff !important;
+  background-color: #f8fafc !important;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px) !important;
+  background-size: 32px 32px !important;
 }
 
 html.light .landing-page .bg-slate-900\/80 {
@@ -265,7 +267,22 @@ html.light .landing-page .bg-slate-900\/80 {
 }
 
 html.light .landing-page .from-blue-900\/20 {
-  background-image: radial-gradient(ellipse at top, #eff6ff 0%, #ffffff 50%, #ffffff 100%) !important;
+  background-image: radial-gradient(ellipse at top, #eff6ff 0%, transparent 70%) !important;
+}
+
+/* Show ambient background glows on landing page */
+html.light .landing-page .blur-\[120px\],
+html.light .landing-page .blur-\[100px\] {
+  opacity: 0.6 !important;
+  mix-blend-mode: multiply !important;
+}
+
+html.light .landing-page .bg-blue-600\/15 {
+  background-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+html.light .landing-page .bg-purple-600\/15 {
+  background-color: rgba(147, 51, 234, 0.15) !important;
 }
 
 html.light .landing-page .from-blue-400 {
