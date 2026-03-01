@@ -13,10 +13,10 @@ const Assets = () => {
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                         Import
                     </button>
-                    <button className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-green-600/20 text-green-500 font-medium hover:bg-green-600/30 transition flex items-center justify-center gap-2 border border-green-500/20">
+                    <Link to="/add-asset" className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-green-600/20 text-green-500 font-medium hover:bg-green-600/30 transition flex items-center justify-center gap-2 border border-green-500/20">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                         Add Asset
-                    </button>
+                    </Link>
                 </div>
             </div>
 

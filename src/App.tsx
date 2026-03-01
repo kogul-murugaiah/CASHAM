@@ -28,6 +28,8 @@ const IncomeTracking = lazy(() => import('./pages/IncomeTracking'));
 const Assets = lazy(() => import('./pages/Assets'));
 const Liabilities = lazy(() => import('./pages/Liabilities'));
 const NetWorth = lazy(() => import('./pages/NetWorth'));
+const AddAsset = lazy(() => import('./pages/AddAsset'));
+const AddLiability = lazy(() => import('./pages/AddLiability'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -74,6 +76,8 @@ function App() {
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/add" element={<AddExpense />} />
                             <Route path="/add-income" element={<AddIncome />} />
+                            <Route path="/add-asset" element={<AddAsset />} />
+                            <Route path="/add-liability" element={<AddLiability />} />
                             <Route path="/expense-tracking" element={<ExpenseTracking />} />
                             <Route path="/income-tracking" element={<IncomeTracking />} />
                             <Route path="/assets" element={<Assets />} />
