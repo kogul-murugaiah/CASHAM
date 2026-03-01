@@ -20,7 +20,7 @@ export const useExpenseCategories = () => {
       setLoading(true);
       setError(null);
 
-      const data = await api.get('/api/categories');
+      const data = await api.get('/api/config?type=categories');
 
       const types = data || [];
 
@@ -60,7 +60,7 @@ export const useExpenseCategories = () => {
     }
 
     try {
-      const data = await api.post('/api/categories', { name: trimmedName });
+      const data = await api.post('/api/config?type=categories', { name: trimmedName });
       setCategories(prev => [...prev, data]);
       return data;
     } catch (err: any) {

@@ -37,7 +37,7 @@ const AddAsset = () => {
         const debounceTimer = setTimeout(async () => {
             setIsSearching(true);
             try {
-                const results = await api.get(`/api/symbol-search?type=${assetType}&q=${encodeURIComponent(searchQuery)}`);
+                const results = await api.get(`/api/wealth?action=search&type=${assetType}&q=${encodeURIComponent(searchQuery)}`);
                 setSearchResults(results || []);
             } catch (err) {
                 console.error("Search failed", err);
@@ -98,7 +98,7 @@ const AddAsset = () => {
         setLoading(true);
 
         try {
-            await api.post('/api/assets', {
+            await api.post('/api/wealth?action=assets', {
                 type: assetType,
                 name: form.name,
                 symbol: selectedSymbol || null,

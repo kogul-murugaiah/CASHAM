@@ -8,15 +8,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { method } = req;
+    const { method, query } = req;
+    const type = query.type as string;
+
+    const allowedTypes = ['account_types', 'categories', 'income_sources'];
+    if (!allowedTypes.includes(type)) {
+        return res.status(400).json({ error: 'Invalid config type' });
+    }
 
     if (method === 'GET') {
         try {
             const { data, error } = await supabaseAdmin
-                .from('categories')
+                .from(type)
                 .select('*')
                 .eq('user_id', user.id)
-                .order('name');
+                .order(type === 'account_types' ? 'created_at' : 'name');
 
             if (error) throw error;
             return res.status(200).json(data);
@@ -31,15 +37,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!name) return res.status(400).json({ error: 'Name is required' });
 
             const { data, error } = await supabaseAdmin
-                .from('categories')
-                .insert([{
-                    user_id: user.id,
-                    name
-                }])
-                .select();
+                .from(type)
+                .insert([{ user_id: user.id, name }])
+                .select(type === 'account_types' ? 'name' : '*')
+                .single();
 
             if (error) throw error;
-            return res.status(201).json(data[0]);
+
+            // Hooks expect a single object
+            return res.status(201).json(data);
         } catch (error: any) {
             return res.status(500).json({ error: error.message });
         }
@@ -47,17 +53,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     else if (method === 'DELETE') {
         try {
-            const { id } = req.query;
+            if (type === 'account_types') {
+                const { name } = req.query;
+                if (!name) return res.status(400).json({ error: 'Missing name' });
+                const { error } = await supabaseAdmin.from(type).delete().eq('name', name).eq('user_id', user.id);
+                if (error) throw error;
+            } else {
+                const { id } = req.query;
+                if (!id) return res.status(400).json({ error: 'Missing id' });
+                const { error } = await supabaseAdmin.from(type).delete().eq('id', id).eq('user_id', user.id);
+                if (error) throw error;
+            }
 
-            if (!id) return res.status(400).json({ error: 'Missing category id' });
-
-            const { error } = await supabaseAdmin
-                .from('categories')
-                .delete()
-                .eq('id', id)
-                .eq('user_id', user.id);
-
-            if (error) throw error;
             return res.status(200).json({ success: true });
         } catch (error: any) {
             return res.status(500).json({ error: error.message });

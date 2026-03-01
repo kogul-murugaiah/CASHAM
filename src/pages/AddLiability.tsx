@@ -33,7 +33,7 @@ const AddLiability = () => {
         setLoading(true);
 
         try {
-            await api.post('/api/liabilities', {
+            await api.post('/api/wealth?action=liabilities', {
                 type: liabilityType,
                 name: form.name,
                 balance: Number(form.balance),
@@ -92,8 +92,8 @@ const AddLiability = () => {
                                     type="button"
                                     onClick={() => setLiabilityType(type.id)}
                                     className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${liabilityType === type.id
-                                            ? 'bg-red-500/20 border-red-500/50 text-red-400'
-                                            : 'bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:text-white hover:border-white/20'
+                                        ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                                        : 'bg-slate-800/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:text-white hover:border-white/20'
                                         }`}
                                 >
                                     <span className="text-2xl mb-1">{type.icon}</span>

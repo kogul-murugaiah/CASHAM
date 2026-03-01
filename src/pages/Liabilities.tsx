@@ -8,7 +8,7 @@ const Liabilities = () => {
 
     const fetchLiabilities = async () => {
         try {
-            const data = await api.get('/api/liabilities');
+            const data = await api.get('/api/wealth?action=liabilities');
             setLiabilities(data || []);
         } catch (error) {
             console.error('Failed to fetch liabilities:', error);
@@ -24,7 +24,7 @@ const Liabilities = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this liability?')) return;
         try {
-            await api.delete(`/api/liabilities?id=${id}`);
+            await api.delete(`/api/wealth?action=liabilities&id=${id}`);
             fetchLiabilities();
         } catch (error) {
             console.error('Failed to delete liability:', error);

@@ -11,8 +11,8 @@ const NetWorth = () => {
         setLoading(true);
         try {
             const [assetsData, liabilitiesData] = await Promise.all([
-                api.get('/api/assets'),
-                api.get('/api/liabilities')
+                api.get('/api/wealth?action=assets'),
+                api.get('/api/wealth?action=liabilities')
             ]);
 
             const aTotal = (assetsData || []).reduce((acc: number, curr: any) => acc + (Number(curr.value) || 0), 0);

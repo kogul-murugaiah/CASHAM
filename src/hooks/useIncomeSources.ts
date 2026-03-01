@@ -19,7 +19,7 @@ export const useIncomeSources = () => {
       setLoading(true);
       setError(null);
 
-      const data = await api.get('/api/sources');
+      const data = await api.get('/api/config?type=income_sources');
 
       const types = data || [];
 
@@ -59,7 +59,7 @@ export const useIncomeSources = () => {
     }
 
     try {
-      const data = await api.post('/api/sources', { name: trimmedName });
+      const data = await api.post('/api/config?type=income_sources', { name: trimmedName });
       setSources(prev => [...prev, data]);
       return data;
     } catch (err: any) {

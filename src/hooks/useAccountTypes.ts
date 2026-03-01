@@ -21,7 +21,7 @@ export const useAccountTypes = () => {
     setError(null);
 
     try {
-      const data = await api.get('/api/accounts');
+      const data = await api.get('/api/config?type=account_types');
 
       const types = data?.map((row: any) => row.name) || [];
 
@@ -54,7 +54,7 @@ export const useAccountTypes = () => {
     }
 
     try {
-      const data = await api.post('/api/accounts', { name: name.trim() });
+      const data = await api.post('/api/config?type=account_types', { name: name.trim() });
 
       if (data) {
         setAccountTypes(prev => [...prev, data.name]);

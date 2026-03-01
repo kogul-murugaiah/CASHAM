@@ -8,7 +8,7 @@ const Assets = () => {
 
     const fetchAssets = async () => {
         try {
-            const data = await api.get('/api/assets');
+            const data = await api.get('/api/wealth?action=assets');
             setAssets(data || []);
         } catch (error) {
             console.error('Failed to fetch assets:', error);
@@ -24,7 +24,7 @@ const Assets = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this asset?')) return;
         try {
-            await api.delete(`/api/assets?id=${id}`);
+            await api.delete(`/api/wealth?action=assets&id=${id}`);
             fetchAssets();
         } catch (error) {
             console.error('Failed to delete asset:', error);
