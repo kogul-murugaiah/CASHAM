@@ -15,6 +15,7 @@ import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
 import AddExpense from './pages/AddExpense';
@@ -42,6 +43,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
 
               <Route
                 path="/*"
