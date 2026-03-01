@@ -68,14 +68,28 @@ const Login = () => {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    setError("");
+
+    // Safety fallback: reset spinner after 10s in case the redirect stalls
+    // (common on Android mobile browsers)
+    const timeout = setTimeout(() => {
+      setGoogleLoading(false);
+      setError("Redirect timed out. Please try again.");
+    }, 10000);
+
     try {
-      await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: false,
         },
       });
+      if (error) throw error;
+      // Redirect is in progress — clear the safety timeout
+      clearTimeout(timeout);
     } catch (err: any) {
+      clearTimeout(timeout);
       setError(err.message || "Google sign-in failed");
       setGoogleLoading(false);
     }

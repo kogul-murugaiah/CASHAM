@@ -16,14 +16,27 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AuthCallback from './pages/AuthCallback';
+import { Suspense, lazy } from 'react';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
-import AddExpense from './pages/AddExpense';
-import AddIncome from './pages/AddIncome';
-import ExpenseTracking from './pages/ExpenseTracking';
-import IncomeTracking from './pages/IncomeTracking';
-import AddInvestment from './pages/AddInvestment';
-import InvestmentTracking from './pages/InvestmentTracking';
+
+// Lazy-loaded components for route-based code splitting
+const AddExpense = lazy(() => import('./pages/AddExpense'));
+const AddIncome = lazy(() => import('./pages/AddIncome'));
+const ExpenseTracking = lazy(() => import('./pages/ExpenseTracking'));
+const IncomeTracking = lazy(() => import('./pages/IncomeTracking'));
+const AddInvestment = lazy(() => import('./pages/AddInvestment'));
+const InvestmentTracking = lazy(() => import('./pages/InvestmentTracking'));
+
+// Simple mobile-friendly fallback loader
+const PageLoader = () => (
+  <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+      <p className="text-slate-400 text-sm font-medium animate-pulse">Loading...</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
@@ -55,15 +68,17 @@ function App() {
                     {/* Main content — offset by sidebar width on desktop, top bar on mobile */}
                     <div className="flex-1 md:ml-[240px] pt-[64px] md:pt-0 min-h-screen flex flex-col transition-all duration-300">
                       <div className="flex-1">
-                        <Routes>
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/add" element={<AddExpense />} />
-                          <Route path="/add-income" element={<AddIncome />} />
-                          <Route path="/expense-tracking" element={<ExpenseTracking />} />
-                          <Route path="/income-tracking" element={<IncomeTracking />} />
-                          <Route path="/add-investment" element={<AddInvestment />} />
-                          <Route path="/investment-tracking" element={<InvestmentTracking />} />
-                        </Routes>
+                        <Suspense fallback={<PageLoader />}>
+                          <Routes>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/add" element={<AddExpense />} />
+                            <Route path="/add-income" element={<AddIncome />} />
+                            <Route path="/expense-tracking" element={<ExpenseTracking />} />
+                            <Route path="/income-tracking" element={<IncomeTracking />} />
+                            <Route path="/add-investment" element={<AddInvestment />} />
+                            <Route path="/investment-tracking" element={<InvestmentTracking />} />
+                          </Routes>
+                        </Suspense>
                       </div>
                       <Footer />
                       {/* Mobile: only the FAB quick-entry button */}
