@@ -19,7 +19,8 @@ const AuthCallback = () => {
             handled.current = true;
 
             try {
-                const res = await fetch("/api/auth/session", {
+                // Single call: sets httpOnly cookies AND seeds defaults for new users
+                const res = await fetch("/api/auth/google-setup", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -34,12 +35,6 @@ const AuthCallback = () => {
                     const data = await res.json().catch(() => ({}));
                     throw new Error(data.error || "Failed to persist session");
                 }
-
-                // Seed default categories/sources/account types for new users (idempotent)
-                await fetch("/api/auth/seed-defaults", {
-                    method: "POST",
-                    credentials: "include",
-                }).catch(() => { /* non-critical, ignore errors */ });
 
                 navigate("/dashboard", { replace: true });
             } catch (err: any) {
