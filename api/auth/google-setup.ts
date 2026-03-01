@@ -25,17 +25,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Set-Cookie', [
         cookie.serialize('sb-access-token', access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV !== 'development',
+            secure: true,
             maxAge: expires_in || 3600,
             path: '/',
-            sameSite: 'lax',
+            sameSite: 'none',
         }),
         cookie.serialize('sb-refresh-token', refresh_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV !== 'development',
+            secure: true,
             maxAge: 60 * 60 * 24 * 30,
             path: '/',
-            sameSite: 'lax',
+            sameSite: 'none',
         }),
     ]);
 

@@ -10,6 +10,7 @@ export class ApiError extends Error {
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const response = await fetch(url, {
         ...options,
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             ...options.headers,

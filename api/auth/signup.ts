@@ -31,18 +31,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (data?.session) {
             const accessTokenCookie = cookie.serialize('sb-access-token', data.session.access_token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV !== 'development',
+                secure: true,
                 maxAge: data.session.expires_in,
                 path: '/',
-                sameSite: 'lax',
+                sameSite: 'none',
             });
 
             const refreshTokenCookie = cookie.serialize('sb-refresh-token', data.session.refresh_token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV !== 'development',
+                secure: true,
                 maxAge: 60 * 60 * 24 * 30, // 30 days
                 path: '/',
-                sameSite: 'lax',
+                sameSite: 'none',
             });
 
             res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
