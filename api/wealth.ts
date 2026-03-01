@@ -40,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { method, query: reqQuery } = req;
-    const action = reqQuery.action || 'assets'; // 'assets', 'liabilities', or 'search'
+    const action = reqQuery.action || 'assets';
 
     // ========================================================
     // ACTION: SEARCH
@@ -63,7 +63,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             } else {
                 const yf = new (yahooFinance as any)();
                 const searchResult = await yf.search(q);
-                // Type cast since yahooFinance types can infer as never
                 const quotes = (searchResult as any).quotes || [];
                 const results = quotes
                     .map((quote: any) => ({
@@ -87,57 +86,139 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'assets') {
         if (method === 'GET') {
             try {
-                const { data, error } = await supabaseAdmin
+                const { data: rawAssets, error } = await supabaseAdmin
                     .from('assets')
                     .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: false });
+                    .eq('user_id', user.id);
 
                 if (error) throw error;
 
-                const enrichedData = await Promise.all(data.map(async (asset) => {
+                // Group assets by symbol (for stocks/mf/crypto) or by ID (for static assets)
+                const holdingsMap: Record<string, any> = {};
+
+                for (const asset of (rawAssets || [])) {
+                    // Unique key for aggregation: symbol or asset ID for non-trackable items
+                    const key = asset.symbol || asset.id;
+
+                    if (!holdingsMap[key]) {
+                        holdingsMap[key] = {
+                            ...asset,
+                            total_units: asset.units || 0,
+                            total_invested: (asset.units || 1) * (asset.purchase_price || asset.value || 0),
+                            records: [asset]
+                        };
+                    } else {
+                        holdingsMap[key].total_units += (asset.units || 0);
+                        holdingsMap[key].total_invested += (asset.units || 1) * (asset.purchase_price || 0);
+                        holdingsMap[key].records.push(asset);
+                    }
+                }
+
+                const holdings = Object.values(holdingsMap);
+
+                // Fetch live prices and calculate secondary metrics
+                const enrichedHoldings = await Promise.all(holdings.map(async (holding) => {
                     let livePrice = null;
-                    if (asset.symbol) {
-                        if (asset.type === 'mutual_funds') {
-                            livePrice = await getMutualFundNav(asset.symbol);
-                        } else if (asset.type === 'stocks' || asset.type === 'crypto') {
-                            livePrice = await getYahooFinancePrice(asset.symbol);
+                    if (holding.symbol) {
+                        if (holding.type === 'mutual_funds') {
+                            livePrice = await getMutualFundNav(holding.symbol);
+                        } else if (holding.type === 'stocks' || holding.type === 'crypto') {
+                            livePrice = await getYahooFinancePrice(holding.symbol);
                         }
                     }
-                    if (livePrice !== null && asset.units) {
-                        return { ...asset, live_price: livePrice, value: livePrice * asset.units };
-                    }
-                    return asset;
+
+                    const avg_buy_price = holding.total_units > 0
+                        ? holding.total_invested / holding.total_units
+                        : holding.purchase_price || holding.value;
+
+                    const current_value = livePrice !== null && holding.total_units > 0
+                        ? livePrice * holding.total_units
+                        : holding.value;
+
+                    return {
+                        ...holding,
+                        avg_buy_price,
+                        current_value,
+                        live_price: livePrice,
+                        pnl: current_value - holding.total_invested,
+                        pnl_percent: holding.total_invested > 0
+                            ? ((current_value - holding.total_invested) / holding.total_invested) * 100
+                            : 0
+                    };
                 }));
-                return res.status(200).json(enrichedData);
+
+                // Group by Categories for the UI
+                const categories: Record<string, any[]> = {};
+                let totalPortfolioValue = 0;
+                let totalPortfolioInvested = 0;
+
+                enrichedHoldings.forEach(h => {
+                    if (!categories[h.type]) categories[h.type] = [];
+                    categories[h.type].push(h);
+                    totalPortfolioValue += h.current_value;
+                    totalPortfolioInvested += h.total_invested;
+                });
+
+                return res.status(200).json({
+                    holdings: enrichedHoldings,
+                    categories,
+                    summary: {
+                        total_value: totalPortfolioValue,
+                        total_invested: totalPortfolioInvested,
+                        total_pnl: totalPortfolioValue - totalPortfolioInvested,
+                        total_pnl_percent: totalPortfolioInvested > 0
+                            ? ((totalPortfolioValue - totalPortfolioInvested) / totalPortfolioInvested) * 100
+                            : 0
+                    }
+                });
             } catch (error: any) {
                 return res.status(500).json({ error: error.message });
             }
-        } else if (method === 'POST') {
+        }
+
+        else if (method === 'POST') {
             try {
                 const { type, name, symbol, units, purchase_price, purchase_date, value, notes } = req.body;
-                let finalValue = value;
-                if (!value && units && purchase_price) {
-                    finalValue = units * purchase_price;
-                }
+
+                // For trackable assets, value is derived. For others, it's manual.
+                const finalValue = value || (units && purchase_price ? units * purchase_price : 0);
+
                 const { data, error } = await supabaseAdmin
                     .from('assets')
                     .insert([{
-                        user_id: user.id, type, name, symbol: symbol || null, units: units || null,
-                        purchase_price: purchase_price || null, purchase_date: purchase_date || null,
-                        value: finalValue || 0, notes: notes || null
+                        user_id: user.id,
+                        type,
+                        name,
+                        symbol: symbol || null,
+                        units: units || null,
+                        purchase_price: purchase_price || null,
+                        purchase_date: purchase_date || null,
+                        value: finalValue,
+                        notes: notes || null
                     }]).select();
+
                 if (error) throw error;
                 return res.status(201).json(data[0]);
             } catch (error: any) {
                 return res.status(500).json({ error: error.message });
             }
-        } else if (method === 'DELETE') {
+        }
+
+        else if (method === 'DELETE') {
             try {
-                const { id } = reqQuery;
-                if (!id) return res.status(400).json({ error: 'Missing asset id' });
-                const { error } = await supabaseAdmin.from('assets').delete().eq('id', id).eq('user_id', user.id);
-                if (error) throw error;
+                const { id, symbol } = reqQuery;
+
+                if (symbol) {
+                    // Delete all instances of this trackable holding
+                    const { error } = await supabaseAdmin.from('assets').delete().eq('symbol', symbol).eq('user_id', user.id);
+                    if (error) throw error;
+                } else if (id) {
+                    const { error } = await supabaseAdmin.from('assets').delete().eq('id', id).eq('user_id', user.id);
+                    if (error) throw error;
+                } else {
+                    return res.status(400).json({ error: 'Missing id or symbol' });
+                }
+
                 return res.status(200).json({ success: true });
             } catch (error: any) {
                 return res.status(500).json({ error: error.message });

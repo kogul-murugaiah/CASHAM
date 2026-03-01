@@ -15,7 +15,7 @@ const NetWorth = () => {
                 api.get('/api/wealth?action=liabilities')
             ]);
 
-            const aTotal = (assetsData || []).reduce((acc: number, curr: any) => acc + (Number(curr.value) || 0), 0);
+            const aTotal = assetsData?.summary?.total_value || 0;
             const lTotal = (liabilitiesData || []).reduce((acc: number, curr: any) => acc + (Number(curr.balance) || 0), 0);
 
             setTotalAssets(aTotal);
