@@ -182,10 +182,14 @@ const Assets = () => {
                                                 <p className="text-lg font-bold text-white font-mono">{formatCurrency(item.current_value)}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Daily P&L</p>
-                                                <p className={`text-sm font-bold font-mono ${item.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                    {item.pnl >= 0 ? '▲' : '▼'}{Math.abs(item.pnl_percent).toFixed(2)}%
-                                                </p>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Overall P&L</p>
+                                                {item.total_invested > 0 ? (
+                                                    <p className={`text-sm font-bold font-mono ${item.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {item.pnl >= 0 ? '▲' : '▼'}{Math.abs(item.pnl_percent).toFixed(2)}%
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-[10px] text-slate-500 italic">Add buy price to see</p>
+                                                )}
                                             </div>
                                         </div>
 

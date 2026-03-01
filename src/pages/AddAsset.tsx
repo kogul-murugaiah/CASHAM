@@ -98,12 +98,20 @@ const AddAsset = () => {
         setLoading(true);
 
         try {
+            // If it's a trackable asset with units, the backend expects unit price for purchase_price.
+            // But our UI asks for TOTAL. So we divide. 
+            const unitsNum = Number(form.units);
+            const totalInvested = form.purchase_price ? Number(form.purchase_price) : null;
+            const unitPurchasePrice = (totalInvested && unitsNum > 0)
+                ? totalInvested / unitsNum
+                : totalInvested;
+
             await api.post('/api/wealth?action=assets', {
                 type: assetType,
                 name: form.name,
                 symbol: selectedSymbol || null,
-                units: form.units ? Number(form.units) : null,
-                purchase_price: form.purchase_price ? Number(form.purchase_price) : null,
+                units: unitsNum > 0 ? unitsNum : null,
+                purchase_price: unitPurchasePrice,
                 purchase_date: form.purchase_date || null,
                 value: form.value ? Number(form.value) : null,
                 notes: form.notes || null
@@ -293,15 +301,21 @@ const AddAsset = () => {
                         )}
                     </div>
 
-                    {/* Purchase Details (Optional) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border border-white/5 rounded-2xl bg-white/[0.02]">
+                    {/* Purchase Details (Crucial for PnL) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border border-blue-500/20 rounded-2xl bg-blue-500/[0.03]">
                         <div className="md:col-span-2">
-                            <h4 className="text-sm font-bold text-slate-300">Purchase Details <span className="text-slate-500 font-normal">(Optional)</span></h4>
-                            <p className="text-xs text-slate-500">Adding these helps calculate your total return or profit.</p>
+                            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Investment Info
+                            </h4>
+                            <p className="text-xs text-slate-400 mt-1">Providing these details enables <span className="text-blue-400 font-bold">Profit & Loss tracking</span> for this asset.</p>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1.5">Total Amount Invested (₹)</label>
+                            <label className="block text-sm font-medium text-slate-300 mb-1.5 flex justify-between">
+                                <span>Total Invested (₹)</span>
+                                <span className="text-[10px] text-slate-500 font-normal uppercase tracking-wider italic">Optional but recommended</span>
+                            </label>
                             <input
                                 type="number"
                                 name="purchase_price"
@@ -309,19 +323,22 @@ const AddAsset = () => {
                                 onChange={handleChange}
                                 min="0"
                                 step="any"
-                                placeholder="0.00"
-                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition font-mono"
+                                placeholder="Total amount paid for all units"
+                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition font-mono"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1.5">Date of Purchase</label>
+                            <label className="block text-sm font-medium text-slate-300 mb-1.5 flex justify-between">
+                                <span>Date of Purchase</span>
+                                <span className="text-[10px] text-slate-500 font-normal uppercase tracking-wider italic">Optional</span>
+                            </label>
                             <input
                                 type="date"
                                 name="purchase_date"
                                 value={form.purchase_date}
                                 onChange={handleChange}
-                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition cursor-pointer"
+                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition cursor-pointer"
                             />
                         </div>
                     </div>

@@ -104,12 +104,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         holdingsMap[key] = {
                             ...asset,
                             total_units: asset.units || 0,
-                            total_invested: (asset.units || 1) * (asset.purchase_price || asset.value || 0),
+                            total_invested: asset.units
+                                ? (asset.units * (asset.purchase_price || 0))
+                                : (asset.purchase_price || asset.value || 0),
                             records: [asset]
                         };
                     } else {
                         holdingsMap[key].total_units += (asset.units || 0);
-                        holdingsMap[key].total_invested += (asset.units || 1) * (asset.purchase_price || 0);
+                        holdingsMap[key].total_invested += asset.units
+                            ? (asset.units * (asset.purchase_price || 0))
+                            : (asset.purchase_price || 0);
                         holdingsMap[key].records.push(asset);
                     }
                 }
