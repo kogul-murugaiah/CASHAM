@@ -30,14 +30,16 @@ async function computeAndInsertCarryover(
             .lt("date", `${year}-${String(month === 12 ? 1 : month + 1).padStart(2, "0")}-01`);
     }
 
-    const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id").eq("user_id", userId).gte("date", prevStart).lt("date", startDate);
-    const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).gte("date", prevStart).lt("date", startDate);
-    const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).eq("action", "buy").gte("date", prevStart).lt("date", startDate);
+    // Calculate true historical cumulative balance up to startDate, 
+    // fetching all history but ignoring all prior carryover rows.
+    const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id").eq("user_id", userId).lt("date", startDate);
+    const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).lt("date", startDate);
+    const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).eq("action", "buy").lt("date", startDate);
 
-    // Exclude the previous month's own carryover rows from the sum to avoid compounding
+    // Exclude all historical carryover rows from the sum to avoid compounding
     const filteredPrevInc = (prevInc || []).filter(i => i.source_id !== sourceId);
 
-    // Gather all distinct account types from previous month data
+    // Gather all distinct account types from all historical data
     const allAccounts = new Set<string | null>();
     filteredPrevInc.forEach(i => allAccounts.add(i.account_type ?? null));
     (prevExp || []).forEach(e => allAccounts.add(e.account_type ?? null));
@@ -49,14 +51,14 @@ async function computeAndInsertCarryover(
         const expSum = (prevExp || []).filter(e => (e.account_type ?? null) === acc).reduce((s, e) => s + e.amount, 0);
         const invSum = (prevInv || []).filter(v => (v.account_type ?? null) === acc).reduce((s, v) => s + v.amount, 0);
         const bal = incSum - expSum - invSum;
-        if (bal > 0) {
+        if (bal !== 0) {
             carries.push({
                 user_id: userId,
                 amount: bal,
                 date: startDate,
                 account_type: acc,
                 source_id: sourceId,
-                description: `Auto-carryover from ${MONTH_NAMES[prevMonth - 1]} ${prevYear}`
+                description: `Auto-carryover up to ${MONTH_NAMES[prevMonth - 1]} ${prevYear}`
             });
         }
     });
