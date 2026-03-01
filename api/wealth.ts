@@ -21,7 +21,8 @@ async function getMutualFundNav(schemeCode: string): Promise<number | null> {
 
 async function getYahooFinancePrice(symbol: string): Promise<number | null> {
     try {
-        const quote = await yahooFinance.quote(symbol) as any;
+        const yf = new (yahooFinance as any)();
+        const quote = await yf.quote(symbol) as any;
         return quote.regularMarketPrice || quote.price || null;
     } catch (e) {
         console.error('Error fetching Yahoo Finance price:', e);
@@ -60,17 +61,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 })).slice(0, 10);
                 return res.status(200).json(results);
             } else {
-                const searchResult = await yahooFinance.search(q);
+                const yf = new (yahooFinance as any)();
+                const searchResult = await yf.search(q);
                 // Type cast since yahooFinance types can infer as never
                 const quotes = (searchResult as any).quotes || [];
                 const results = quotes
-                    .filter((quote: any) => quote.isYahooFinance)
                     .map((quote: any) => ({
-                        symbol: quote.symbol,
-                        name: quote.shortname || quote.longname || quote.symbol,
+                        symbol: quote.symbol || quote.ticker || "",
+                        name: quote.shortname || quote.longname || quote.name || quote.symbol || "Unknown",
                         type: quote.quoteType?.toLowerCase() === 'cryptocurrency' ? 'crypto' : 'stocks',
-                        exchange: quote.exchange
-                    })).slice(0, 10);
+                        exchange: quote.exchange || quote.exchDisp || ""
+                    }))
+                    .filter((q: any) => q.symbol)
+                    .slice(0, 10);
                 return res.status(200).json(results);
             }
         } catch (error: any) {
