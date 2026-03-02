@@ -228,6 +228,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(500).json({ error: error.message });
             }
         }
+
+        else if (method === 'PUT') {
+            try {
+                const { id } = reqQuery;
+                if (!id) return res.status(400).json({ error: 'Missing record id' });
+
+                const { type, name, symbol, units, purchase_price, purchase_date, value, notes } = req.body;
+
+                // For trackable assets, value is derived. For others, it's manual.
+                const finalValue = value || (units && purchase_price ? units * purchase_price : 0);
+
+                const { data, error } = await supabaseAdmin
+                    .from('assets')
+                    .update({
+                        type,
+                        name,
+                        symbol: symbol || null,
+                        units: units || null,
+                        purchase_price: purchase_price || null,
+                        purchase_date: purchase_date || null,
+                        value: finalValue,
+                        notes: notes || null
+                    })
+                    .eq('id', id)
+                    .eq('user_id', user.id)
+                    .select();
+
+                if (error) throw error;
+                return res.status(200).json(data[0]);
+            } catch (error: any) {
+                return res.status(500).json({ error: error.message });
+            }
+        }
     }
 
     // ========================================================

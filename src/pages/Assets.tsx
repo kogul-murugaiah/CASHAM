@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const Assets = () => {
     const [data, setData] = useState<any>(null);
@@ -20,22 +21,6 @@ const Assets = () => {
     useEffect(() => {
         fetchAssets();
     }, []);
-
-    const handleDelete = async (item: any) => {
-        const message = item.symbol
-            ? `Are you sure you want to delete ALL records for ${item.name} (${item.symbol})?`
-            : `Are you sure you want to delete ${item.name}?`;
-
-        if (!window.confirm(message)) return;
-
-        try {
-            const query = item.symbol ? `symbol=${item.symbol}` : `id=${item.id}`;
-            await api.delete(`/api/wealth?action=assets&${query}`);
-            fetchAssets();
-        } catch (error) {
-            console.error('Failed to delete asset:', error);
-        }
-    };
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -69,6 +54,8 @@ const Assets = () => {
         other: 'Other Assets'
     };
 
+    const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b'];
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-40">
@@ -79,13 +66,23 @@ const Assets = () => {
 
     const { summary, categories, holdings } = data || { summary: {}, categories: {}, holdings: [] };
 
+    // Prepare chart data
+    const chartData = Object.entries(categories).map(([type, items]: [string, any]) => {
+        const value = items.reduce((sum: number, item: any) => sum + item.current_value, 0);
+        return {
+            name: categoryNames[type] || type,
+            value: value,
+            type: type
+        };
+    }).filter(d => d.value > 0);
+
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full animate-fade-in relative z-10 pb-24">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold font-heading text-white">Portfolio</h1>
-                    <p className="text-sm text-slate-400 mt-1">{holdings.length} holdings across {Object.keys(categories).length} categories</p>
+                    <h1 className="text-3xl font-bold font-heading text-white">Wealth Overview</h1>
+                    <p className="text-sm text-slate-400 mt-1">Unified view of your diversified assets</p>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
                     <Link to="/add-asset" className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-green-600 text-white font-bold hover:bg-green-500 transition flex items-center justify-center gap-2 shadow-lg shadow-green-600/20">
@@ -110,99 +107,120 @@ const Assets = () => {
                 </div>
             ) : (
                 <div className="space-y-10">
-                    {/* Overall Summary Card */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl">
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Current Value</p>
-                            <h2 className="text-3xl font-bold text-white font-mono">{formatCurrency(summary.total_value)}</h2>
+                    {/* Top Row: Chart + Summary */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        {/* Chart Card */}
+                        <div className="lg:col-span-8 bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center gap-8">
+                            <div className="w-full md:w-1/2 h-[240px] relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={chartData}
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                            stroke="none"
+                                        >
+                                            {chartData.map((_entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                            formatter={(value: any) => formatCurrency(Number(value))}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Value</p>
+                                    <p className="text-lg font-bold text-white">{formatCurrency(summary.total_value)}</p>
+                                </div>
+                            </div>
+                            <div className="w-full md:w-1/2 space-y-3">
+                                <h3 className="text-lg font-bold text-white mb-4 italic text-slate-400">Portfolio Allocation</h3>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {chartData.map((d, index) => (
+                                        <div key={d.type} className="flex items-center justify-between group">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                                <span className="text-sm text-slate-300 font-medium">{d.name}</span>
+                                            </div>
+                                            <span className="text-sm text-slate-500 font-mono">
+                                                {summary.total_value > 0 ? ((d.value / summary.total_value) * 100).toFixed(1) : '0'}%
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl">
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Invested</p>
-                            <h2 className="text-2xl font-bold text-slate-300 font-mono">{formatCurrency(summary.total_invested)}</h2>
-                        </div>
-                        <div className={`bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl ${summary.total_pnl >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Overall P&L</p>
-                            <div className="flex items-baseline gap-2">
-                                <h2 className={`text-2xl font-bold font-mono ${summary.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {summary.total_pnl >= 0 ? '+' : ''}{formatCurrency(summary.total_pnl)}
-                                </h2>
-                                <span className={`text-sm font-bold ${summary.total_pnl >= 0 ? 'text-green-500/80' : 'text-red-500/80'}`}>
-                                    ({summary.total_pnl_percent.toFixed(2)}%)
-                                </span>
+
+                        {/* Summary Stats Card */}
+                        <div className="lg:col-span-4 flex flex-col gap-4">
+                            <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-center">
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Invested</p>
+                                <h2 className="text-2xl font-bold text-white font-mono">{formatCurrency(summary.total_invested)}</h2>
+                            </div>
+                            <div className={`bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-center ${summary.total_pnl >= 0 ? 'border-green-500/20' : 'border-red-500/20'}`}>
+                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Overall P&L</p>
+                                <div className="flex items-baseline gap-2">
+                                    <h2 className={`text-2xl font-bold font-mono ${summary.total_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {summary.total_pnl >= 0 ? '▲' : '▼'}{formatCurrency(Math.abs(summary.total_pnl))}
+                                    </h2>
+                                    <span className={`text-sm font-bold ${summary.total_pnl >= 0 ? 'text-green-500/60' : 'text-red-500/60'}`}>
+                                        ({summary.total_pnl_percent.toFixed(2)}%)
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Categories */}
-                    {Object.entries(categories).map(([type, items]: [string, any]) => (
-                        <div key={type} className="space-y-4">
-                            <div className="flex items-center gap-3 px-2">
-                                <span className="text-2xl">{getIcon(type)}</span>
-                                <h2 className="text-xl font-bold text-white font-heading">{categoryNames[type] || type}</h2>
-                                <span className="text-xs bg-slate-800 text-slate-400 px-2.5 py-0.5 rounded-full font-bold">{items.length}</span>
-                            </div>
+                    {/* Category Selection Grid */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-bold text-white font-heading px-2">Asset Classes</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {Object.entries(categories).map(([type, items]: [string, any]) => {
+                                const catValue = items.reduce((sum: number, h: any) => sum + h.current_value, 0);
+                                const catInvested = items.reduce((sum: number, h: any) => sum + h.total_invested, 0);
+                                const catPnl = catValue - catInvested;
+                                const catPnlPercent = catInvested > 0 ? (catPnl / catInvested) * 100 : 0;
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {items.map((item: any) => (
-                                    <div key={item.id} className="bg-slate-900/60 backdrop-blur-xl border border-white/5 rounded-3xl p-5 shadow-xl relative group transition hover:border-white/10 flex flex-col">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center border border-white/5">
-                                                    <span className="text-xl">{getIcon(type)}</span>
-                                                </div>
-                                                <div className="overflow-hidden">
-                                                    <h3 className="text-base font-bold text-white truncate w-40" title={item.name}>{item.name}</h3>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.symbol || 'Manual Entry'}</p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleDelete(item)}
-                                                className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Avg. Cost</p>
-                                                <p className="text-sm font-bold text-slate-300 font-mono">{formatCurrency(item.avg_buy_price)}</p>
+                                return (
+                                    <Link
+                                        key={type}
+                                        to={`/assets/${type}`}
+                                        className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-3xl p-6 shadow-lg hover:bg-slate-800/60 transition group relative overflow-hidden"
+                                    >
+                                        <div className="flex items-start justify-between mb-8">
+                                            <div className="w-12 h-12 bg-slate-800 rounded-2xl flex items-center justify-center border border-white/5 group-hover:scale-110 transition duration-300">
+                                                <span className="text-2xl">{getIcon(type)}</span>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Live Price</p>
-                                                <p className={`text-sm font-bold font-mono ${item.live_price ? 'text-blue-400' : 'text-slate-500'}`}>
-                                                    {item.live_price ? formatCurrency(item.live_price) : 'N/A'}
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">{items.length} Holdings</p>
+                                                <p className={`text-xs font-bold ${catPnl >= 0 ? 'text-green-500/80' : 'text-red-500/80'}`}>
+                                                    {catPnl >= 0 ? '+' : ''}{catPnlPercent.toFixed(1)}%
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-end">
-                                            <div>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Total Value</p>
-                                                <p className="text-lg font-bold text-white font-mono">{formatCurrency(item.current_value)}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Overall P&L</p>
-                                                {item.total_invested > 0 ? (
-                                                    <p className={`text-sm font-bold font-mono ${item.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                        {item.pnl >= 0 ? '▲' : '▼'}{Math.abs(item.pnl_percent).toFixed(2)}%
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-[10px] text-slate-500 italic">Add buy price to see</p>
-                                                )}
+                                        <div className="mt-auto">
+                                            <h3 className="text-lg font-bold text-white mb-1 group-hover:text-green-400 transition">{categoryNames[type] || type}</h3>
+                                            <div className="flex items-baseline gap-2">
+                                                <p className="text-xl font-bold font-mono text-slate-300">{formatCurrency(catValue)}</p>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">Current</p>
                                             </div>
                                         </div>
 
-                                        {item.total_units > 0 && (
-                                            <div className="absolute top-2 right-2 px-2 py-0.5 bg-slate-800/80 rounded-md border border-white/5 text-[9px] font-bold text-slate-400">
-                                                {item.total_units} UNIT{item.total_units > 1 ? 'S' : ''}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                                        {/* Decorative Arrow */}
+                                        <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
-                    ))}
+                    </div>
                 </div>
             )}
         </div>

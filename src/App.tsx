@@ -26,6 +26,8 @@ const AddIncome = lazy(() => import('./pages/AddIncome'));
 const ExpenseTracking = lazy(() => import('./pages/ExpenseTracking'));
 const IncomeTracking = lazy(() => import('./pages/IncomeTracking'));
 const Assets = lazy(() => import('./pages/Assets'));
+const CategoryPortfolio = lazy(() => import('./pages/CategoryPortfolio'));
+const HoldingDetails = lazy(() => import('./pages/HoldingDetails'));
 const Liabilities = lazy(() => import('./pages/Liabilities'));
 const NetWorth = lazy(() => import('./pages/NetWorth'));
 const AddAsset = lazy(() => import('./pages/AddAsset'));
@@ -81,6 +83,8 @@ function App() {
                             <Route path="/expense-tracking" element={<ExpenseTracking />} />
                             <Route path="/income-tracking" element={<IncomeTracking />} />
                             <Route path="/assets" element={<Assets />} />
+                            <Route path="/assets/:category" element={<CategoryPortfolio />} />
+                            <Route path="/holding/:symbol" element={<HoldingDetails />} />
                             <Route path="/liabilities" element={<Liabilities />} />
                             <Route path="/net-worth" element={<NetWorth />} />
                           </Routes>
