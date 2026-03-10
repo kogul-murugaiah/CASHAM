@@ -14,7 +14,7 @@ type IncomeSource = {
 
 type Income = {
     id: string;
-    source_id: number;
+    source_id: number | null;
     amount: number;
     date: string;
     account_type: string;
@@ -32,7 +32,7 @@ type EditingIncome = {
 };
 
 type SourceTotal = {
-    sourceId: number;
+    sourceId: number | null;
     sourceName: string;
     total: number;
 };
@@ -128,7 +128,7 @@ const IncomeTracking = () => {
         setEditingData({
             id: inc.id,
             date: inc.date,
-            source_id: inc.source_id.toString(),
+            source_id: (inc.source_id || "").toString(),
             description: inc.description || "",
             account_type: inc.account_type,
             amount: inc.amount.toString(),
@@ -171,7 +171,7 @@ const IncomeTracking = () => {
         setError(null);
 
         try {
-            const selectedSource = sources.find(s => s.id === Number(editingData.source_id));
+            const selectedSource = sources.find(s => String(s.id) === String(editingData.source_id));
 
             await api.put('/api/incomes', {
                 id: editingId,
