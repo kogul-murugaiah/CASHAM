@@ -55,6 +55,10 @@
 }
 
 /* ── LIGHT THEME OVERRIDES ────────────────────────────────────────────────── */
+html.dark {
+  color-scheme: dark;
+}
+
 html.light {
   color-scheme: light;
 }

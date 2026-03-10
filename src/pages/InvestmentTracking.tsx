@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useTheme } from "../contexts/ThemeContext";
 import * as XLSX from "xlsx";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -57,6 +58,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 const InvestmentTracking = () => {
     const { accountTypes } = useAccountTypes();
+    const { theme } = useTheme();
     const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
     const [records, setRecords] = useState<Investment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -231,7 +233,7 @@ const InvestmentTracking = () => {
                             <button onClick={() => setViewMode("yearly")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-slate-400 hover:text-white"}`}>Yearly</button>
                         </div>
                         {viewMode === "monthly" ? (
-                            <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
+                            <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ colorScheme: theme }} className="rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
                         ) : (
                             <input type="number" min="2000" max="2100" value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-24 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
                         )}

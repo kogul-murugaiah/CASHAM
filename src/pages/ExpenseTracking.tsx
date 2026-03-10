@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useTheme } from "../contexts/ThemeContext";
 import * as XLSX from 'xlsx';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -63,6 +64,7 @@ const MONTH_NAMES = [
 
 const ExpenseTracking = () => {
     const { accountTypes } = useAccountTypes();
+    const { theme } = useTheme();
     const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -318,6 +320,7 @@ const ExpenseTracking = () => {
                                 type="month"
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
+                                style={{ colorScheme: theme }}
                                 className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer"
                             />
                         ) : (
