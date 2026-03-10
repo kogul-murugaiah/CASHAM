@@ -171,9 +171,12 @@ const IncomeTracking = () => {
         setError(null);
 
         try {
+            const selectedSource = sources.find(s => s.id === Number(editingData.source_id));
+
             await api.put('/api/incomes', {
                 id: editingId,
                 date: editingData.date,
+                source: selectedSource?.name || "Unknown",
                 source_id: Number(editingData.source_id),
                 description: editingData.description.trim() || null,
                 amount: Number(editingData.amount),
