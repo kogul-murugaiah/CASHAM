@@ -14,6 +14,7 @@ type IncomeSource = {
 
 type Income = {
     id: string;
+    source: string | null;
     source_id: number | null;
     amount: number;
     date: string;
@@ -197,7 +198,7 @@ const IncomeTracking = () => {
     // Calculations
     const sourceTotals: SourceTotal[] = records.reduce((acc, rec) => {
         const sourceId = rec.source_id;
-        const sourceName = rec.income_sources?.name || "Unknown";
+        const sourceName = rec.source || rec.income_sources?.name || "Unknown";
         const existing = acc.find((item) => item.sourceId === sourceId);
         if (existing) {
             existing.total += rec.amount;
@@ -249,7 +250,7 @@ const IncomeTracking = () => {
     const handleExport = () => {
         const exportData = records.map(rec => ({
             Date: new Date(rec.date).toLocaleDateString('en-IN'),
-            Source: rec.income_sources?.name || "Unknown",
+            Source: rec.source || rec.income_sources?.name || "Unknown",
             Account: rec.account_type,
             Amount: rec.amount,
             Description: rec.description || ""
@@ -435,7 +436,7 @@ const IncomeTracking = () => {
                                                 {currentRecords.map((rec) => (
                                                     <tr key={rec.id} className="group hover:bg-white/5 transition-colors">
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{new Date(rec.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{rec.income_sources?.name || "Unknown"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{rec.source || rec.income_sources?.name || "Unknown"}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-[10px] text-slate-500 uppercase tracking-tight">{rec.account_type}</td>
                                                         <td className="px-6 py-4 text-sm text-slate-400 max-w-[200px] truncate" title={rec.description || ""}>
                                                             {rec.description || "-"}
