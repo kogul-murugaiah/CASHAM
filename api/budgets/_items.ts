@@ -40,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     else if (method === 'PUT') {
         try {
-            const { id, name, amount, status } = req.body;
+            const { id, name, amount, status, paid_amount } = req.body;
             
             if (!id) return res.status(400).json({ error: 'id is required' });
 
@@ -48,6 +48,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (name !== undefined) updates.name = name;
             if (amount !== undefined) updates.amount = amount;
             if (status !== undefined) updates.status = status;
+            if (paid_amount !== undefined) updates.paid_amount = paid_amount;
+            // When reverting to planned, clear paid_amount
+            if (status === 'planned') updates.paid_amount = null;
 
             const { data, error } = await supabaseAdmin
                 .from('budget_items')

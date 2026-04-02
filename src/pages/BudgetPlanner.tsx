@@ -13,7 +13,8 @@ type BudgetItem = {
     id: string;
     category_id: string;
     name: string;
-    amount: number;
+    amount: number;        // planned amount
+    paid_amount: number | null; // actual amount spent (set when marking paid)
     status: 'planned' | 'paid';
 };
 
@@ -172,24 +173,51 @@ export default function BudgetPlanner() {
         }
     };
 
-    const handleToggleItemStatus = async (item: BudgetItem) => {
-        const newStatus = item.status === 'planned' ? 'paid' : 'planned';
+    // Confirm-to-pay state: tracks which item is being confirmed with its actual amount
+    const [confirmPayItem, setConfirmPayItem] = useState<{ id: string; categoryId: string; amount: string } | null>(null);
+
+    const handleRequestMarkPaid = (item: BudgetItem) => {
+        // Open confirmation with planned amount pre-filled
+        setConfirmPayItem({ id: item.id, categoryId: item.category_id, amount: String(item.amount) });
+    };
+
+    const handleConfirmPaid = async () => {
+        if (!confirmPayItem) return;
+        const actualAmount = Number(confirmPayItem.amount);
         try {
             await api.put(`/api/budgets/items`, {
-                id: item.id,
-                status: newStatus
+                id: confirmPayItem.id,
+                status: 'paid',
+                paid_amount: actualAmount
             });
             setBudgetData(prev => ({
                 ...prev,
-                categories: prev.categories.map(c => 
-                    c.id === item.category_id 
-                        ? { ...c, items: c.items.map(i => i.id === item.id ? { ...i, status: newStatus } : i) }
+                categories: prev.categories.map(c =>
+                    c.id === confirmPayItem.categoryId
+                        ? { ...c, items: c.items.map(i => i.id === confirmPayItem.id ? { ...i, status: 'paid', paid_amount: actualAmount } : i) }
                         : c
                 )
             }));
-            if (newStatus === 'paid') trackBudgetEvent('status_changed', { from: 'planned', to: 'paid' });
+            trackBudgetEvent('status_changed', { from: 'planned', to: 'paid', paid_amount: actualAmount });
+            setConfirmPayItem(null);
         } catch (err: any) {
-            setError(err.message || "Failed to update item status");
+            setError(err.message || "Failed to mark as paid");
+        }
+    };
+
+    const handleRevertPlanned = async (item: BudgetItem) => {
+        try {
+            await api.put(`/api/budgets/items`, { id: item.id, status: 'planned' });
+            setBudgetData(prev => ({
+                ...prev,
+                categories: prev.categories.map(c =>
+                    c.id === item.category_id
+                        ? { ...c, items: c.items.map(i => i.id === item.id ? { ...i, status: 'planned', paid_amount: null } : i) }
+                        : c
+                )
+            }));
+        } catch (err: any) {
+            setError(err.message || "Failed to revert item");
         }
     };
 
@@ -216,7 +244,7 @@ export default function BudgetPlanner() {
         // Hook up GA or other tracking here
     };
 
-    // Calculations
+    // Calculations — use paid_amount (actual) for paid items where available
     const parseNum = (n: any) => Number(n) || 0;
     
     let totalPlannedExpenses = 0;
@@ -227,7 +255,8 @@ export default function BudgetPlanner() {
         totalAllocated += parseNum(c.allocated_amount);
         c.items.forEach(i => {
             if (i.status === 'planned') totalPlannedExpenses += parseNum(i.amount);
-            if (i.status === 'paid') totalPaidExpenses += parseNum(i.amount);
+            // Actual balance uses paid_amount if set, falls back to planned amount
+            if (i.status === 'paid') totalPaidExpenses += i.paid_amount != null ? parseNum(i.paid_amount) : parseNum(i.amount);
         });
     });
 
@@ -242,7 +271,8 @@ export default function BudgetPlanner() {
         const [isAdding, setIsAdding] = useState(false);
 
         const catAllocated = parseNum(category.allocated_amount);
-        const catPaid = category.items.filter(i => i.status === 'paid').reduce((s, i) => s + parseNum(i.amount), 0);
+        // Use actual paid_amount for paid items
+        const catPaid = category.items.filter(i => i.status === 'paid').reduce((s, i) => s + (i.paid_amount != null ? parseNum(i.paid_amount) : parseNum(i.amount)), 0);
         const catPlanned = category.items.filter(i => i.status === 'planned').reduce((s, i) => s + parseNum(i.amount), 0);
         
         const actualBalance = catAllocated - catPaid;
@@ -263,51 +293,107 @@ export default function BudgetPlanner() {
                         <p className="text-sm text-slate-400 mt-1">Budget: <strong className="text-emerald-400">{currencyFormatter.format(catAllocated)}</strong></p>
                     </div>
                     
-                    <div className="flex flex-wrap gap-4 text-xs font-medium">
-                        <div className="bg-slate-800/50 px-3 py-2 rounded-lg border border-white/5 shadow-inner">
-                            <span className="text-slate-500 block mb-1">Actual Balance</span>
-                            <span className={`text-sm ${actualBalance < 0 ? 'text-red-400' : 'text-white'}`}>{currencyFormatter.format(actualBalance)}</span>
+                    <div className="flex flex-wrap gap-3 text-xs font-medium">
+                        <div className="glass-card px-4 py-2.5 border-white/5 bg-slate-700/40 !rounded-xl !shadow-none hover:!shadow-none">
+                            <span className="text-slate-500 block mb-0.5 text-[10px] uppercase tracking-widest">Actual Balance</span>
+                            <span className={`text-sm font-bold font-mono ${actualBalance < 0 ? 'text-red-400' : 'text-white'}`}>{currencyFormatter.format(actualBalance)}</span>
                         </div>
-                        <div className="bg-slate-800/50 px-3 py-2 rounded-lg border border-white/5 shadow-inner">
-                            <span className="text-slate-500 block mb-1">Projected Balance</span>
-                            <span className={`text-sm ${projBalance < 0 ? 'text-orange-400' : 'text-white'}`}>{currencyFormatter.format(projBalance)}</span>
+                        <div className="glass-card px-4 py-2.5 border-white/5 bg-slate-700/40 !rounded-xl !shadow-none hover:!shadow-none">
+                            <span className="text-slate-500 block mb-0.5 text-[10px] uppercase tracking-widest">Projected</span>
+                            <span className={`text-sm font-bold font-mono ${projBalance < 0 ? 'text-orange-400' : 'text-white'}`}>{currencyFormatter.format(projBalance)}</span>
                         </div>
                         <button onClick={() => handleDeleteCategory(category.id)} className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-white/5 rounded-lg flex self-center">
                             <FiTrash2 size={16} />
                         </button>
                     </div>
                 </div>
-
                 <div className="p-5">
                     {category.items.length > 0 ? (
                         <div className="space-y-3 mb-4">
-                            {category.items.map(item => (
-                                <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800/60 transition-colors border border-white/5 group">
-                                    <div className="flex items-center gap-3">
-                                        <button 
-                                            onClick={() => handleToggleItemStatus(item)}
-                                            className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${item.status === 'paid' ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-transparent hover:border-emerald-500 border border-transparent'}`}
-                                            title={item.status === 'paid' ? "Mark Planned" : "Mark Paid"}
-                                        >
-                                            <FiCheck size={14} />
-                                        </button>
-                                        <span className={`text-sm font-medium ${item.status === 'paid' ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
-                                            {item.name}
-                                        </span>
+                        {category.items.map(item => {
+                                const isConfirming = confirmPayItem?.id === item.id;
+                                return (
+                                <div key={item.id} className={`rounded-xl border transition-all ${isConfirming ? 'bg-emerald-950/40 border-emerald-500/30' : 'bg-slate-800/40 hover:bg-slate-800/60 border-white/5'} group`}>
+                                    {/* Normal item row */}
+                                    <div className="flex items-center justify-between p-3">
+                                        <div className="flex items-center gap-3">
+                                            {item.status === 'planned' ? (
+                                                <button 
+                                                    onClick={() => handleRequestMarkPaid(item)}
+                                                    className="w-6 h-6 rounded-md flex items-center justify-center transition-all bg-slate-700 text-transparent hover:border-emerald-500 hover:text-emerald-400 border border-slate-600"
+                                                    title="Mark as Paid"
+                                                >
+                                                    <FiCheck size={14} />
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleRevertPlanned(item)}
+                                                    className="w-6 h-6 rounded-md flex items-center justify-center transition-all bg-emerald-500 text-white hover:bg-red-500"
+                                                    title="Revert to Planned"
+                                                >
+                                                    <FiCheck size={14} />
+                                                </button>
+                                            )}
+                                            <span className={`text-sm font-medium ${item.status === 'paid' ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
+                                                {item.name}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right">
+                                                {item.status === 'paid' && item.paid_amount != null && item.paid_amount !== item.amount ? (
+                                                    <>
+                                                        <span className="text-xs text-slate-500 line-through font-mono block">{currencyFormatter.format(parseNum(item.amount))}</span>
+                                                        <span className="text-sm font-bold font-mono text-emerald-400">{currencyFormatter.format(parseNum(item.paid_amount))}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className={`text-sm font-bold font-mono ${item.status === 'paid' ? 'text-slate-500' : 'text-amber-400'}`}>
+                                                        {currencyFormatter.format(item.status === 'paid' && item.paid_amount != null ? parseNum(item.paid_amount) : parseNum(item.amount))}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded border w-16 text-center ${
+                                                item.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-slate-400 border-white/5'
+                                            }`}>
+                                                {item.status}
+                                            </span>
+                                            <button onClick={() => handleDeleteItem(category.id, item.id)} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1">
+                                                <FiTrash2 size={14} />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className={`text-sm font-bold font-mono ${item.status === 'paid' ? 'text-slate-500' : 'text-amber-400'}`}>
-                                            {currencyFormatter.format(parseNum(item.amount))}
-                                        </span>
-                                        <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5 w-16 text-center">
-                                            {item.status}
-                                        </span>
-                                        <button onClick={() => handleDeleteItem(category.id, item.id)} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1">
-                                            <FiTrash2 size={14} />
-                                        </button>
-                                    </div>
+
+                                    {/* Inline confirm-to-pay panel */}
+                                    {isConfirming && (
+                                        <div className="px-3 pb-3">
+                                            <div className="bg-emerald-950/60 border border-emerald-500/20 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                                                <div className="flex-1">
+                                                    <p className="text-xs font-bold text-emerald-300 mb-1 uppercase tracking-widest">How much did you actually spend?</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-emerald-400 font-bold">₹</span>
+                                                        <input
+                                                            type="number"
+                                                            value={confirmPayItem!.amount}
+                                                            onChange={e => setConfirmPayItem(prev => prev ? { ...prev, amount: e.target.value } : null)}
+                                                            className="bg-slate-900/70 border border-emerald-500/30 text-white font-mono font-bold rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                                                            autoFocus
+                                                        />
+                                                        <span className="text-[10px] text-slate-500">Planned: {currencyFormatter.format(item.amount)}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={handleConfirmPaid} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-emerald-600/20">
+                                                        <FiCheck size={14} /> Confirm Paid
+                                                    </button>
+                                                    <button onClick={() => setConfirmPayItem(null)} className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <p className="text-sm text-slate-500 mb-4 px-2">No planned expenses in this category yet.</p>
@@ -377,22 +463,21 @@ export default function BudgetPlanner() {
                     </div>
                 ) : (
                     <div className="space-y-8 animate-fade-in">
-                        {/* Summary Dashboard */}
-                        <div className="glass-card p-6 bg-gradient-to-br from-slate-800 to-slate-900 border-white/10 relative overflow-hidden shadow-2xl">
-                            {/* Abstract glowing background effect */}
-                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none"></div>
+                        {/* Summary Dashboard - same pattern as IncomeTracking hero banner */}
+                        <div className="glass-card p-8 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-emerald-500/30 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none opacity-50"></div>
                             
                             <div className="flex flex-col md:flex-row gap-8 justify-between items-start md:items-center relative z-10">
                                 
                                 {/* Total Income Setup */}
                                 <div className="w-full md:w-1/3">
-                                    <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Total Monthly Income</p>
+                                    <p className="text-xs uppercase tracking-widest text-emerald-200 font-bold mb-2">Total Monthly Income</p>
                                     {!editingIncome ? (
                                         <div className="flex items-center gap-3">
                                             <span className="text-4xl font-bold text-white font-heading tracking-tight drop-shadow-md">
                                                 {currencyFormatter.format(parseNum(budgetData.total_income))}
                                             </span>
-                                            <button onClick={() => setEditingIncome(true)} className="p-1.5 bg-white/5 hover:bg-white/10 rounded border border-white/5 text-slate-400 hover:text-white transition-all">
+                                            <button onClick={() => setEditingIncome(true)} className="p-1.5 bg-white/10 hover:bg-white/20 rounded border border-white/10 text-white/70 hover:text-white transition-all">
                                                 <FiEdit2 size={14} />
                                             </button>
                                         </div>
@@ -403,25 +488,25 @@ export default function BudgetPlanner() {
                                                 <input 
                                                     type="number" autoFocus
                                                     value={tempIncome} onChange={e => setTempIncome(e.target.value)}
-                                                    className="w-full pl-7 pr-3 py-2 bg-slate-950/50 border border-emerald-500/50 rounded-lg text-white font-bold font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                    className="w-full pl-7 pr-3 py-2 bg-slate-700/50 border border-emerald-500/50 rounded-lg text-white font-bold font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                                                 />
                                             </div>
                                             <button onClick={handleSaveIncome} className="px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-emerald-600/20">Save</button>
-                                            <button onClick={() => { setEditingIncome(false); setTempIncome(String(budgetData.total_income)); }} className="px-3 py-2 bg-white/5 text-slate-300 rounded-lg text-sm font-medium">Cancel</button>
+                                            <button onClick={() => { setEditingIncome(false); setTempIncome(String(budgetData.total_income)); }} className="px-3 py-2 bg-white/10 text-white rounded-lg text-sm font-medium">Cancel</button>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Balances */}
                                 <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="bg-slate-950/40 p-4 rounded-2xl border border-white/5">
+                                    <div className="glass-card p-4 border-emerald-500/20 bg-slate-700/40">
                                         <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">In-Hand Actual Balance</p>
                                         <p className={`text-2xl font-bold font-mono tracking-tight ${currentInHand < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                                             {currencyFormatter.format(currentInHand)}
                                         </p>
                                         <p className="text-[10px] text-slate-500 mt-1">Income - Total Paid</p>
                                     </div>
-                                    <div className="bg-slate-950/40 p-4 rounded-2xl border border-white/5">
+                                    <div className="glass-card p-4 border-white/5 bg-slate-700/40">
                                         <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">Projected Forecast</p>
                                         <p className={`text-2xl font-bold font-mono tracking-tight ${projectedRemaining < 0 ? 'text-orange-400' : 'text-amber-400'}`}>
                                             {currencyFormatter.format(projectedRemaining)}
@@ -439,9 +524,9 @@ export default function BudgetPlanner() {
                                 <span>Allocated: {currencyFormatter.format(totalAllocated)}</span>
                                 <span>Income: {currencyFormatter.format(parseNum(budgetData.total_income))}</span>
                             </div>
-                            <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5 relative">
+                            <div className="h-3 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 relative">
                                 <div 
-                                    className={`h-full absolute left-0 top-0 rounded-full ${totalAllocated > parseNum(budgetData.total_income) ? 'bg-red-500' : 'bg-emerald-500'}`}
+                                    className={`h-full absolute left-0 top-0 rounded-full transition-all duration-500 ${totalAllocated > parseNum(budgetData.total_income) ? 'bg-red-500' : 'bg-emerald-500'}`}
                                     style={{ width: `${Math.min(100, parseNum(budgetData.total_income) === 0 ? 0 : (totalAllocated / parseNum(budgetData.total_income)) * 100)}%` }}
                                 ></div>
                             </div>

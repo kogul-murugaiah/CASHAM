@@ -37,7 +37,8 @@ CREATE TABLE public.budget_items (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     category_id UUID NOT NULL REFERENCES public.budget_categories(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    amount NUMERIC NOT NULL DEFAULT 0,
+    amount NUMERIC NOT NULL DEFAULT 0,        -- planned amount
+    paid_amount NUMERIC DEFAULT NULL,         -- actual amount spent (set when marking paid)
     status TEXT NOT NULL CHECK (status IN ('planned', 'paid')) DEFAULT 'planned',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -46,3 +47,6 @@ CREATE TABLE public.budget_items (
 ALTER TABLE public.budget_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage their own budget items" 
     ON public.budget_items FOR ALL USING (auth.uid() = user_id);
+
+-- ⚠️  MIGRATION: If you already ran the schema above without paid_amount, run this line:
+-- ALTER TABLE public.budget_items ADD COLUMN IF NOT EXISTS paid_amount NUMERIC DEFAULT NULL;
