@@ -416,8 +416,8 @@ html.light .landing-page .hover\:border-slate-600:hover {
 
 /* -------------- ENFIX FINTECH LIGHT THEME ---------------- */
 html.light body,
-html.light .bg-slate-[800],
-html.light .bg-slate-[900],
+html.light .bg-slate-\[800\],
+html.light .bg-slate-\[900\],
 html.light .bg-slate-900,
 html.light .min-h-screen {
   background-color: #f8fafc !important; /* Cool Off-White */
@@ -476,7 +476,7 @@ html.light .to-teal-600\/20 {
 }
 
 /* Inputs on Add Transaction pages */
-html.light .bg-slate-[700]\/50, 
+html.light .bg-slate-\[700\]\/50, 
 html.light .bg-slate-700\/50 {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
