@@ -49,7 +49,7 @@ const MONTH_NAMES = [
 
 const TYPE_COLORS: Record<string, string> = {
     "Stock": "#f59e0b",
-    "Mutual Fund": "#3b82f6",
+    "Mutual Fund": "#10b981",
     "Crypto": "#8b5cf6",
     "Gold": "#fbbf24",
     "FD": "#10b981",
@@ -228,14 +228,14 @@ const InvestmentTracking = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex p-1 bg-slate-900/50 backdrop-blur rounded-xl border border-white/5">
+                        <div className="flex p-1 bg-slate-700/50 backdrop-blur rounded-xl border border-white/5">
                             <button onClick={() => setViewMode("monthly")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-slate-400 hover:text-white"}`}>Monthly</button>
                             <button onClick={() => setViewMode("yearly")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "text-slate-400 hover:text-white"}`}>Yearly</button>
                         </div>
                         {viewMode === "monthly" ? (
-                            <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ colorScheme: theme }} className="rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
+                            <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ colorScheme: theme }} className="rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
                         ) : (
-                            <input type="number" min="2000" max="2100" value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-24 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
+                            <input type="number" min="2000" max="2100" value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="w-24 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer" />
                         )}
                     </div>
                 </div>
@@ -245,13 +245,13 @@ const InvestmentTracking = () => {
 
                 {loading ? (
                     <div className="grid gap-6 md:grid-cols-3">
-                        {[...Array(3)].map((_, i) => <div key={i} className="h-32 animate-pulse rounded-3xl bg-slate-800/50" />)}
+                        {[...Array(3)].map((_, i) => <div key={i} className="h-32 animate-pulse rounded-3xl bg-slate-700/50" />)}
                     </div>
                 ) : (
                     <div className="space-y-8 animate-fade-in">
                         {records.length === 0 ? (
                             <div className="glass-card p-12 text-center border-amber-500/10">
-                                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
                                         <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
                                     </svg>
@@ -275,12 +275,12 @@ const InvestmentTracking = () => {
                                     </div>
                                     <div className="glass-card p-6 relative overflow-hidden">
                                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                                            <div className="w-24 h-24 rounded-full bg-blue-500 blur-2xl" />
+                                            <div className="w-24 h-24 rounded-full bg-emerald-500 blur-2xl" />
                                         </div>
                                         <p className="text-sm font-medium text-slate-400">Total Returned</p>
-                                        <div className="mt-2 text-3xl font-bold text-blue-400 font-heading">{currencyFormatter.format(totalReturned)}</div>
-                                        <div className="mt-4 flex items-center text-xs text-blue-300 bg-blue-500/10 w-fit px-2 py-1 rounded-lg">
-                                            <span className="w-2 h-2 rounded-full bg-blue-400 mr-2 animate-pulse" />Sell Total
+                                        <div className="mt-2 text-3xl font-bold text-emerald-400 font-heading">{currencyFormatter.format(totalReturned)}</div>
+                                        <div className="mt-4 flex items-center text-xs text-blue-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-lg">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />Sell Total
                                         </div>
                                     </div>
                                     <div className="glass-card p-6 relative overflow-hidden">
@@ -337,7 +337,7 @@ const InvestmentTracking = () => {
 
                                 {/* Table */}
                                 <div className="glass-card p-0 overflow-hidden">
-                                    <div className="border-b border-white/5 bg-slate-900/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="border-b border-white/5 bg-slate-700/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-white font-heading">Investment History</h2>
                                             <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
@@ -352,7 +352,7 @@ const InvestmentTracking = () => {
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="border-b border-white/5 bg-slate-900/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                                                <tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                                                     <th className="px-6 py-4">Date</th>
                                                     <th className="px-6 py-4">Name</th>
                                                     <th className="px-6 py-4">Type</th>
@@ -369,16 +369,16 @@ const InvestmentTracking = () => {
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{new Date(rec.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
                                                         <td className="px-6 py-4 text-sm font-medium text-white">{rec.name}</td>
                                                         <td className="px-6 py-4">
-                                                            <span className="inline-flex items-center rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5">{rec.type}</span>
+                                                            <span className="inline-flex items-center rounded-lg bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5">{rec.type}</span>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold border ${rec.action === "buy" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
+                                                            <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold border ${rec.action === "buy" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}`}>
                                                                 {rec.action === "buy" ? "↑ Buy" : "↓ Sell"}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 text-sm text-slate-400">{rec.units ?? "-"}</td>
                                                         <td className="px-6 py-4 text-[10px] text-slate-500 uppercase">{rec.account_type ?? "-"}</td>
-                                                        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold font-mono ${rec.action === "buy" ? "text-amber-400" : "text-blue-400"}`}>
+                                                        <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-bold font-mono ${rec.action === "buy" ? "text-amber-400" : "text-emerald-400"}`}>
                                                             {currencyFormatter.format(rec.amount)}
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
@@ -397,11 +397,11 @@ const InvestmentTracking = () => {
                                         </table>
                                     </div>
                                     {totalPages > 1 && (
-                                        <div className="border-t border-white/5 bg-slate-900/40 px-6 py-4 flex items-center justify-between">
+                                        <div className="border-t border-white/5 bg-slate-700/40 px-6 py-4 flex items-center justify-between">
                                             <p className="text-xs font-medium text-slate-500">Page {currentPage} of {totalPages}</p>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-slate-800 px-4 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Prev</button>
-                                                <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-slate-800 px-4 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Next</button>
+                                                <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Prev</button>
+                                                <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Next</button>
                                             </div>
                                         </div>
                                     )}
@@ -414,7 +414,7 @@ const InvestmentTracking = () => {
 
             {/* Edit Modal */}
             {isModalOpen && editingData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4 animate-fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-700/80 backdrop-blur-sm px-4 animate-fade-in">
                     <div className="w-full max-w-xl glass-card p-6 sm:p-8 shadow-amber-500/10">
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div>
@@ -430,32 +430,32 @@ const InvestmentTracking = () => {
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Name</label>
-                                    <input value={editingData.name} onChange={(e) => setEditingData({ ...editingData, name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+                                    <input value={editingData.name} onChange={(e) => setEditingData({ ...editingData, name: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Type</label>
-                                    <select value={editingData.type} onChange={(e) => setEditingData({ ...editingData, type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 appearance-none cursor-pointer">
+                                    <select value={editingData.type} onChange={(e) => setEditingData({ ...editingData, type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 appearance-none cursor-pointer">
                                         {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Action</label>
-                                    <select value={editingData.action} onChange={(e) => setEditingData({ ...editingData, action: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 appearance-none cursor-pointer">
+                                    <select value={editingData.action} onChange={(e) => setEditingData({ ...editingData, action: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 appearance-none cursor-pointer">
                                         <option value="buy">Buy</option>
                                         <option value="sell">Sell</option>
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Amount (₹)</label>
-                                    <input type="number" value={editingData.amount} onChange={(e) => setEditingData({ ...editingData, amount: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 font-mono" />
+                                    <input type="number" value={editingData.amount} onChange={(e) => setEditingData({ ...editingData, amount: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 font-mono" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                                    <input type="date" value={editingData.date} onChange={(e) => setEditingData({ ...editingData, date: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
+                                    <input type="date" value={editingData.date} onChange={(e) => setEditingData({ ...editingData, date: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Account</label>
-                                    <select value={editingData.account_type} onChange={(e) => setEditingData({ ...editingData, account_type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 appearance-none cursor-pointer">
+                                    <select value={editingData.account_type} onChange={(e) => setEditingData({ ...editingData, account_type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 appearance-none cursor-pointer">
                                         <option value="">No account</option>
                                         {accountTypes.map((at) => <option key={at} value={at}>{at}</option>)}
                                     </select>
@@ -464,7 +464,7 @@ const InvestmentTracking = () => {
 
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
-                                <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 resize-none" />
+                                <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 resize-none" />
                             </div>
 
                             {error && <p className="text-sm text-red-400 text-center">{error}</p>}

@@ -96,19 +96,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-900 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
       {/* Background Mesh */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-green-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
 
       <div className="flex-1 flex items-center justify-center relative z-10">
         <div className="w-full max-w-md">
           {/* Branding */}
           <div className="text-center mb-8 animate-fade-in">
-            <div className="inline-block p-4 rounded-full bg-white/5 backdrop-blur-sm mb-4 border border-white/10 shadow-lg shadow-blue-500/10">
+            <div className="inline-block p-4 rounded-full bg-white/5 backdrop-blur-sm mb-4 border border-white/10 shadow-lg shadow-emerald-500/10">
               <Logo size="xl" className="mx-auto" />
             </div>
-            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
               CASHAM
             </h1>
           </div>
@@ -140,7 +140,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   autoComplete="username"
-                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                   required
                   disabled={loading}
                 />
@@ -162,7 +162,7 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     autoComplete="current-password"
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all pr-12"
+                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all pr-12"
                     required
                     disabled={loading}
                   />
@@ -222,7 +222,7 @@ const Login = () => {
                     className="sr-only peer"
                     disabled={loading}
                   />
-                  <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-slate-900/50 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-slate-700/50 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 transition-all flex items-center justify-center">
                     {rememberMe && (
                       <svg className="w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -246,7 +246,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading || googleLoading}
-                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-blue-500/20"
+                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-emerald-500/20"
               >
                 {loading ? "Logging in..." : "Log In"}
               </button>
@@ -287,7 +287,7 @@ const Login = () => {
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="text-blue-400 font-bold hover:text-blue-300 transition-colors"
+                  className="text-emerald-400 font-bold hover:text-blue-300 transition-colors"
                 >
                   Sign up
                 </Link>

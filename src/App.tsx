@@ -32,7 +32,7 @@ const InvestmentTracking = lazy(() => import('./pages/InvestmentTracking'));
 const PageLoader = () => (
   <div className="flex-1 flex items-center justify-center min-h-[50vh]">
     <div className="flex flex-col items-center gap-4">
-      <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+      <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
       <p className="text-slate-400 text-sm font-medium animate-pulse">Loading...</p>
     </div>
   </div>
@@ -42,12 +42,12 @@ function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
-        <div className="min-h-screen relative overflow-hidden bg-slate-950 text-slate-100 font-sans">
+        <div className="min-h-screen relative overflow-hidden bg-slate-900 text-slate-100 font-sans">
           {/* Ambient Background Mesh */}
           <div className="fixed inset-0 z-0 pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] animate-float"></div>
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] animate-float"></div>
             <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s' }}></div>
-            <div className="absolute bottom-[-10%] left-[20%] w-[35%] h-[35%] bg-purple-500/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '4s' }}></div>
+            <div className="absolute bottom-[-10%] left-[20%] w-[35%] h-[35%] bg-green-500/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: '4s' }}></div>
           </div>
 
           {/* Content */}

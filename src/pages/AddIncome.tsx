@@ -146,7 +146,7 @@ const AddIncome = () => {
                   id="amount"
                   value={form.amount}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
+                  className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -164,7 +164,7 @@ const AddIncome = () => {
                 id="date"
                 value={form.date}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
+                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
                 required
               />
             </div>
@@ -211,7 +211,7 @@ const AddIncome = () => {
               onChange={handleChange}
               maxLength={300}
               rows={3}
-              className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none resize-none"
+              className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none resize-none"
               placeholder="Details..."
             />
           </div>

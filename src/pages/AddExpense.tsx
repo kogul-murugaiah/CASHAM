@@ -163,7 +163,7 @@ const AddExpense = () => {
                 id="item"
                 value={form.item}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                 placeholder="e.g., Groceries"
                 required
               />
@@ -183,7 +183,7 @@ const AddExpense = () => {
                   id="amount"
                   value={form.amount}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                  className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -201,7 +201,7 @@ const AddExpense = () => {
                 id="date"
                 value={form.date}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
+                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
                 required
               />
             </div>
@@ -247,7 +247,7 @@ const AddExpense = () => {
                 id="description"
                 value={form.description}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                 placeholder="Details..."
               />
             </div>
@@ -268,7 +268,7 @@ const AddExpense = () => {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary rounded-xl px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary rounded-xl px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Adding..." : "Add Expense"}
             </button>
@@ -285,7 +285,7 @@ const AddExpense = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/5 bg-slate-900/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <tr className="border-b border-white/5 bg-slate-700/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
                       <th className="px-6 py-4">Date</th>
                       <th className="px-6 py-4">Item</th>
                       <th className="px-6 py-4">Category</th>
@@ -304,7 +304,7 @@ const AddExpense = () => {
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {expense.categories ? (
-                            <span className="inline-flex items-center rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5 group-hover:border-white/10 transition-colors">
+                            <span className="inline-flex items-center rounded-lg bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5 group-hover:border-white/10 transition-colors">
                               {expense.categories.name}
                             </span>
                           ) : (

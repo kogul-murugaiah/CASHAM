@@ -104,7 +104,7 @@ const Navbar = () => {
                         "rounded-full px-3 py-2 text-sm font-semibold transition duration-200 whitespace-nowrap",
                         isActive
                           ? "bg-slate-700/50 text-white shadow-sm border border-white/10"
-                          : "text-slate-400 hover:bg-slate-800/50 hover:text-white",
+                          : "text-slate-400 hover:bg-slate-700/50 hover:text-white",
                       ].join(" ")
                     }
                   >
@@ -119,11 +119,11 @@ const Navbar = () => {
               <div className="relative" ref={desktopDropdownRef}>
                 <button
                   onClick={() => setDesktopDropdownOpen(!desktopDropdownOpen)}
-                  className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-400 transition duration-200 hover:bg-slate-800/50 hover:text-white"
+                  className="flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-slate-400 transition duration-200 hover:bg-slate-700/50 hover:text-white"
                   aria-label="User menu"
                   aria-expanded={desktopDropdownOpen}
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-xs font-bold text-white shadow-sm ring-2 ring-slate-900">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-indigo-700 text-xs font-bold text-white shadow-sm ring-2 ring-slate-900">
                     {getInitials(user.email || "")}
                   </div>
                   <span className="hidden sm:inline-block">
@@ -143,7 +143,7 @@ const Navbar = () => {
                   <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900/90 shadow-xl ring-1 ring-white/10 backdrop-blur-xl animate-fade-in">
                     <div className="p-4">
                       <div className="mb-3 flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-sm font-bold text-white shadow-sm ring-2 ring-white/5">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-indigo-700 text-sm font-bold text-white shadow-sm ring-2 ring-white/5">
                           {getInitials(user.email || "")}
                         </div>
                         <div className="flex-1 min-w-0">

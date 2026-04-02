@@ -68,8 +68,8 @@ const AuthCallback = () => {
     }, [navigate]);
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center relative overflow-hidden">
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow" />
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center relative overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed" />
 
             <div className="relative z-10 text-center space-y-6 px-4">
@@ -88,8 +88,8 @@ const AuthCallback = () => {
                     </div>
                 ) : (
                     <div className="glass-card p-8 max-w-sm mx-auto space-y-4">
-                        <div className="w-14 h-14 mx-auto rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                            <svg className="w-7 h-7 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                            <svg className="w-7 h-7 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>

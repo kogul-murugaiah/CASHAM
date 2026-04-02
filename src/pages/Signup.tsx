@@ -85,19 +85,19 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-900 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
       {/* Background Mesh */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-green-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
 
       <div className="flex-1 flex items-center justify-center relative z-10">
         <div className="w-full max-w-md">
           {/* Branding */}
           <div className="text-center mb-8 animate-fade-in">
-            <div className="inline-block p-4 rounded-full bg-white/5 backdrop-blur-sm mb-4 border border-white/10 shadow-lg shadow-purple-500/10">
+            <div className="inline-block p-4 rounded-full bg-white/5 backdrop-blur-sm mb-4 border border-white/10 shadow-lg shadow-green-500/10">
               <Logo size="xl" className="mx-auto" />
             </div>
-            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
               CASHAM
             </h1>
           </div>
@@ -127,7 +127,7 @@ const Signup = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                   placeholder="Enter your email"
                   required
                   disabled={loading}
@@ -148,7 +148,7 @@ const Signup = () => {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all pr-12"
+                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all pr-12"
                     placeholder="Create a password"
                     required
                     disabled={loading}
@@ -179,7 +179,7 @@ const Signup = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all pr-12"
+                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all pr-12"
                     placeholder="Confirm your password"
                     required
                     disabled={loading}
@@ -214,7 +214,7 @@ const Signup = () => {
               <button
                 type="submit"
                 disabled={loading || googleLoading}
-                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-blue-500/20"
+                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-emerald-500/20"
               >
                 {loading ? "Creating account..." : "Create Account"}
               </button>
@@ -255,7 +255,7 @@ const Signup = () => {
                 Already have an account?{" "}
                 <Link
                   to="/login"
-                  className="text-blue-400 font-bold hover:text-blue-300 transition-colors"
+                  className="text-emerald-400 font-bold hover:text-blue-300 transition-colors"
                 >
                   Log in
                 </Link>

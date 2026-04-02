@@ -39,7 +39,7 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0, // No decimals for cleaner look
 });
 
-const COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b"];
+const COLORS = ["#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b"];
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -109,7 +109,7 @@ const Dashboard = () => {
 
   // Data for Charts
   const comparisonData = [
-    { name: "Income", value: monthlyIncome, fill: "#3b82f6" }, // Blue
+    { name: "Income", value: monthlyIncome, fill: "#10b981" }, // Blue
     { name: "Expense", value: monthlyExpenses, fill: "#ef4444" }, // Red
   ];
 
@@ -189,7 +189,7 @@ const Dashboard = () => {
             <button
               onClick={handleSyncCarryover}
               disabled={syncing}
-              className="mt-2 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 opacity-60 hover:opacity-100 disabled:opacity-30"
+              className="mt-2 text-xs font-bold text-emerald-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 opacity-60 hover:opacity-100 disabled:opacity-30"
             >
               <svg className={`${syncing ? "animate-spin" : ""}`} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
               {syncing ? "Syncing..." : "Sync Balance Carryover"}
@@ -197,7 +197,7 @@ const Dashboard = () => {
           </div>
 
           {/* Month Picker UI */}
-          <div className="flex items-center gap-2 bg-slate-800/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md self-start md:self-auto">
+          <div className="flex items-center gap-2 bg-slate-700/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md self-start md:self-auto">
             <button
               onClick={handlePrevMonth}
               className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"
@@ -210,7 +210,7 @@ const Dashboard = () => {
               <select
                 value={currentMonth}
                 onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
-                className="bg-transparent text-white font-semibold focus:outline-none appearance-none cursor-pointer hover:text-blue-400 transition-colors"
+                className="bg-transparent text-white font-semibold focus:outline-none appearance-none cursor-pointer hover:text-emerald-400 transition-colors"
               >
                 {MONTH_NAMES.map((name, i) => (
                   <option key={name} value={i + 1} className="bg-slate-900 text-white">{name}</option>
@@ -221,7 +221,7 @@ const Dashboard = () => {
                 type="number"
                 value={currentYear}
                 onChange={(e) => setCurrentYear(parseInt(e.target.value))}
-                className="bg-transparent text-white font-semibold w-16 focus:outline-none hover:text-blue-400 transition-colors"
+                className="bg-transparent text-white font-semibold w-16 focus:outline-none hover:text-emerald-400 transition-colors"
               />
             </div>
 
@@ -238,7 +238,7 @@ const Dashboard = () => {
         {loading ? (
           <div className="grid gap-6 md:grid-cols-3 mb-8">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-40 animate-pulse rounded-3xl bg-slate-800/50" />
+              <div key={i} className="h-40 animate-pulse rounded-3xl bg-slate-700/50" />
             ))}
           </div>
         ) : error ? (
@@ -254,7 +254,7 @@ const Dashboard = () => {
             </div>
             <button
               onClick={() => window.location.reload()}
-              className="mt-6 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+              className="mt-6 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-6 py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-600/20"
             >
               Retry Connection
             </button>
@@ -266,14 +266,14 @@ const Dashboard = () => {
               {/* Income */}
               <div className="glass-card p-6 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <div className="w-24 h-24 rounded-full bg-blue-500 blur-2xl"></div>
+                  <div className="w-24 h-24 rounded-full bg-emerald-500 blur-2xl"></div>
                 </div>
                 <p className="text-sm font-medium text-slate-400">Total Income</p>
                 <div className="mt-2 text-3xl font-bold text-white font-heading">
                   {currencyFormatter.format(monthlyIncome)}
                 </div>
-                <div className="mt-4 flex items-center text-xs text-blue-300 bg-blue-500/10 w-fit px-2 py-1 rounded-lg">
-                  <span className="w-2 h-2 rounded-full bg-blue-400 mr-2 animate-pulse"></span>
+                <div className="mt-4 flex items-center text-xs text-blue-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-lg">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
                   Inflow
                 </div>
               </div>
@@ -418,7 +418,7 @@ const Dashboard = () => {
               <h3 className="text-lg font-bold text-white mb-6 font-heading">Detailed Account Status</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {accountBalances.map((account) => (
-                  <div key={account.accountType} className="rounded-2xl border border-white/5 bg-slate-800/50 p-4 hover:bg-slate-800/80 transition-colors">
+                  <div key={account.accountType} className="rounded-2xl border border-white/5 bg-slate-700/50 p-4 hover:bg-slate-700/80 transition-colors">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{account.accountType}</span>
                       <div className={`h-2 w-2 rounded-full ${account.balance >= 0 ? "bg-green-500" : "bg-red-500"}`}></div>

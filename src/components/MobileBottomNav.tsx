@@ -35,14 +35,14 @@ const MobileBottomNav = () => {
         <div className="md:hidden fixed inset-0 z-40 flex items-end justify-center pb-24 px-4">
           {/* Overlay */}
           <div
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setHubOpen(false)}
           />
 
           {/* Hub Card */}
           <div
             ref={hubRef}
-            className="relative w-full max-w-sm glass-card p-6 animate-fade-in shadow-2xl shadow-slate-950/50"
+            className="relative w-full max-w-sm glass-card p-6 animate-fade-in shadow-2xl shadow-slate-900/50"
           >
             <div className="flex items-center justify-between mb-5">
               <div>
@@ -98,11 +98,11 @@ const MobileBottomNav = () => {
           onClick={() => setHubOpen(!hubOpen)}
           className={`relative flex items-center gap-2.5 px-6 py-3.5 rounded-full font-bold text-white text-sm font-heading transition-all duration-300 shadow-2xl ${hubOpen
               ? "bg-slate-700 shadow-slate-900/50 scale-95"
-              : "bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 shadow-blue-500/40 hover:shadow-blue-500/60 hover:scale-105 active:scale-95"
+              : "bg-gradient-to-r from-emerald-500 via-indigo-500 to-emerald-600 shadow-emerald-500/40 hover:shadow-emerald-500/60 hover:scale-105 active:scale-95"
             }`}
         >
           {!hubOpen && (
-            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-30 blur-md animate-pulse pointer-events-none" />
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 opacity-30 blur-md animate-pulse pointer-events-none" />
           )}
           <FiPlus
             size={20}

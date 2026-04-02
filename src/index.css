@@ -9,7 +9,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-50 font-sans antialiased selection:bg-blue-500/30 selection:text-blue-200;
+    @apply bg-slate-900 text-slate-50 font-sans antialiased selection:bg-emerald-500/30 selection:text-blue-200;
   }
 
   :root {
@@ -19,19 +19,19 @@
 
 @layer components {
   .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-xl rounded-3xl transition-all duration-300 hover:bg-slate-900/50 hover:border-white/10 hover:shadow-2xl hover:shadow-blue-900/20;
+    @apply bg-slate-700/40 backdrop-blur-md border border-white/5 shadow-xl rounded-3xl transition-all duration-300 hover:bg-slate-700/50 hover:border-white/10 hover:shadow-2xl hover:shadow-emerald-900/20;
   }
 
   .glass-nav {
-    @apply bg-slate-950/70 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 transition-all duration-300;
+    @apply bg-slate-900/70 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 transition-all duration-300;
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/30 hover:shadow-blue-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 bg-[length:200%_200%] animate-gradient;
+    @apply bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium px-6 py-2.5 rounded-full shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 bg-[length:200%_200%] animate-gradient;
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-green-400;
   }
 }
 
@@ -69,7 +69,7 @@ html.light body {
 }
 
 /* Page backgrounds */
-html.light .bg-slate-950,
+html.light .bg-slate-900,
 html.light .min-h-screen {
   background-color: #f1f5f9 !important;
 }
@@ -78,7 +78,7 @@ html.light .bg-slate-900 {
   background-color: #e2e8f0 !important;
 }
 
-html.light .bg-slate-800 {
+html.light .bg-slate-700 {
   background-color: #cbd5e1 !important;
 }
 
@@ -145,16 +145,16 @@ html.light nav a:hover {
   color: #0f172a !important;
 }
 
-html.light nav a.text-blue-400 {
+html.light nav a.text-emerald-400 {
   color: #2563eb !important;
 }
 
 /* Active sidebar link */
-html.light .bg-blue-500\/15 {
+html.light .bg-emerald-500\/15 {
   background-color: rgba(59, 130, 246, 0.15) !important;
 }
 
-html.light .border-blue-500\/20 {
+html.light .border-emerald-500\/20 {
   border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
@@ -226,7 +226,7 @@ html.light ::-webkit-scrollbar-thumb:hover {
 }
 
 /* Month picker */
-html.light .bg-slate-800\/40 {
+html.light .bg-slate-700\/40 {
   background-color: rgba(226, 232, 240, 0.6) !important;
 }
 
@@ -235,15 +235,15 @@ html.light .bg-slate-900\/95 {
   background-color: rgba(255, 255, 255, 0.98) !important;
 }
 
-html.light .bg-slate-950\/80 {
+html.light .bg-slate-900\/80 {
   background-color: rgba(255, 255, 255, 0.85) !important;
 }
 
-html.light .bg-slate-950\/60 {
+html.light .bg-slate-900\/60 {
   background-color: rgba(15, 23, 42, 0.4) !important;
 }
 
-html.light .bg-slate-950\/70 {
+html.light .bg-slate-900\/70 {
   background-color: rgba(15, 23, 42, 0.4) !important;
 }
 
@@ -252,7 +252,7 @@ html.light .bg-slate-900\/80 {
   background-color: rgba(255, 255, 255, 0.95) !important;
 }
 
-html.light .bg-slate-800\/50 {
+html.light .bg-slate-700\/50 {
   background-color: rgba(226, 232, 240, 0.5) !important;
 }
 
@@ -270,7 +270,7 @@ html.light .landing-page .bg-slate-900\/80 {
   border-bottom-color: #e2e8f0 !important;
 }
 
-html.light .landing-page .from-blue-900\/20 {
+html.light .landing-page .from-emerald-900\/20 {
   background-image: radial-gradient(ellipse at top, #eff6ff 0%, transparent 70%) !important;
 }
 
@@ -281,55 +281,55 @@ html.light .landing-page .blur-\[100px\] {
   mix-blend-mode: multiply !important;
 }
 
-html.light .landing-page .bg-blue-600\/15 {
+html.light .landing-page .bg-emerald-600\/15 {
   background-color: rgba(37, 99, 235, 0.15) !important;
 }
 
-html.light .landing-page .bg-purple-600\/15 {
+html.light .landing-page .bg-green-600\/15 {
   background-color: rgba(147, 51, 234, 0.15) !important;
 }
 
-html.light .landing-page .from-blue-400 {
+html.light .landing-page .from-emerald-400 {
   --tw-gradient-from: #2563eb !important;
 }
 
-html.light .landing-page .via-indigo-400 {
+html.light .landing-page .via-teal-400 {
   --tw-gradient-via: #4f46e5 !important;
 }
 
-html.light .landing-page .to-purple-400 {
+html.light .landing-page .to-green-400 {
   --tw-gradient-to: #9333ea !important;
 }
 
-html.light .landing-page .bg-blue-900\/30 {
+html.light .landing-page .bg-emerald-900\/30 {
   background-color: #dbeafe !important;
   border-color: #bfdbfe !important;
   color: #1d4ed8 !important;
 }
 
-html.light .landing-page button.bg-slate-800,
-html.light .landing-page a.bg-slate-800 {
+html.light .landing-page button.bg-slate-700,
+html.light .landing-page a.bg-slate-700 {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
 
-html.light .landing-page button.bg-slate-800:hover,
-html.light .landing-page a.bg-slate-800:hover {
+html.light .landing-page button.bg-slate-700:hover,
+html.light .landing-page a.bg-slate-700:hover {
   background-color: #f8fafc !important;
 }
 
-html.light .landing-page section.bg-slate-800\/30 {
+html.light .landing-page section.bg-slate-700\/30 {
   background-color: #f8fafc !important;
 }
 
-html.light .landing-page .bg-slate-800\/50 {
+html.light .landing-page .bg-slate-700\/50 {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
-html.light .landing-page .bg-slate-800\/50:hover {
+html.light .landing-page .bg-slate-700\/50:hover {
   background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
 }
@@ -344,16 +344,16 @@ html.light .landing-page section#pricing .bg-slate-900.border:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
 }
 
-html.light .landing-page .border-blue-500\/30 {
+html.light .landing-page .border-emerald-500\/30 {
   border-color: #bfdbfe !important;
   box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.1) !important;
 }
 
-html.light .landing-page h3.text-blue-400 {
+html.light .landing-page h3.text-emerald-400 {
   color: #2563eb !important;
 }
 
-html.light .landing-page h3.text-indigo-400 {
+html.light .landing-page h3.text-teal-400 {
   color: #4f46e5 !important;
 }
 
@@ -361,15 +361,15 @@ html.light .landing-page svg.text-green-400 {
   color: #16a34a !important;
 }
 
-html.light .landing-page svg.text-blue-400 {
+html.light .landing-page svg.text-emerald-400 {
   color: #2563eb !important;
 }
 
-html.light .landing-page svg.text-indigo-400 {
+html.light .landing-page svg.text-teal-400 {
   color: #4f46e5 !important;
 }
 
-html.light .landing-page footer.bg-slate-950 {
+html.light .landing-page footer.bg-slate-900 {
   background-color: #f8fafc !important;
   border-top-color: #e2e8f0 !important;
 }
@@ -402,7 +402,7 @@ html.light .landing-page .text-slate-500 {
   color: #64748b !important;
 }
 
-html.light .landing-page .hover\:bg-slate-800:hover {
+html.light .landing-page .hover\:bg-slate-700:hover {
   background-color: #f8fafc !important;
 }
 
@@ -412,4 +412,39 @@ html.light .landing-page .hover\:bg-slate-700:hover {
 
 html.light .landing-page .hover\:border-slate-600:hover {
   border-color: #cbd5e1 !important;
+}
+/* -------------- ENFIX THEME APPEND ---------------- */
+html.light body,
+html.light .bg-slate-[800],
+html.light .bg-slate-[900],
+html.light .min-h-screen {
+  background-color: #f0fdf4 !important;
+}
+html.light .glass-card {
+  background-color: #ffffff !important;
+  border-color: #d1fae5 !important;
+  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.04) !important;
+}
+html.light aside {
+  background-color: #064e3b !important;
+  border-color: #064e3b !important;
+}
+html.light aside .text-slate-400,
+html.light aside .text-slate-500,
+html.light aside nav button,
+html.light aside nav a {
+  color: #a7f3d0 !important;
+}
+html.light aside .text-white, html.light aside h1, html.light aside span.text-slate-200, html.light aside span.text-slate-300 {
+  color: #ffffff !important;
+}
+html.light aside nav a:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+html.light aside .bg-emerald-500\/15 {
+  background-color: rgba(16, 185, 129, 0.4) !important;
+}
+html.light aside .border-emerald-500\/20 {
+  border-color: rgba(16, 185, 129, 0.8) !important;
 }

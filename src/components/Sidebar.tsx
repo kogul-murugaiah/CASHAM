@@ -97,7 +97,7 @@ const Sidebar = () => {
                                         to={to}
                                         className={({ isActive }) =>
                                             `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${isActive
-                                                ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
+                                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
                                                 : "text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent"
                                             } ${isCollapsed ? "justify-center" : ""}`
                                         }
@@ -134,7 +134,7 @@ const Sidebar = () => {
                     {theme === "dark" ? (
                         <FiSun size={16} strokeWidth={1.8} className="flex-shrink-0 text-amber-400" />
                     ) : (
-                        <FiMoon size={16} strokeWidth={1.8} className="flex-shrink-0 text-indigo-400" />
+                        <FiMoon size={16} strokeWidth={1.8} className="flex-shrink-0 text-teal-400" />
                     )}
                     {!isCollapsed && (
                         <span className="text-sm font-medium font-heading">
@@ -145,7 +145,7 @@ const Sidebar = () => {
 
                 {user && (
                     <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/3 ${isCollapsed ? "justify-center" : ""}`}>
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
                             {getInitials(user.email)}
                         </div>
                         {!isCollapsed && (
@@ -180,7 +180,7 @@ const Sidebar = () => {
                 {/* Collapse toggle */}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="absolute -right-3 top-[72px] w-6 h-6 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg z-50"
+                    className="absolute -right-3 top-[72px] w-6 h-6 rounded-full bg-slate-700 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg z-50"
                     title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                     <FiChevronLeft
@@ -191,7 +191,7 @@ const Sidebar = () => {
             </aside>
 
             {/* ── MOBILE TOP BAR ──────────────────────────────────────────────── */}
-            <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3.5 bg-slate-950/80 backdrop-blur-2xl border-b border-white/5">
+            <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3.5 bg-slate-700/80 backdrop-blur-2xl border-b border-white/5">
                 {/* Hamburger LEFT */}
                 <button
                     onClick={() => setMobileOpen(true)}
@@ -215,7 +215,7 @@ const Sidebar = () => {
                 <div className="md:hidden fixed inset-0 z-50 flex">
                     {/* Overlay */}
                     <div
-                        className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+                        className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm animate-fade-in"
                         onClick={() => setMobileOpen(false)}
                     />
 

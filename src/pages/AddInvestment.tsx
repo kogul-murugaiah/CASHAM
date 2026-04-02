@@ -119,7 +119,7 @@ const AddInvestment = () => {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
 
                     {/* Action Toggle */}
-                    <div className="flex p-1 bg-slate-900/50 rounded-xl border border-white/5 max-w-xs relative z-10">
+                    <div className="flex p-1 bg-slate-700/50 rounded-xl border border-white/5 max-w-xs relative z-10">
                         <button
                             type="button"
                             onClick={() => setForm((p) => ({ ...p, action: "buy" }))}
@@ -130,7 +130,7 @@ const AddInvestment = () => {
                         <button
                             type="button"
                             onClick={() => setForm((p) => ({ ...p, action: "sell" }))}
-                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${form.action === "sell" ? "bg-blue-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-400 hover:text-white"}`}
+                            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${form.action === "sell" ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25" : "text-slate-400 hover:text-white"}`}
                         >
                             📉 Sell
                         </button>
@@ -142,7 +142,7 @@ const AddInvestment = () => {
                             <label htmlFor="name" className="block text-sm font-medium text-slate-300">Investment Name</label>
                             <input
                                 type="text" name="name" id="name" value={form.name} onChange={handleChange}
-                                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
+                                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
                                 placeholder="e.g., HDFC Bank, Bitcoin" required
                             />
                         </div>
@@ -152,7 +152,7 @@ const AddInvestment = () => {
                             <label htmlFor="type" className="block text-sm font-medium text-slate-300">Type</label>
                             <select
                                 name="type" id="type" value={form.type} onChange={handleChange}
-                                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none appearance-none cursor-pointer"
+                                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none appearance-none cursor-pointer"
                             >
                                 {INVESTMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
@@ -163,7 +163,7 @@ const AddInvestment = () => {
                             <label htmlFor="units" className="block text-sm font-medium text-slate-300">Units (Optional)</label>
                             <input
                                 type="number" name="units" id="units" value={form.units} onChange={handleChange}
-                                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
+                                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
                                 placeholder="e.g., 10" step="any" min="0"
                             />
                         </div>
@@ -177,7 +177,7 @@ const AddInvestment = () => {
                                 </div>
                                 <input
                                     type="number" name="price_per_unit" id="price_per_unit" value={form.price_per_unit} onChange={handleChange}
-                                    className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
+                                    className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
                                     placeholder="0.00" step="any" min="0"
                                 />
                             </div>
@@ -194,7 +194,7 @@ const AddInvestment = () => {
                                 </div>
                                 <input
                                     type="number" name="amount" id="amount" value={form.amount} onChange={handleChange}
-                                    className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none font-mono font-bold"
+                                    className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none font-mono font-bold"
                                     placeholder="0.00" step="0.01" min="0" required
                                 />
                             </div>
@@ -205,7 +205,7 @@ const AddInvestment = () => {
                             <label htmlFor="date" className="block text-sm font-medium text-slate-300">Date</label>
                             <input
                                 type="date" name="date" id="date" value={form.date} onChange={handleChange}
-                                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none cursor-pointer"
+                                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none cursor-pointer"
                                 required
                             />
                         </div>
@@ -215,7 +215,7 @@ const AddInvestment = () => {
                             <label htmlFor="accountType" className="block text-sm font-medium text-slate-300">Account (Optional)</label>
                             <select
                                 name="accountType" id="accountType" value={form.accountType} onChange={handleChange}
-                                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none appearance-none cursor-pointer"
+                                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none appearance-none cursor-pointer"
                             >
                                 <option value="">No account</option>
                                 {accountTypes.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -227,7 +227,7 @@ const AddInvestment = () => {
                             <label htmlFor="description" className="block text-sm font-medium text-slate-300">Description (Optional)</label>
                             <input
                                 type="text" name="description" id="description" value={form.description} onChange={handleChange}
-                                className="block w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
+                                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all outline-none"
                                 placeholder="Notes..."
                             />
                         </div>
@@ -258,7 +258,7 @@ const AddInvestment = () => {
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-white/5 bg-slate-900/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                        <tr className="border-b border-white/5 bg-slate-700/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
                                             <th className="px-6 py-4">Date</th>
                                             <th className="px-6 py-4">Name</th>
                                             <th className="px-6 py-4">Type</th>
@@ -272,14 +272,14 @@ const AddInvestment = () => {
                                                 <td className="px-6 py-4 text-sm text-slate-400 whitespace-nowrap">{new Date(inv.date).toLocaleDateString()}</td>
                                                 <td className="px-6 py-4 text-sm font-medium text-white">{inv.name}</td>
                                                 <td className="px-6 py-4 text-sm">
-                                                    <span className="inline-flex items-center rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5">{inv.type}</span>
+                                                    <span className="inline-flex items-center rounded-lg bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5">{inv.type}</span>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm">
-                                                    <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold border ${inv.action === "buy" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
+                                                    <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold border ${inv.action === "buy" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}`}>
                                                         {inv.action === "buy" ? "↑ Buy" : "↓ Sell"}
                                                     </span>
                                                 </td>
-                                                <td className={`px-6 py-4 text-sm font-bold text-right font-mono ${inv.action === "buy" ? "text-amber-400" : "text-blue-400"}`}>
+                                                <td className={`px-6 py-4 text-sm font-bold text-right font-mono ${inv.action === "buy" ? "text-amber-400" : "text-emerald-400"}`}>
                                                     {inv.action === "buy" ? "-" : "+"}₹{Number(inv.amount).toFixed(2)}
                                                 </td>
                                             </tr>

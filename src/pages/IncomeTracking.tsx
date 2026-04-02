@@ -285,7 +285,7 @@ const IncomeTracking = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex p-1 bg-slate-900/50 backdrop-blur rounded-xl border border-white/5">
+                        <div className="flex p-1 bg-slate-700/50 backdrop-blur rounded-xl border border-white/5">
                             <button
                                 onClick={() => setViewMode("monthly")}
                                 className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
@@ -306,7 +306,7 @@ const IncomeTracking = () => {
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 style={{ colorScheme: theme }}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
                             />
                         ) : (
                             <input
@@ -315,7 +315,7 @@ const IncomeTracking = () => {
                                 max="2100"
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(e.target.value)}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
                             />
                         )}
                     </div>
@@ -336,14 +336,14 @@ const IncomeTracking = () => {
                 {loading ? (
                     <div className="grid gap-6 md:grid-cols-3">
                         {[...Array(3)].map((_, i) => (
-                            <div key={i} className="h-32 animate-pulse rounded-3xl bg-slate-800/50" />
+                            <div key={i} className="h-32 animate-pulse rounded-3xl bg-slate-700/50" />
                         ))}
                     </div>
                 ) : (
                     <div className="space-y-8 animate-fade-in text-shadow-sm">
                         {records.length === 0 ? (
                             <div className="glass-card p-12 text-center border-emerald-500/10">
-                                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-2">No Records Found</h3>
@@ -372,7 +372,7 @@ const IncomeTracking = () => {
                                                         cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={4} dataKey="value"
                                                     >
                                                         {sourceTotals.map((_, index) => {
-                                                            const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+                                                            const COLORS = ['#10b981', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
                                                             return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />;
                                                         })}
                                                     </Pie>
@@ -410,7 +410,7 @@ const IncomeTracking = () => {
                                 </div>
 
                                 <div className="glass-card p-0 overflow-hidden">
-                                    <div className="border-b border-white/5 bg-slate-900/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="border-b border-white/5 bg-slate-700/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-white font-heading">Income History</h2>
                                             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
@@ -425,7 +425,7 @@ const IncomeTracking = () => {
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="border-b border-white/5 bg-slate-900/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                                                <tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
                                                     <th className="px-6 py-4">Date</th>
                                                     <th className="px-6 py-4">Source</th>
                                                     <th className="px-6 py-4">Account</th>
@@ -457,11 +457,11 @@ const IncomeTracking = () => {
                                     </div>
 
                                     {totalPages > 1 && (
-                                        <div className="border-t border-white/5 bg-slate-900/40 px-6 py-4 flex items-center justify-between">
+                                        <div className="border-t border-white/5 bg-slate-700/40 px-6 py-4 flex items-center justify-between">
                                             <p className="text-xs font-medium text-slate-500">Page {currentPage} of {totalPages}</p>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-slate-800 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Prev</button>
-                                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-slate-800 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Next</button>
+                                                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Prev</button>
+                                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Next</button>
                                             </div>
                                         </div>
                                     )}
@@ -474,7 +474,7 @@ const IncomeTracking = () => {
 
             {/* Edit Modal */}
             {isModalOpen && editingData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4 animate-fade-in shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-700/80 backdrop-blur-sm px-4 animate-fade-in shadow-2xl">
                     <div className="w-full max-w-xl glass-card p-6 sm:p-8 animate-float-slow transform transition-all shadow-emerald-500/10">
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div>
@@ -490,24 +490,24 @@ const IncomeTracking = () => {
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                                    <input type="date" value={editingData.date} onChange={(e) => setEditingData({ ...editingData, date: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                                    <input type="date" value={editingData.date} onChange={(e) => setEditingData({ ...editingData, date: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Amount (₹)</label>
-                                    <input type="number" value={editingData.amount} onChange={(e) => setEditingData({ ...editingData, amount: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-mono" />
+                                    <input type="number" value={editingData.amount} onChange={(e) => setEditingData({ ...editingData, amount: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-mono" />
                                 </div>
                             </div>
 
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Source</label>
-                                    <select value={editingData.source_id} onChange={(e) => setEditingData({ ...editingData, source_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
+                                    <select value={editingData.source_id} onChange={(e) => setEditingData({ ...editingData, source_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
                                         {sources.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Account</label>
-                                    <select value={editingData.account_type} onChange={(e) => setEditingData({ ...editingData, account_type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
+                                    <select value={editingData.account_type} onChange={(e) => setEditingData({ ...editingData, account_type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
                                         {accountTypes.map(at => <option key={at} value={at}>{at}</option>)}
                                     </select>
                                 </div>
@@ -515,7 +515,7 @@ const IncomeTracking = () => {
 
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
-                                <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none" />
+                                <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none" />
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">
