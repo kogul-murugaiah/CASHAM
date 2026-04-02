@@ -11,8 +11,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return categoriesHandler(req, res);
         case 'items':
             return itemsHandler(req, res);
+        case 'month':
         default:
-            // root budget (month setup)
+            // root budget month setup
             return budgetMonthHandler(req, res);
     }
 }

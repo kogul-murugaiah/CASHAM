@@ -64,7 +64,7 @@ export default function BudgetPlanner() {
         setLoading(true);
         setError(null);
         try {
-            const data = await api.get(`/api/budgets?month=${month}&year=${year}`);
+            const data = await api.get(`/api/budgets/month?month=${month}&year=${year}`);
             setBudgetData(data);
             setTempIncome(String(data.total_income));
         } catch (err: any) {
@@ -87,7 +87,7 @@ export default function BudgetPlanner() {
     const handleSaveIncome = async () => {
         try {
             setError(null);
-            const data = await api.post(`/api/budgets`, {
+            const data = await api.post(`/api/budgets/month`, {
                 month,
                 year,
                 total_income: Number(tempIncome)
