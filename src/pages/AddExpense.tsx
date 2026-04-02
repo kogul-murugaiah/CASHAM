@@ -4,6 +4,11 @@ import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
 
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
 
 const initialForm = {
   amount: "",
@@ -30,11 +35,17 @@ const AddExpense = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
+  const [todayExpenses, setTodayExpenses] = useState(0);
 
   // Fetch recent expenses
   const fetchRecentExpenses = async () => {
     try {
       const data = await api.get('/api/expenses');
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayTotal = (data || []).filter((exp: any) => exp.date.startsWith(todayStr)).reduce((sum: number, exp: any) => sum + exp.amount, 0);
+      setTodayExpenses(todayTotal);
+
       setRecentExpenses(data?.slice(0, 5) || []);
     } catch (err: any) {
       console.error("Error fetching recent expenses:", err);
@@ -110,9 +121,16 @@ const AddExpense = () => {
           <h1 className="text-3xl font-bold font-heading text-white mb-2">
             Add Expense
           </h1>
-          <p className="text-slate-400">
+          <p className="text-slate-400 mb-6">
             Record a new spending to track your budget.
           </p>
+
+          <div className="mx-auto w-fit bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl backdrop-blur-sm shadow-xl shadow-red-500/5 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Today's Spend</p>
+            <p className="text-3xl font-bold text-red-400 font-heading">
+              {todayExpenses > 0 ? "-" : ""}{currencyFormatter.format(todayExpenses)}
+            </p>
+          </div>
         </header>
 
         {error && (

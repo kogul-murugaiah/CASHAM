@@ -104,6 +104,9 @@ const Dashboard = () => {
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const monthlyBalance = monthlyIncome - monthlyExpenses;
 
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
+
   // Data for Charts
   const comparisonData = [
     { name: "Income", value: monthlyIncome, fill: "#3b82f6" }, // Blue
@@ -284,9 +287,14 @@ const Dashboard = () => {
                 <div className="mt-2 text-3xl font-bold text-white font-heading">
                   {currencyFormatter.format(monthlyExpenses)}
                 </div>
-                <div className="mt-4 flex items-center text-xs text-red-300 bg-red-500/10 w-fit px-2 py-1 rounded-lg">
-                  <span className="w-2 h-2 rounded-full bg-red-400 mr-2 animate-pulse"></span>
-                  Outflow
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center text-xs text-red-300 bg-red-500/10 w-fit px-2 py-1 rounded-lg">
+                    <span className="w-2 h-2 rounded-full bg-red-400 mr-2 animate-pulse"></span>
+                    Outflow
+                  </div>
+                  <div className="text-xs font-semibold text-red-400 px-2 py-1 bg-red-500/10 rounded-lg flex items-center border border-red-500/20 shadow-lg shadow-red-500/5">
+                    <span className="opacity-70 mr-1 pb-0.5">Today:</span> {todayExpenses > 0 ? "-" : ""}{currencyFormatter.format(todayExpenses)}
+                  </div>
                 </div>
               </div>
 
