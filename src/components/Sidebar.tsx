@@ -15,6 +15,7 @@ const NAV_GROUPS = [
         items: [
             { to: "/dashboard", icon: FiHome, label: "Dashboard" },
             { to: "/budget-planner", icon: FiPieChart, label: "Budget Planner" },
+            { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
         ],
     },
     {
@@ -22,7 +23,7 @@ const NAV_GROUPS = [
         items: [
             { to: "/add", icon: FiMinusCircle, label: "Add Expense" },
             { to: "/add-income", icon: FiPlusCircle, label: "Add Income" },
-            { to: "/add-investment", icon: FiTrendingUp, label: "Add Investment" },
+            { to: "/add-investment", icon: FiTrendingUp, label: "Log Investment" },
             { to: "/transfer", icon: FiRepeat, label: "Transfer" },
         ],
     },
@@ -31,7 +32,6 @@ const NAV_GROUPS = [
         items: [
             { to: "/expense-tracking", icon: FiList, label: "Expense Tracker" },
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
-            { to: "/investment-tracking", icon: FiBarChart2, label: "Investments" },
         ],
     },
 ];
