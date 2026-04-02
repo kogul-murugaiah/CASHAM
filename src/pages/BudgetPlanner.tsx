@@ -3,11 +3,6 @@ import { api } from "../lib/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiTarget } from "react-icons/fi";
 
-const MONTH_NAMES = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-];
-
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
