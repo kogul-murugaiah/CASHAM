@@ -421,11 +421,15 @@ const Dashboard = () => {
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">In</span>
-                        <span className="text-green-400">+{currencyFormatter.format(account.income)}</span>
+                        <span className={account.income < 0 ? "text-red-400" : "text-green-400"}>
+                          {account.income >= 0 ? "+" : ""}{currencyFormatter.format(account.income)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500">Out</span>
-                        <span className="text-red-400">-{currencyFormatter.format(account.expenses)}</span>
+                        <span className={account.expenses < 0 ? "text-green-400" : "text-red-400"}>
+                          {account.expenses >= 0 ? "-" : "+"}{currencyFormatter.format(Math.abs(account.expenses))}
+                        </span>
                       </div>
                     </div>
                   </div>
