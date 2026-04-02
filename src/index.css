@@ -448,3 +448,39 @@ html.light aside .bg-emerald-500\/15 {
 html.light aside .border-emerald-500\/20 {
   border-color: rgba(16, 185, 129, 0.8) !important;
 }
+
+/* -------------- ENFIX LIGHT THEME FIXES ---------------- */
+/* 1. Ensure Sidebar and Mobile Nav strictly respect dark green */
+html.light aside.bg-slate-900\/60,
+html.light aside.bg-slate-700\/60,
+html.light aside {
+  background-color: #064e3b !important;
+}
+html.light header.bg-slate-700\/80 {
+  background-color: #064e3b !important;
+}
+
+/* 2. Text visibility fixes for light green backgrounds on tracking pages */
+html.light .text-emerald-200,
+html.light .text-emerald-300 {
+  color: #064e3b !important; /* Very dark green for readability */
+}
+html.light .text-emerald-400 {
+  color: #047857 !important; /* Dark green */
+}
+html.light .text-red-300,
+html.light .text-red-400 {
+  color: #b91c1c !important; /* Dark red */
+}
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #b45309 !important; /* Dark amber */
+}
+
+/* Enhance glass cards inside light mode to prevent washed out text */
+html.light .from-emerald-600\/20 {
+  --tw-gradient-from: rgba(16, 185, 129, 0.15) !important;
+}
+html.light .to-teal-600\/20 {
+  --tw-gradient-to: rgba(20, 184, 166, 0.15) !important;
+}

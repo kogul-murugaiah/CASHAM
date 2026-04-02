@@ -77,7 +77,7 @@ const LandingPage = () => {
                     <div className="grid lg:grid-cols-2 gap-16 lg:gap-8 items-center">
                         {/* Left Column - Text Content */}
                         <div className="text-left animate-fade-in-up">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-900/30 border border-emerald-500/20 text-emerald-600 dark:text-blue-300 text-sm font-semibold mb-8 shadow-sm">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-900/30 border border-emerald-500/20 text-emerald-600 dark:text-emerald-300 text-sm font-semibold mb-8 shadow-sm">
                                 <span className="relative flex h-2.5 w-2.5">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600 dark:bg-emerald-500"></span>

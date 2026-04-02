@@ -189,7 +189,7 @@ const Dashboard = () => {
             <button
               onClick={handleSyncCarryover}
               disabled={syncing}
-              className="mt-2 text-xs font-bold text-emerald-400 hover:text-blue-300 transition-colors flex items-center gap-1.5 opacity-60 hover:opacity-100 disabled:opacity-30"
+              className="mt-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5 opacity-60 hover:opacity-100 disabled:opacity-30"
             >
               <svg className={`${syncing ? "animate-spin" : ""}`} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
               {syncing ? "Syncing..." : "Sync Balance Carryover"}
@@ -272,7 +272,7 @@ const Dashboard = () => {
                 <div className="mt-2 text-3xl font-bold text-white font-heading">
                   {currencyFormatter.format(monthlyIncome)}
                 </div>
-                <div className="mt-4 flex items-center text-xs text-blue-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-lg">
+                <div className="mt-4 flex items-center text-xs text-emerald-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-lg">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>
                   Inflow
                 </div>

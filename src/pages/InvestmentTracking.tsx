@@ -279,7 +279,7 @@ const InvestmentTracking = () => {
                                         </div>
                                         <p className="text-sm font-medium text-slate-400">Total Returned</p>
                                         <div className="mt-2 text-3xl font-bold text-emerald-400 font-heading">{currencyFormatter.format(totalReturned)}</div>
-                                        <div className="mt-4 flex items-center text-xs text-blue-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-lg">
+                                        <div className="mt-4 flex items-center text-xs text-emerald-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-lg">
                                             <span className="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse" />Sell Total
                                         </div>
                                     </div>

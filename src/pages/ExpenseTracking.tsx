@@ -368,7 +368,7 @@ const ExpenseTracking = () => {
                             <>
                                 <div className="glass-card p-8 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-emerald-500/30 relative overflow-hidden">
                                     <div className="relative z-10">
-                                        <p className="text-sm font-medium text-blue-200 mb-2 uppercase tracking-widest text-shadow-sm">Total Spendings</p>
+                                        <p className="text-sm font-medium text-emerald-200 mb-2 uppercase tracking-widest text-shadow-sm">Total Spendings</p>
                                         <div className="text-5xl font-bold text-white font-heading tracking-tight sm:text-6xl drop-shadow-lg">
                                             {currencyFormatter.format(grandTotal)}
                                         </div>
@@ -456,7 +456,7 @@ const ExpenseTracking = () => {
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{new Date(exp.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{exp.item}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className="inline-flex px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-blue-300 border border-emerald-500/20 uppercase">
+                                                            <span className="inline-flex px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 uppercase">
                                                                 {exp.categories?.name || "Uncategorized"}
                                                             </span>
                                                         </td>
