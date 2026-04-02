@@ -312,51 +312,78 @@ export default function BudgetPlanner() {
                         <div className="space-y-3 mb-4">
                         {category.items.map(item => {
                                 const isConfirming = confirmPayItem?.id === item.id;
+                                const effectiveAmount = item.status === 'paid' && item.paid_amount != null
+                                    ? parseNum(item.paid_amount)
+                                    : parseNum(item.amount);
+                                const amountDiffers = item.status === 'paid' && item.paid_amount != null && item.paid_amount !== item.amount;
                                 return (
-                                <div key={item.id} className={`rounded-xl border transition-all ${isConfirming ? 'bg-emerald-950/40 border-emerald-500/30' : 'bg-slate-800/40 hover:bg-slate-800/60 border-white/5'} group`}>
-                                    {/* Normal item row */}
-                                    <div className="flex items-center justify-between p-3">
-                                        <div className="flex items-center gap-3">
+                                <div key={item.id} className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                                    isConfirming
+                                        ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/10'
+                                        : item.status === 'paid'
+                                        ? 'border-emerald-500/15 bg-emerald-500/5'
+                                        : 'border-white/8 bg-slate-700/40 hover:bg-slate-700/60'
+                                } group`}>
+                                    {/* Item row */}
+                                    <div className="flex items-center justify-between px-4 py-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            {/* Check button — styled like a native checkbox */}
                                             {item.status === 'planned' ? (
-                                                <button 
+                                                <button
                                                     onClick={() => handleRequestMarkPaid(item)}
-                                                    className="w-6 h-6 rounded-md flex items-center justify-center transition-all bg-slate-700 text-transparent hover:border-emerald-500 hover:text-emerald-400 border border-slate-600"
+                                                    className="flex-shrink-0 w-5 h-5 rounded border-2 border-slate-400 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all flex items-center justify-center text-transparent hover:text-emerald-500"
                                                     title="Mark as Paid"
                                                 >
-                                                    <FiCheck size={14} />
+                                                    <FiCheck size={12} strokeWidth={3} />
                                                 </button>
                                             ) : (
-                                                <button 
+                                                <button
                                                     onClick={() => handleRevertPlanned(item)}
-                                                    className="w-6 h-6 rounded-md flex items-center justify-center transition-all bg-emerald-500 text-white hover:bg-red-500"
-                                                    title="Revert to Planned"
+                                                    className="flex-shrink-0 w-5 h-5 rounded border-2 border-emerald-500 bg-emerald-500 hover:bg-red-400 hover:border-red-400 transition-all flex items-center justify-center text-white"
+                                                    title="Undo — Revert to Planned"
                                                 >
-                                                    <FiCheck size={14} />
+                                                    <FiCheck size={12} strokeWidth={3} />
                                                 </button>
                                             )}
-                                            <span className={`text-sm font-medium ${item.status === 'paid' ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
+                                            <span className={`text-sm font-medium truncate ${
+                                                item.status === 'paid'
+                                                    ? 'text-slate-400 line-through decoration-slate-400'
+                                                    : 'text-slate-100'
+                                            }`}>
                                                 {item.name}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-3">
+
+                                        <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                                            {/* Amount — shows strikethrough original + actual if different */}
                                             <div className="text-right">
-                                                {item.status === 'paid' && item.paid_amount != null && item.paid_amount !== item.amount ? (
+                                                {amountDiffers ? (
                                                     <>
-                                                        <span className="text-xs text-slate-500 line-through font-mono block">{currencyFormatter.format(parseNum(item.amount))}</span>
-                                                        <span className="text-sm font-bold font-mono text-emerald-400">{currencyFormatter.format(parseNum(item.paid_amount))}</span>
+                                                        <span className="text-[10px] text-slate-500 line-through font-mono block leading-none">{currencyFormatter.format(parseNum(item.amount))}</span>
+                                                        <span className="text-sm font-bold font-mono text-emerald-400">{currencyFormatter.format(parseNum(item.paid_amount!))}</span>
                                                     </>
                                                 ) : (
-                                                    <span className={`text-sm font-bold font-mono ${item.status === 'paid' ? 'text-slate-500' : 'text-amber-400'}`}>
-                                                        {currencyFormatter.format(item.status === 'paid' && item.paid_amount != null ? parseNum(item.paid_amount) : parseNum(item.amount))}
+                                                    <span className={`text-sm font-bold font-mono ${
+                                                        item.status === 'paid' ? 'text-emerald-400' : 'text-slate-200'
+                                                    }`}>
+                                                        {currencyFormatter.format(effectiveAmount)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded border w-16 text-center ${
-                                                item.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-white/5 text-slate-400 border-white/5'
+
+                                            {/* Status pill */}
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                                                item.status === 'paid'
+                                                    ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'
+                                                    : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                                             }`}>
                                                 {item.status}
                                             </span>
-                                            <button onClick={() => handleDeleteItem(category.id, item.id)} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1">
+
+                                            <button
+                                                onClick={() => handleDeleteItem(category.id, item.id)}
+                                                className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 flex-shrink-0"
+                                            >
                                                 <FiTrash2 size={14} />
                                             </button>
                                         </div>
@@ -364,27 +391,33 @@ export default function BudgetPlanner() {
 
                                     {/* Inline confirm-to-pay panel */}
                                     {isConfirming && (
-                                        <div className="px-3 pb-3">
-                                            <div className="bg-emerald-950/60 border border-emerald-500/20 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                                        <div className="border-t border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                                                 <div className="flex-1">
-                                                    <p className="text-xs font-bold text-emerald-300 mb-1 uppercase tracking-widest">How much did you actually spend?</p>
+                                                    <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">How much did you actually spend?</p>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-emerald-400 font-bold">₹</span>
+                                                        <span className="text-slate-400 font-bold text-sm">₹</span>
                                                         <input
                                                             type="number"
                                                             value={confirmPayItem!.amount}
                                                             onChange={e => setConfirmPayItem(prev => prev ? { ...prev, amount: e.target.value } : null)}
-                                                            className="bg-slate-900/70 border border-emerald-500/30 text-white font-mono font-bold rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                                                            className="bg-slate-700/50 border border-emerald-500/30 text-white font-mono font-bold rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
                                                             autoFocus
                                                         />
-                                                        <span className="text-[10px] text-slate-500">Planned: {currencyFormatter.format(item.amount)}</span>
+                                                        <span className="text-[11px] text-slate-400">Planned: {currencyFormatter.format(item.amount)}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <button onClick={handleConfirmPaid} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-emerald-600/20">
-                                                        <FiCheck size={14} /> Confirm Paid
+                                                    <button
+                                                        onClick={handleConfirmPaid}
+                                                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-emerald-600/20"
+                                                    >
+                                                        <FiCheck size={13} /> Confirm Paid
                                                     </button>
-                                                    <button onClick={() => setConfirmPayItem(null)} className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium rounded-lg transition-colors">
+                                                    <button
+                                                        onClick={() => setConfirmPayItem(null)}
+                                                        className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium rounded-lg transition-colors border border-white/5"
+                                                    >
                                                         Cancel
                                                     </button>
                                                 </div>
