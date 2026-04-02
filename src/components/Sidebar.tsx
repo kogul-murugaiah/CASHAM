@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon,
+    FiSun, FiMoon, FiPieChart
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -14,6 +14,7 @@ const NAV_GROUPS = [
         label: "Overview",
         items: [
             { to: "/dashboard", icon: FiHome, label: "Dashboard" },
+            { to: "/budget-planner", icon: FiPieChart, label: "Budget Planner" },
         ],
     },
     {
