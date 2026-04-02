@@ -32,33 +32,55 @@ async function computeAndInsertCarryover(
 
     // Calculate true historical cumulative balance up to startDate, 
     // fetching all history but ignoring all prior carryover rows.
-    const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id").eq("user_id", userId).lt("date", startDate);
+    const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id, date").eq("user_id", userId).lt("date", startDate);
     const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).lt("date", startDate);
     const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).eq("action", "buy").lt("date", startDate);
 
     // Exclude all historical carryover rows from the sum to avoid compounding
     const filteredPrevInc = (prevInc || []).filter(i => i.source_id !== sourceId);
 
-    // Gather all distinct account types from all historical data
-    const allAccounts = new Set<string | null>();
-    filteredPrevInc.forEach(i => allAccounts.add(i.account_type ?? null));
-    (prevExp || []).forEach(e => allAccounts.add(e.account_type ?? null));
-    (prevInv || []).forEach(v => allAccounts.add(v.account_type ?? null));
+    // Fetch sources to map source_id to source name
+    const { data: sources } = await supabaseAdmin.from("income_sources").select("id, name").eq("user_id", userId);
+    const sourceMap = new Map((sources || []).map(s => [s.id, s.name]));
+
+    // Gather all distinct account types from all historical data (ignore null/empty)
+    const allAccounts = new Set<string>();
+    filteredPrevInc.forEach(i => i.account_type && allAccounts.add(i.account_type));
+    (prevExp || []).forEach(e => e.account_type && allAccounts.add(e.account_type));
+    (prevInv || []).forEach(v => v.account_type && allAccounts.add(v.account_type));
 
     const carries: any[] = [];
     allAccounts.forEach(acc => {
-        const incSum = filteredPrevInc.filter(i => (i.account_type ?? null) === acc).reduce((s, i) => s + i.amount, 0);
-        const expSum = (prevExp || []).filter(e => (e.account_type ?? null) === acc).reduce((s, e) => s + e.amount, 0);
-        const invSum = (prevInv || []).filter(v => (v.account_type ?? null) === acc).reduce((s, v) => s + v.amount, 0);
+        const incSum = filteredPrevInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
+        const expSum = (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
+        const invSum = (prevInv || []).filter(v => v.account_type === acc).reduce((s, v) => s + v.amount, 0);
         const bal = incSum - expSum - invSum;
         if (bal !== 0) {
+            // Find sources from the previous month for this account
+            const prevMonthIncForAcc = filteredPrevInc.filter(i => 
+                i.account_type === acc && 
+                i.date >= prevStart && 
+                i.date < startDate
+            );
+            
+            const prevMonthSourceIds = new Set(prevMonthIncForAcc.map(i => i.source_id));
+            const prevMonthSourceNames = Array.from(prevMonthSourceIds)
+                .map(id => sourceMap.get(id))
+                .filter(Boolean)
+                .join(", ");
+                
+            let description = `Auto-carryover up to ${MONTH_NAMES[prevMonth - 1]} ${prevYear}`;
+            if (prevMonthSourceNames) {
+                description += ` (Previous month sources: ${prevMonthSourceNames})`;
+            }
+
             carries.push({
                 user_id: userId,
                 amount: bal,
                 date: startDate,
                 account_type: acc,
                 source_id: sourceId,
-                description: `Auto-carryover up to ${MONTH_NAMES[prevMonth - 1]} ${prevYear}`
+                description
             });
         }
     });
