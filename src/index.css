@@ -413,74 +413,99 @@ html.light .landing-page .hover\:bg-slate-700:hover {
 html.light .landing-page .hover\:border-slate-600:hover {
   border-color: #cbd5e1 !important;
 }
-/* -------------- ENFIX THEME APPEND ---------------- */
+
+/* -------------- ENFIX FINTECH LIGHT THEME ---------------- */
 html.light body,
 html.light .bg-slate-[800],
 html.light .bg-slate-[900],
+html.light .bg-slate-900,
 html.light .min-h-screen {
-  background-color: #f0fdf4 !important;
+  background-color: #f8fafc !important; /* Cool Off-White */
 }
+
+/* Float Cards Exceptionally */
 html.light .glass-card {
   background-color: #ffffff !important;
-  border-color: #d1fae5 !important;
-  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.04) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(13, 148, 136, 0.08) !important; /* Soft Teal Shadow */
 }
-html.light aside {
-  background-color: #064e3b !important;
-  border-color: #064e3b !important;
+
+/* Strong Dark Teal Sidebar */
+html.light aside,
+html.light aside.bg-slate-900\/60,
+html.light aside.bg-slate-700\/60 {
+  background-color: #134e4a !important; /* Deep Teal 900 */
+  border-color: #134e4a !important;
 }
+html.light header.bg-slate-700\/80 {
+  background-color: #134e4a !important;
+}
+
 html.light aside .text-slate-400,
 html.light aside .text-slate-500,
 html.light aside nav button,
 html.light aside nav a {
-  color: #a7f3d0 !important;
+  color: #99f6e4 !important; /* Teal 200 */
 }
-html.light aside .text-white, html.light aside h1, html.light aside span.text-slate-200, html.light aside span.text-slate-300 {
+html.light aside .text-white, 
+html.light aside h1, 
+html.light aside span.text-slate-200, 
+html.light aside span.text-slate-300 {
   color: #ffffff !important;
 }
 html.light aside nav a:hover {
   color: #ffffff !important;
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
-html.light aside .bg-emerald-500\/15 {
-  background-color: rgba(16, 185, 129, 0.4) !important;
+html.light aside .bg-emerald-500\/15,
+html.light aside .bg-blue-500\/15 {
+  background-color: rgba(20, 184, 166, 0.3) !important; /* Teal 500 selection */
 }
-html.light aside .border-emerald-500\/20 {
-  border-color: rgba(16, 185, 129, 0.8) !important;
-}
-
-/* -------------- ENFIX LIGHT THEME FIXES ---------------- */
-/* 1. Ensure Sidebar and Mobile Nav strictly respect dark green */
-html.light aside.bg-slate-900\/60,
-html.light aside.bg-slate-700\/60,
-html.light aside {
-  background-color: #064e3b !important;
-}
-html.light header.bg-slate-700\/80 {
-  background-color: #064e3b !important;
+html.light aside .border-emerald-500\/20,
+html.light aside .border-blue-500\/20 {
+  border-color: rgba(20, 184, 166, 0.6) !important;
 }
 
-/* 2. Text visibility fixes for light green backgrounds on tracking pages */
-html.light .text-emerald-200,
-html.light .text-emerald-300 {
-  color: #064e3b !important; /* Very dark green for readability */
+/* Glass Hero Banner in Tracking Pages */
+html.light .from-emerald-600\/20,
+html.light .to-teal-600\/20 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.8) !important;
+  --tw-gradient-to: rgba(255, 255, 255, 0.8) !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Inputs on Add Transaction pages */
+html.light .bg-slate-[700]\/50, 
+html.light .bg-slate-700\/50 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+html.light .bg-slate-700\/50:focus,
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #14b8a6 !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1) !important;
+}
+
+/* Text Visibility */
+html.light .text-emerald-200, 
+html.light .text-blue-200,
+html.light .text-emerald-300,
+html.light .text-blue-300 {
+  color: #0f766e !important; /* Teal 700 */
 }
 html.light .text-emerald-400 {
-  color: #047857 !important; /* Dark green */
-}
-html.light .text-red-300,
-html.light .text-red-400 {
-  color: #b91c1c !important; /* Dark red */
-}
-html.light .text-amber-300,
-html.light .text-amber-400 {
-  color: #b45309 !important; /* Dark amber */
+  color: #0d9488 !important; /* Teal 600 */
 }
 
-/* Enhance glass cards inside light mode to prevent washed out text */
-html.light .from-emerald-600\/20 {
-  --tw-gradient-from: rgba(16, 185, 129, 0.15) !important;
+/* KPI Badges */
+html.light .bg-emerald-500\/10 {
+  background-color: #f0fdfa !important; /* Teal 50 */
+  border-color: #ccfbf1 !important; /* Teal 100 */
 }
-html.light .to-teal-600\/20 {
-  --tw-gradient-to: rgba(20, 184, 166, 0.15) !important;
+html.light .bg-red-500\/10 {
+  background-color: #fff1f2 !important; /* Rose 50 */
+  border-color: #ffe4e6 !important; /* Rose 100 */
 }
