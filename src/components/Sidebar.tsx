@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart
+    FiSun, FiMoon, FiPieChart, FiRepeat
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -23,6 +23,7 @@ const NAV_GROUPS = [
             { to: "/add", icon: FiMinusCircle, label: "Add Expense" },
             { to: "/add-income", icon: FiPlusCircle, label: "Add Income" },
             { to: "/add-investment", icon: FiTrendingUp, label: "Add Investment" },
+            { to: "/transfer", icon: FiRepeat, label: "Transfer" },
         ],
     },
     {

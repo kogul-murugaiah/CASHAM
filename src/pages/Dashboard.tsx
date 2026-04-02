@@ -33,6 +33,15 @@ type Expense = {
   account_type: string;
 };
 
+type Transfer = {
+  id: string;
+  from_account: string;
+  to_account: string;
+  amount: number;
+  date: string;
+  note: string | null;
+};
+
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
@@ -50,6 +59,7 @@ const Dashboard = () => {
   const { accountTypes } = useAccountTypes();
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [totalInvested, setTotalInvested] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +83,7 @@ const Dashboard = () => {
 
         setIncome(data.income || []);
         setExpenses(data.expenses || []);
+        setTransfers(data.transfers || []);
 
         // Fetch investment totals for the selected month
         try {
@@ -120,11 +131,19 @@ const Dashboard = () => {
     const accExp = expenses
       .filter((exp) => exp.account_type === accountType)
       .reduce((sum, exp) => sum + exp.amount, 0);
+    const accTransferIn = transfers
+      .filter((t) => t.to_account === accountType)
+      .reduce((sum, t) => sum + t.amount, 0);
+    const accTransferOut = transfers
+      .filter((t) => t.from_account === accountType)
+      .reduce((sum, t) => sum + t.amount, 0);
     return {
       accountType,
       income: accIncome,
       expenses: accExp,
-      balance: accIncome - accExp,
+      transferIn: accTransferIn,
+      transferOut: accTransferOut,
+      balance: accIncome - accExp + accTransferIn - accTransferOut,
     };
   });
 
@@ -439,6 +458,15 @@ const Dashboard = () => {
                           {account.expenses >= 0 ? "-" : "+"}{currencyFormatter.format(Math.abs(account.expenses))}
                         </span>
                       </div>
+                      {(account.transferIn > 0 || account.transferOut > 0) && (
+                        <div className="flex justify-between text-xs pt-1 border-t border-white/5 mt-1">
+                          <span className="text-blue-400/70">Transfers</span>
+                          <span className="text-blue-400 font-mono">
+                            {account.transferIn > 0 && <span className="text-green-400">+{currencyFormatter.format(account.transferIn)} </span>}
+                            {account.transferOut > 0 && <span className="text-red-400">-{currencyFormatter.format(account.transferOut)}</span>}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

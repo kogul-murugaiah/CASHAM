@@ -34,7 +34,8 @@ async function computeAndInsertCarryover(
     // fetching all history but ignoring all prior carryover rows.
     const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id, date").eq("user_id", userId).lt("date", startDate);
     const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).lt("date", startDate);
-    const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).eq("action", "buy").lt("date", startDate);
+    const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).lt("date", startDate);
+    const { data: prevTransfers } = await supabaseAdmin.from("transfers").select("amount, from_account, to_account").eq("user_id", userId).lt("date", startDate);
 
     // Exclude all historical carryover rows from the sum to avoid compounding
     const filteredPrevInc = (prevInc || []).filter(i => i.source_id !== sourceId);
@@ -48,13 +49,18 @@ async function computeAndInsertCarryover(
     filteredPrevInc.forEach(i => i.account_type && allAccounts.add(i.account_type));
     (prevExp || []).forEach(e => e.account_type && allAccounts.add(e.account_type));
     (prevInv || []).forEach(v => v.account_type && allAccounts.add(v.account_type));
+    (prevTransfers || []).forEach(t => { allAccounts.add(t.from_account); allAccounts.add(t.to_account); });
 
     const carries: any[] = [];
     allAccounts.forEach(acc => {
         const incSum = filteredPrevInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
         const expSum = (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
-        const invSum = (prevInv || []).filter(v => v.account_type === acc).reduce((s, v) => s + v.amount, 0);
-        const bal = incSum - expSum - invSum;
+        // Count both buy AND sell for investments: buy reduces balance, sell restores it
+        const invBuy = (prevInv || []).filter(v => v.account_type === acc && v.action === 'buy').reduce((s, v) => s + v.amount, 0);
+        const invSell = (prevInv || []).filter(v => v.account_type === acc && v.action === 'sell').reduce((s, v) => s + v.amount, 0);
+        const transferIn = (prevTransfers || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
+        const transferOut = (prevTransfers || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
+        const bal = incSum - expSum - invBuy + invSell + transferIn - transferOut;
         if (bal !== 0) {
             // Find sources from the previous month for this account
             const prevMonthIncForAcc = filteredPrevInc.filter(i => 
@@ -143,6 +149,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 .eq("user_id", user.id).gte("date", startDate).lt("date", endDate);
             if (expenseError) throw expenseError;
 
+            const { data: transferData, error: transferError } = await supabaseAdmin
+                .from("transfers").select("*")
+                .eq("user_id", user.id).gte("date", startDate).lt("date", endDate);
+            if (transferError) throw transferError;
+
             // Auto-carryover on first access if none exists yet
             const hasCarryover = source && (incomeData || []).some(inc => inc.source_id === source.id);
             if (!hasCarryover && source) {
@@ -153,7 +164,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 incomeData = newIncome;
             }
 
-            return res.status(200).json({ income: incomeData || [], expenses: expenseData || [] });
+            return res.status(200).json({ income: incomeData || [], expenses: expenseData || [], transfers: transferData || [] });
         } catch (error: any) {
             console.error("Dashboard API Error:", error);
             return res.status(500).json({ error: error.message || "Internal Server Error" });
