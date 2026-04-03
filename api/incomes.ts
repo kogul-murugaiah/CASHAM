@@ -29,7 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           )
         `)
                 .eq('user_id', user.id)
-                .order('date', { ascending: false });
+                .order('date', { ascending: false })
+                .order('created_at', { ascending: false });
 
             if (startDate) {
                 query = query.gte('date', startDate);
