@@ -265,205 +265,423 @@ const Portfolio = () => {
     </button>
   );
 
-  // ── Mutual Fund Table ─────────────────────────────────────────
   const MFTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          <th className="px-6 py-4 text-left">Fund</th>
-          <th className="px-6 py-4">Category</th>
-          <th className="px-6 py-4">Units</th>
-          <th className="px-6 py-4">NAV (buy)</th>
-          <th className="px-6 py-4">Invested</th>
-          <th className="px-6 py-4">Current Value / P&L</th>
-          <th className="px-6 py-4">SIP</th>
-          <th className="px-6 py-4"></th>
-        </tr></thead>
-        <tbody className="divide-y divide-white/5">
-          {records.map(inv => {
-            const mf = inv.investment_mf?.[0];
-            return (
-              <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-white">{inv.name}</p>
-                  <p className="text-xs text-slate-500">{mf?.fund_house || "—"}</p>
-                </td>
-                <td className="px-6 py-4 text-center"><span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">{mf?.fund_category || "—"}</span></td>
-                <td className="px-6 py-4 text-sm text-slate-300 text-center font-mono">{mf?.units ?? "—"}</td>
-                <td className="px-6 py-4 text-sm text-slate-400 text-center font-mono">{mf?.nav_at_purchase ? `₹${mf.nav_at_purchase}` : "—"}</td>
-                <td className="px-6 py-4 text-sm text-amber-400 font-bold font-mono text-center">{currencyFormatter.format(inv.amount)}</td>
-                <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
-                <td className="px-6 py-4 text-center">{mf?.is_sip ? <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">SIP {mf.sip_day && `(${mf.sip_day}th)`}</span> : "—"}</td>
-                <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="overflow-hidden">
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <th className="px-6 py-4 text-left">Fund</th>
+            <th className="px-6 py-4">Category</th>
+            <th className="px-6 py-4">Units</th>
+            <th className="px-6 py-4">NAV (buy)</th>
+            <th className="px-6 py-4">Invested</th>
+            <th className="px-6 py-4">Current Value / P&L</th>
+            <th className="px-6 py-4">SIP</th>
+            <th className="px-6 py-4"></th>
+          </tr></thead>
+          <tbody className="divide-y divide-white/5">
+            {records.map(inv => {
+              const mf = inv.investment_mf?.[0];
+              return (
+                <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium text-white">{inv.name}</p>
+                    <p className="text-xs text-slate-500">{mf?.fund_house || "—"}</p>
+                  </td>
+                  <td className="px-6 py-4 text-center"><span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg">{mf?.fund_category || "—"}</span></td>
+                  <td className="px-6 py-4 text-sm text-slate-300 text-center font-mono">{mf?.units ?? "—"}</td>
+                  <td className="px-6 py-4 text-sm text-slate-400 text-center font-mono">{mf?.nav_at_purchase ? `₹${mf.nav_at_purchase}` : "—"}</td>
+                  <td className="px-6 py-4 text-sm text-amber-400 font-bold font-mono text-center">{currencyFormatter.format(inv.amount)}</td>
+                  <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-4 text-center">{mf?.is_sip ? <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">SIP {mf.sip_day && `(${mf.sip_day}th)`}</span> : "—"}</td>
+                  <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden divide-y divide-white/5">
+        {records.map(inv => {
+          const mf = inv.investment_mf?.[0];
+          return (
+            <div key={inv.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-sm font-bold text-white">{inv.name}</h4>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-tight">{mf?.fund_house || "—"}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded uppercase font-bold">
+                    {mf?.fund_category || "Mutual Fund"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Units / Nav</p>
+                  <p className="text-xs text-slate-200 font-mono mt-0.5">{mf?.units || "0"} @ ₹{mf?.nav_at_purchase || "0"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold text-right">SIP Status</p>
+                  <p className="text-xs text-slate-200 mt-0.5">{mf?.is_sip ? `Monthly (${mf.sip_day}th)` : "One-time"}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Portfolio Status</p>
+                  <PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} />
+                </div>
+                <DeleteBtn id={inv.id} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
-  // ── Stock Table ───────────────────────────────────────────────
   const StockTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          <th className="px-6 py-4 text-left">Company</th>
-          <th className="px-6 py-4">Ticker</th>
-          <th className="px-6 py-4">Sector</th>
-          <th className="px-6 py-4">Qty</th>
-          <th className="px-6 py-4">Buy Price</th>
-          <th className="px-6 py-4">Invested</th>
-          <th className="px-6 py-4">Current Value / P&L</th>
-          <th className="px-6 py-4"></th>
-        </tr></thead>
-        <tbody className="divide-y divide-white/5">
-          {records.map(inv => {
-            const s = inv.investment_stock?.[0];
-            return (
-              <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-white">{inv.name}</p>
-                  <span className="text-[10px] text-slate-500">{s?.exchange || "NSE"}</span>
-                </td>
-                <td className="px-6 py-4 text-center"><span className="font-mono font-bold text-amber-400 text-sm">{s?.ticker || "—"}</span></td>
-                <td className="px-6 py-4 text-center text-xs text-slate-400">{s?.sector || "—"}</td>
-                <td className="px-6 py-4 text-center text-sm text-slate-300 font-mono">{s?.quantity ?? "—"}</td>
-                <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">{s?.buy_price ? `₹${s.buy_price}` : "—"}</td>
-                <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
-                <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
-                <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="overflow-hidden">
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <th className="px-6 py-4 text-left">Company</th>
+            <th className="px-6 py-4">Ticker</th>
+            <th className="px-6 py-4">Sector</th>
+            <th className="px-6 py-4">Qty</th>
+            <th className="px-6 py-4">Buy Price</th>
+            <th className="px-6 py-4">Invested</th>
+            <th className="px-6 py-4">Current Value / P&L</th>
+            <th className="px-6 py-4"></th>
+          </tr></thead>
+          <tbody className="divide-y divide-white/5">
+            {records.map(inv => {
+              const s = inv.investment_stock?.[0];
+              return (
+                <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium text-white">{inv.name}</p>
+                    <span className="text-[10px] text-slate-500">{s?.exchange || "NSE"}</span>
+                  </td>
+                  <td className="px-6 py-4 text-center"><span className="font-mono font-bold text-amber-400 text-sm">{s?.ticker || "—"}</span></td>
+                  <td className="px-6 py-4 text-center text-xs text-slate-400">{s?.sector || "—"}</td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-300 font-mono">{s?.quantity ?? "—"}</td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">{s?.buy_price ? `₹${s.buy_price}` : "—"}</td>
+                  <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                  <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden divide-y divide-white/5">
+        {records.map(inv => {
+          const s = inv.investment_stock?.[0];
+          return (
+            <div key={inv.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-sm font-bold text-white">{inv.name}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="font-mono font-bold text-amber-400 text-[10px]">{s?.ticker || "—"}</span>
+                    <span className="text-slate-600 text-[10px]">•</span>
+                    <span className="text-slate-500 text-[10px] uppercase tracking-tight">{s?.exchange || "NSE"}</span>
+                  </div>
+                </div>
+                <span className="text-[9px] bg-slate-700/50 text-slate-400 border border-white/5 px-2 py-0.5 rounded font-bold uppercase">
+                  {s?.sector || "Equity"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Qty / Avg Buy</p>
+                  <p className="text-xs text-slate-200 font-mono mt-0.5">{s?.quantity || "0"} @ ₹{s?.buy_price || "0"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Total Invested</p>
+                  <p className="text-xs text-amber-400 font-bold font-mono mt-0.5">{currencyFormatter.format(inv.amount)}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Market Position</p>
+                  <PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} />
+                </div>
+                <DeleteBtn id={inv.id} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
-  // ── Gold Table ────────────────────────────────────────────────
   const GoldTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          <th className="px-6 py-4 text-left">Name</th>
-          <th className="px-6 py-4">Form</th>
-          <th className="px-6 py-4">Purity</th>
-          <th className="px-6 py-4">Grams</th>
-          <th className="px-6 py-4">Buy Price/g</th>
-          <th className="px-6 py-4">Invested</th>
-          <th className="px-6 py-4">Current Value / P&L</th>
-          <th className="px-6 py-4"></th>
-        </tr></thead>
-        <tbody className="divide-y divide-white/5">
-          {records.map(inv => {
-            const g = inv.investment_gold?.[0];
-            return (
-              <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4 text-sm font-medium text-white">{inv.name}</td>
-                <td className="px-6 py-4 text-center"><span className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2.5 py-1 rounded-lg">{g?.gold_form || "—"}</span></td>
-                <td className="px-6 py-4 text-center text-sm text-slate-300">{g?.purity || "24K"}</td>
-                <td className="px-6 py-4 text-center text-sm font-mono text-slate-300">{g?.grams ? `${g.grams}g` : "—"}</td>
-                <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">{g?.buy_price_per_gram ? `₹${g.buy_price_per_gram}/g` : "—"}</td>
-                <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
-                <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
-                <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="overflow-hidden">
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <th className="px-6 py-4 text-left">Name</th>
+            <th className="px-6 py-4">Form</th>
+            <th className="px-6 py-4">Purity</th>
+            <th className="px-6 py-4">Grams</th>
+            <th className="px-6 py-4">Buy Price/g</th>
+            <th className="px-6 py-4">Invested</th>
+            <th className="px-6 py-4">Current Value / P&L</th>
+            <th className="px-6 py-4"></th>
+          </tr></thead>
+          <tbody className="divide-y divide-white/5">
+            {records.map(inv => {
+              const g = inv.investment_gold?.[0];
+              return (
+                <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4 text-sm font-medium text-white">{inv.name}</td>
+                  <td className="px-6 py-4 text-center"><span className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2.5 py-1 rounded-lg">{g?.gold_form || "—"}</span></td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-300">{g?.purity || "24K"}</td>
+                  <td className="px-6 py-4 text-center text-sm font-mono text-slate-300">{g?.grams ? `${g.grams}g` : "—"}</td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">{g?.buy_price_per_gram ? `₹${g.buy_price_per_gram}/g` : "—"}</td>
+                  <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                  <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden divide-y divide-white/5">
+        {records.map(inv => {
+          const g = inv.investment_gold?.[0];
+          return (
+            <div key={inv.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <h4 className="text-sm font-bold text-white">{inv.name}</h4>
+                <div className="flex gap-2">
+                  <span className="text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded font-bold uppercase">
+                    {g?.gold_form || "Physical"}
+                  </span>
+                  <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold">{g?.purity || "24K"}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Quantity</p>
+                  <p className="text-xs text-slate-200 font-mono mt-0.5">{g?.grams ? `${g.grams}g` : "0g"}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Invested Rate</p>
+                  <p className="text-xs text-slate-200 font-mono mt-0.5">₹{g?.buy_price_per_gram || "0"}/g</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Market Logic</p>
+                  <PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} />
+                </div>
+                <DeleteBtn id={inv.id} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
-  // ── FD Table ──────────────────────────────────────────────────
   const FDTable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          <th className="px-6 py-4 text-left">Bank / Label</th>
-          <th className="px-6 py-4">Principal</th>
-          <th className="px-6 py-4">Rate</th>
-          <th className="px-6 py-4">Tenure</th>
-          <th className="px-6 py-4">Start → Maturity</th>
-          <th className="px-6 py-4">Days Left</th>
-          <th className="px-6 py-4">Maturity Amount</th>
-          <th className="px-6 py-4"></th>
-        </tr></thead>
-        <tbody className="divide-y divide-white/5">
-          {records.map(inv => {
-            const fd = inv.investment_fd?.[0];
-            const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null;
-            const maturing = dl !== null && dl <= 30 && dl >= 0;
-            const matured = dl !== null && dl < 0;
-            return (
-              <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-white">{fd?.bank_name || inv.name}</p>
-                  <p className="text-xs text-slate-500">{inv.name}</p>
-                </td>
-                <td className="px-6 py-4 text-center text-sm font-bold text-white font-mono">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td>
-                <td className="px-6 py-4 text-center"><span className="text-sm text-blue-400 font-bold">{fd?.interest_rate ? `${fd.interest_rate}%` : "—"}</span></td>
-                <td className="px-6 py-4 text-center text-sm text-slate-400">{fd?.tenure_months ? `${fd.tenure_months}m` : "—"}</td>
-                <td className="px-6 py-4 text-center text-xs text-slate-400">
-                  {fd?.start_date && fd?.maturity_date
-                    ? <>{new Date(fd.start_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })} → {new Date(fd.maturity_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}</>
-                    : "—"}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  {dl === null ? "—" : matured
-                    ? <span className="text-xs bg-slate-500/20 text-slate-400 px-2 py-1 rounded-full border border-slate-500/20">Matured</span>
-                    : <span className={`text-xs font-bold px-2 py-1 rounded-full border ${maturing ? "bg-red-500/10 text-red-400 border-red-500/20 animate-pulse" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>{dl}d</span>
-                  }
-                </td>
-                <td className="px-6 py-4 text-center text-sm font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td>
-                <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="overflow-hidden">
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <th className="px-6 py-4 text-left">Bank / Label</th>
+            <th className="px-6 py-4">Principal</th>
+            <th className="px-6 py-4">Rate</th>
+            <th className="px-6 py-4">Tenure</th>
+            <th className="px-6 py-4">Start → Maturity</th>
+            <th className="px-6 py-4">Days Left</th>
+            <th className="px-6 py-4">Maturity Amount</th>
+            <th className="px-6 py-4"></th>
+          </tr></thead>
+          <tbody className="divide-y divide-white/5">
+            {records.map(inv => {
+              const fd = inv.investment_fd?.[0];
+              const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null;
+              const maturing = dl !== null && dl <= 30 && dl >= 0;
+              const matured = dl !== null && dl < 0;
+              return (
+                <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium text-white">{fd?.bank_name || inv.name}</p>
+                    <p className="text-xs text-slate-500">{inv.name}</p>
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm font-bold text-white font-mono">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td>
+                  <td className="px-6 py-4 text-center"><span className="text-sm text-blue-400 font-bold">{fd?.interest_rate ? `${fd.interest_rate}%` : "—"}</span></td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-400">{fd?.tenure_months ? `${fd.tenure_months}m` : "—"}</td>
+                  <td className="px-6 py-4 text-center text-xs text-slate-400">
+                    {fd?.start_date && fd?.maturity_date
+                      ? <>{new Date(fd.start_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })} → {new Date(fd.maturity_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}</>
+                      : "—"}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {dl === null ? "—" : matured
+                      ? <span className="text-xs bg-slate-500/20 text-slate-400 px-2 py-1 rounded-full border border-slate-500/20">Matured</span>
+                      : <span className={`text-xs font-bold px-2 py-1 rounded-full border ${maturing ? "bg-red-500/10 text-red-400 border-red-500/20 animate-pulse" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>{dl}d</span>
+                    }
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td>
+                  <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden divide-y divide-white/5">
+        {records.map(inv => {
+          const fd = inv.investment_fd?.[0];
+          const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null;
+          const maturing = dl !== null && dl <= 30 && dl >= 0;
+          const matured = dl !== null && dl < 0;
+          return (
+            <div key={inv.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-sm font-bold text-white">{fd?.bank_name || inv.name}</h4>
+                  <p className="text-[10px] text-slate-500">{inv.name}</p>
+                </div>
+                {dl !== null && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${matured ? "bg-slate-500/10 text-slate-400 border-slate-500/20" : maturing ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
+                    {matured ? "Matured" : `${dl} days left`}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 py-2 border-y border-white/5">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Principal</p>
+                  <p className="text-xs text-white font-mono mt-0.5">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Rate</p>
+                  <p className="text-xs text-blue-400 font-bold mt-0.5">{fd?.interest_rate}%</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Tenure</p>
+                  <p className="text-xs text-slate-200 mt-0.5">{fd?.tenure_months}m</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Maturity Value</p>
+                  <p className="text-sm font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</p>
+                </div>
+                <DeleteBtn id={inv.id} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 
-  // ── Real Estate Table ─────────────────────────────────────────
   const RETable = () => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          <th className="px-6 py-4 text-left">Property</th>
-          <th className="px-6 py-4">Type</th>
-          <th className="px-6 py-4">Area</th>
-          <th className="px-6 py-4">Buy Price</th>
-          <th className="px-6 py-4">Monthly Rent</th>
-          <th className="px-6 py-4">Annual Yield</th>
-          <th className="px-6 py-4">Current Value / Gain</th>
-          <th className="px-6 py-4"></th>
-        </tr></thead>
-        <tbody className="divide-y divide-white/5">
-          {records.map(inv => {
-            const re = inv.investment_real_estate?.[0];
-            const annualRent = (re?.monthly_rental || 0) * 12;
-            const currentVal = inv.current_value || inv.amount;
-            const yield_ = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
-            return (
-              <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
-                <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-white">{inv.name}</p>
-                  <p className="text-xs text-slate-500">{re?.address || "—"}</p>
-                </td>
-                <td className="px-6 py-4 text-center"><span className="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-lg">{re?.property_type || "—"}</span></td>
-                <td className="px-6 py-4 text-center text-sm text-slate-400">{re?.area_sqft ? `${re.area_sqft} sqft` : "—"}</td>
-                <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
-                <td className="px-6 py-4 text-center text-sm text-emerald-400 font-mono">{re?.monthly_rental > 0 ? currencyFormatter.format(re.monthly_rental) : "—"}</td>
-                <td className="px-6 py-4 text-center"><span className={`text-xs font-bold ${yield_ > 0 ? "text-emerald-400" : "text-slate-500"}`}>{yield_ > 0 ? `${yield_.toFixed(2)}%` : "—"}</span></td>
-                <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
-                <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="overflow-hidden">
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead><tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <th className="px-6 py-4 text-left">Property</th>
+            <th className="px-6 py-4">Type</th>
+            <th className="px-6 py-4">Area</th>
+            <th className="px-6 py-4">Buy Price</th>
+            <th className="px-6 py-4">Monthly Rent</th>
+            <th className="px-6 py-4">Annual Yield</th>
+            <th className="px-6 py-4">Current Value / Gain</th>
+            <th className="px-6 py-4"></th>
+          </tr></thead>
+          <tbody className="divide-y divide-white/5">
+            {records.map(inv => {
+              const re = inv.investment_real_estate?.[0];
+              const annualRent = (re?.monthly_rental || 0) * 12;
+              const currentVal = inv.current_value || inv.amount;
+              const yield_ = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
+              return (
+                <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium text-white">{inv.name}</p>
+                    <p className="text-xs text-slate-500">{re?.address || "—"}</p>
+                  </td>
+                  <td className="px-6 py-4 text-center"><span className="text-xs bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-1 rounded-lg">{re?.property_type || "—"}</span></td>
+                  <td className="px-6 py-4 text-center text-sm text-slate-400">{re?.area_sqft ? `${re.area_sqft} sqft` : "—"}</td>
+                  <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                  <td className="px-6 py-4 text-center text-sm text-emerald-400 font-mono">{re?.monthly_rental > 0 ? currencyFormatter.format(re.monthly_rental) : "—"}</td>
+                  <td className="px-6 py-4 text-center"><span className={`text-xs font-bold ${yield_ > 0 ? "text-emerald-400" : "text-slate-500"}`}>{yield_ > 0 ? `${yield_.toFixed(2)}%` : "—"}</span></td>
+                  <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden divide-y divide-white/5">
+        {records.map(inv => {
+          const re = inv.investment_real_estate?.[0];
+          const annualRent = (re?.monthly_rental || 0) * 12;
+          const currentVal = inv.current_value || inv.amount;
+          const yield_ = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
+          return (
+            <div key={inv.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="text-sm font-bold text-white">{inv.name}</h4>
+                  <p className="text-[10px] text-slate-500 truncate max-w-[200px]">{re?.address || "—"}</p>
+                </div>
+                <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded uppercase font-bold">
+                  {re?.property_type || "Property"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Area / Yield</p>
+                  <p className="text-xs text-slate-200 mt-0.5">{re?.area_sqft || "0"} sqft • <span className="text-emerald-400 font-bold">{yield_.toFixed(1)}%</span></p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Monthly Rent</p>
+                  <p className="text-xs text-emerald-400 font-bold font-mono mt-0.5">{currencyFormatter.format(re?.monthly_rental || 0)}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Asset Valuation</p>
+                  <PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} />
+                </div>
+                <DeleteBtn id={inv.id} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 

@@ -198,7 +198,7 @@ const Sidebar = () => {
             </aside>
 
             {/* ── MOBILE TOP BAR ──────────────────────────────────────────────── */}
-            <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3.5 bg-slate-700/80 backdrop-blur-2xl border-b border-white/5">
+            <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3.5 bg-slate-900/80 backdrop-blur-2xl border-b border-emerald-500/10 shadow-lg shadow-black/20">
                 {/* Hamburger LEFT */}
                 <button
                     onClick={() => setMobileOpen(true)}
@@ -206,15 +206,25 @@ const Sidebar = () => {
                 >
                     <FiMenu size={20} />
                 </button>
-
-                {/* Logo + name CENTERED */}
+                
                 <div className="flex items-center gap-2.5 absolute left-1/2 -translate-x-1/2">
                     <Logo size="sm" className="flex-shrink-0" />
-                    <span className="text-lg font-bold font-heading text-white">CASHAM</span>
+                    <span className="text-lg font-bold font-heading text-white tracking-widest uppercase">CASHAM</span>
                 </div>
 
-                {/* Spacer to balance hamburger */}
-                <div className="w-10 flex-shrink-0" />
+                {/* Profile RIGHT */}
+                <div className="flex items-center justify-end w-10">
+                    {user ? (
+                        <button 
+                            onClick={() => setMobileOpen(true)}
+                            className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-[10px] font-bold text-white shadow-lg border border-white/10"
+                        >
+                            {getInitials(user.email)}
+                        </button>
+                    ) : (
+                        <div className="w-8 h-8" />
+                    )}
+                </div>
             </header>
 
             {/* ── MOBILE DRAWER OVERLAY ───────────────────────────────────────── */}

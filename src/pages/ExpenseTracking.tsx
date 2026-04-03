@@ -437,7 +437,8 @@ const ExpenseTracking = () => {
                                             Download Excel
                                         </button>
                                     </div>
-                                    <div className="overflow-x-auto">
+                                    {/* Desktop Table View */}
+                                    <div className="hidden md:block overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
                                                 <tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
@@ -475,6 +476,44 @@ const ExpenseTracking = () => {
                                                 ))}
                                             </tbody>
                                         </table>
+                                    </div>
+
+                                    {/* Mobile Cards View */}
+                                    <div className="md:hidden divide-y divide-white/5">
+                                        {currentExpenses.map((exp) => (
+                                            <div key={exp.id} className="p-4 hover:bg-slate-700/30 transition-colors">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <h4 className="text-sm font-bold text-white mb-1">{exp.item}</h4>
+                                                        <div className="flex items-center gap-2 text-xs">
+                                                            <span className="text-slate-400">{new Date(exp.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })}</span>
+                                                            <span className="text-slate-600">•</span>
+                                                            <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-300 uppercase">
+                                                                {exp.categories?.name || "Uncategorized"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-sm font-bold text-white font-mono">{currencyFormatter.format(exp.amount)}</div>
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter block mt-0.5">{exp.account_type}</span>
+                                                    </div>
+                                                </div>
+                                                {/* Description if present */}
+                                                {(exp.description) && (
+                                                    <div className="text-xs text-slate-500 mb-3 border-l-2 border-white/10 pl-2">
+                                                        {exp.description}
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-end gap-2 pt-3 mt-1">
+                                                    <button onClick={() => handleEdit(exp)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> Edit
+                                                    </button>
+                                                    <button onClick={() => handleDelete(exp.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all text-xs font-bold">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
 
                                     {totalPages > 1 && (
