@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -257,12 +258,23 @@ const Portfolio = () => {
 
   const DeleteBtn = ({ id }: { id: string }) => (
     <button onClick={() => handleDelete(id)} disabled={deleting === id}
-      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100">
+      className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
       {deleting === id
         ? <div className="w-3.5 h-3.5 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
         : <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
       }
     </button>
+  );
+
+  // Reusable action badge for buy/sell display in tables
+  const ActionBadge = ({ action }: { action: string }) => (
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+      action === 'buy'
+        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+    }`}>
+      {action === 'buy' ? '↑ Buy' : '↓ Sell'}
+    </span>
   );
 
   const MFTable = () => (
@@ -277,6 +289,7 @@ const Portfolio = () => {
             <th className="px-6 py-4">Invested</th>
             <th className="px-6 py-4">Current Value / P&L</th>
             <th className="px-6 py-4">SIP</th>
+            <th className="px-6 py-4">Action</th>
             <th className="px-6 py-4"></th>
           </tr></thead>
           <tbody className="divide-y divide-white/5">
@@ -294,6 +307,7 @@ const Portfolio = () => {
                   <td className="px-6 py-4 text-sm text-amber-400 font-bold font-mono text-center">{currencyFormatter.format(inv.amount)}</td>
                   <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
                   <td className="px-6 py-4 text-center">{mf?.is_sip ? <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">SIP {mf.sip_day && `(${mf.sip_day}th)`}</span> : "—"}</td>
+                  <td className="px-6 py-4 text-center"><ActionBadge action={inv.action} /></td>
                   <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
                 </tr>
               );
@@ -313,7 +327,8 @@ const Portfolio = () => {
                   <h4 className="text-sm font-bold text-white">{inv.name}</h4>
                   <p className="text-[10px] text-slate-500 uppercase tracking-tight">{mf?.fund_house || "—"}</p>
                 </div>
-                <div className="text-right">
+                <div className="flex items-center gap-2">
+                  <ActionBadge action={inv.action} />
                   <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded uppercase font-bold">
                     {mf?.fund_category || "Mutual Fund"}
                   </span>
@@ -357,6 +372,7 @@ const Portfolio = () => {
             <th className="px-6 py-4">Buy Price</th>
             <th className="px-6 py-4">Invested</th>
             <th className="px-6 py-4">Current Value / P&L</th>
+            <th className="px-6 py-4">Action</th>
             <th className="px-6 py-4"></th>
           </tr></thead>
           <tbody className="divide-y divide-white/5">
@@ -374,6 +390,7 @@ const Portfolio = () => {
                   <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">{s?.buy_price ? `₹${s.buy_price}` : "—"}</td>
                   <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
                   <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-4 text-center"><ActionBadge action={inv.action} /></td>
                   <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
                 </tr>
               );
@@ -397,9 +414,12 @@ const Portfolio = () => {
                     <span className="text-slate-500 text-[10px] uppercase tracking-tight">{s?.exchange || "NSE"}</span>
                   </div>
                 </div>
-                <span className="text-[9px] bg-slate-700/50 text-slate-400 border border-white/5 px-2 py-0.5 rounded font-bold uppercase">
-                  {s?.sector || "Equity"}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <ActionBadge action={inv.action} />
+                  <span className="text-[9px] bg-slate-700/50 text-slate-400 border border-white/5 px-2 py-0.5 rounded font-bold uppercase">
+                    {s?.sector || "Equity"}
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
@@ -439,6 +459,7 @@ const Portfolio = () => {
             <th className="px-6 py-4">Buy Price/g</th>
             <th className="px-6 py-4">Invested</th>
             <th className="px-6 py-4">Current Value / P&L</th>
+            <th className="px-6 py-4">Action</th>
             <th className="px-6 py-4"></th>
           </tr></thead>
           <tbody className="divide-y divide-white/5">
@@ -453,6 +474,7 @@ const Portfolio = () => {
                   <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">{g?.buy_price_per_gram ? `₹${g.buy_price_per_gram}/g` : "—"}</td>
                   <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
                   <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-4 text-center"><ActionBadge action={inv.action} /></td>
                   <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
                 </tr>
               );
@@ -469,7 +491,8 @@ const Portfolio = () => {
             <div key={inv.id} className="p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="text-sm font-bold text-white">{inv.name}</h4>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <ActionBadge action={inv.action} />
                   <span className="text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded font-bold uppercase">
                     {g?.gold_form || "Physical"}
                   </span>
@@ -514,6 +537,7 @@ const Portfolio = () => {
             <th className="px-6 py-4">Start → Maturity</th>
             <th className="px-6 py-4">Days Left</th>
             <th className="px-6 py-4">Maturity Amount</th>
+            <th className="px-6 py-4">Action</th>
             <th className="px-6 py-4"></th>
           </tr></thead>
           <tbody className="divide-y divide-white/5">
@@ -543,6 +567,7 @@ const Portfolio = () => {
                     }
                   </td>
                   <td className="px-6 py-4 text-center text-sm font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td>
+                  <td className="px-6 py-4 text-center"><ActionBadge action={inv.action} /></td>
                   <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
                 </tr>
               );
@@ -565,11 +590,14 @@ const Portfolio = () => {
                   <h4 className="text-sm font-bold text-white">{fd?.bank_name || inv.name}</h4>
                   <p className="text-[10px] text-slate-500">{inv.name}</p>
                 </div>
-                {dl !== null && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${matured ? "bg-slate-500/10 text-slate-400 border-slate-500/20" : maturing ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
-                    {matured ? "Matured" : `${dl} days left`}
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-1">
+                  <ActionBadge action={inv.action} />
+                  {dl !== null && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${matured ? "bg-slate-500/10 text-slate-400 border-slate-500/20" : maturing ? "bg-red-500/20 text-red-400 border-red-500/30 animate-pulse" : "bg-blue-500/10 text-blue-400 border-blue-500/20"}`}>
+                      {matured ? "Matured" : `${dl} days left`}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 py-2 border-y border-white/5">
@@ -611,16 +639,20 @@ const Portfolio = () => {
             <th className="px-6 py-4">Area</th>
             <th className="px-6 py-4">Buy Price</th>
             <th className="px-6 py-4">Monthly Rent</th>
+            <th className="px-6 py-4">Loan EMI</th>
             <th className="px-6 py-4">Annual Yield</th>
             <th className="px-6 py-4">Current Value / Gain</th>
+            <th className="px-6 py-4">Action</th>
             <th className="px-6 py-4"></th>
           </tr></thead>
           <tbody className="divide-y divide-white/5">
             {records.map(inv => {
               const re = inv.investment_real_estate?.[0];
               const annualRent = (re?.monthly_rental || 0) * 12;
+              const annualEmi = (re?.loan_emi || 0) * 12;
               const currentVal = inv.current_value || inv.amount;
-              const yield_ = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
+              const netYield = currentVal > 0 ? ((annualRent - annualEmi) / currentVal) * 100 : 0;
+              const grossYield = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
               return (
                 <tr key={inv.id} className="group hover:bg-white/5 transition-colors">
                   <td className="px-6 py-4">
@@ -631,8 +663,13 @@ const Portfolio = () => {
                   <td className="px-6 py-4 text-center text-sm text-slate-400">{re?.area_sqft ? `${re.area_sqft} sqft` : "—"}</td>
                   <td className="px-6 py-4 text-center text-sm font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
                   <td className="px-6 py-4 text-center text-sm text-emerald-400 font-mono">{re?.monthly_rental > 0 ? currencyFormatter.format(re.monthly_rental) : "—"}</td>
-                  <td className="px-6 py-4 text-center"><span className={`text-xs font-bold ${yield_ > 0 ? "text-emerald-400" : "text-slate-500"}`}>{yield_ > 0 ? `${yield_.toFixed(2)}%` : "—"}</span></td>
+                  <td className="px-6 py-4 text-center text-sm text-red-400 font-mono">{re?.loan_emi > 0 ? currencyFormatter.format(re.loan_emi) : "—"}</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`text-xs font-bold ${grossYield > 0 ? "text-emerald-400" : "text-slate-500"}`}>{grossYield > 0 ? `${grossYield.toFixed(2)}%` : "—"}</span>
+                    {netYield > 0 && re?.loan_emi > 0 && <p className="text-[10px] text-slate-500">Net: {netYield.toFixed(2)}%</p>}
+                  </td>
                   <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td>
+                  <td className="px-6 py-4 text-center"><ActionBadge action={inv.action} /></td>
                   <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
                 </tr>
               );
@@ -646,8 +683,10 @@ const Portfolio = () => {
         {records.map(inv => {
           const re = inv.investment_real_estate?.[0];
           const annualRent = (re?.monthly_rental || 0) * 12;
+          const annualEmi = (re?.loan_emi || 0) * 12;
           const currentVal = inv.current_value || inv.amount;
-          const yield_ = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
+          const grossYield = currentVal > 0 ? (annualRent / currentVal) * 100 : 0;
+          const netYield = currentVal > 0 ? ((annualRent - annualEmi) / currentVal) * 100 : 0;
           return (
             <div key={inv.id} className="p-4 space-y-4">
               <div className="flex justify-between items-start">
@@ -655,19 +694,24 @@ const Portfolio = () => {
                   <h4 className="text-sm font-bold text-white">{inv.name}</h4>
                   <p className="text-[10px] text-slate-500 truncate max-w-[200px]">{re?.address || "—"}</p>
                 </div>
-                <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded uppercase font-bold">
-                  {re?.property_type || "Property"}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <ActionBadge action={inv.action} />
+                  <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded uppercase font-bold">
+                    {re?.property_type || "Property"}
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
                 <div>
-                  <p className="text-[9px] text-slate-500 uppercase font-bold">Area / Yield</p>
-                  <p className="text-xs text-slate-200 mt-0.5">{re?.area_sqft || "0"} sqft • <span className="text-emerald-400 font-bold">{yield_.toFixed(1)}%</span></p>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Area / Gross Yield</p>
+                  <p className="text-xs text-slate-200 mt-0.5">{re?.area_sqft || "0"} sqft • <span className="text-emerald-400 font-bold">{grossYield.toFixed(1)}%</span></p>
+                  {re?.loan_emi > 0 && <p className="text-[9px] text-slate-500 mt-0.5">Net yield: <span className="text-emerald-300">{netYield.toFixed(1)}%</span></p>}
                 </div>
                 <div className="text-right">
-                  <p className="text-[9px] text-slate-500 uppercase font-bold">Monthly Rent</p>
+                  <p className="text-[9px] text-slate-500 uppercase font-bold">Rent / EMI</p>
                   <p className="text-xs text-emerald-400 font-bold font-mono mt-0.5">{currencyFormatter.format(re?.monthly_rental || 0)}</p>
+                  {re?.loan_emi > 0 && <p className="text-[9px] text-red-400 font-mono">-{currencyFormatter.format(re.loan_emi)} EMI</p>}
                 </div>
               </div>
 
@@ -705,7 +749,10 @@ const Portfolio = () => {
             <h1 className="text-4xl font-bold font-heading text-white">Investment Tracker</h1>
             <p className="text-slate-400 mt-1">Track your wealth across all asset classes.</p>
           </div>
-          <a href="/add-investment" className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-400 hover:scale-[1.02] transition-all self-start sm:self-auto">
+          <a
+            href="/add-investment"
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-400 hover:scale-[1.02] transition-all self-start sm:self-auto"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
             Log Investment
           </a>
@@ -737,7 +784,7 @@ const Portfolio = () => {
             {loading ? <LoadingRows /> : records.length === 0 ? (
               <div className="p-16 text-center">
                 <p className="text-slate-400 text-sm mb-3">No {TABS.find(t => t.key === tab)?.label.toLowerCase()} recorded yet.</p>
-                <a href="/add-investment" className="text-amber-400 text-sm font-bold hover:text-amber-300 transition-colors">+ Log your first investment →</a>
+                <Link to="/add-investment" className="text-amber-400 text-sm font-bold hover:text-amber-300 transition-colors">+ Log your first investment →</Link>
               </div>
             ) : tabContent[tab]}
           </div>

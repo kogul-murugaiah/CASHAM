@@ -2,15 +2,8 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabase.js';
 import { getUserFromRequest } from './_lib/auth.js';
 
+// Single source of truth: maps asset type → detail table name (used for joins + inserts)
 const DETAIL_TABLE: Record<string, string> = {
-    'Mutual Fund': 'investment_mf',
-    'Stock': 'investment_stock',
-    'Gold': 'investment_gold',
-    'FD': 'investment_fd',
-    'Real Estate': 'investment_real_estate',
-};
-
-const RELATION_KEY: Record<string, string> = {
     'Mutual Fund': 'investment_mf',
     'Stock': 'investment_stock',
     'Gold': 'investment_gold',
@@ -45,12 +38,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 for (const inv of all || []) {
                     if (!byType[inv.type]) byType[inv.type] = { invested: 0, current: 0, count: 0 };
                     if (inv.action === 'buy') {
+                        // Buy: add to cost basis and mark current market value
                         byType[inv.type].invested += inv.amount;
-                        byType[inv.type].current += (inv.current_value ?? inv.amount);
-                        byType[inv.type].count += 1;
+                        byType[inv.type].current  += (inv.current_value ?? inv.amount);
+                        byType[inv.type].count    += 1;
                     } else {
+                        // Sell/redeem: reduce cost basis by the realised exit amount.
+                        // Do NOT touch .current — current_value is only set on buy rows
+                        // and reflects their live market value independently.
                         byType[inv.type].invested -= inv.amount;
-                        byType[inv.type].current -= inv.amount;
                     }
                 }
 
@@ -79,8 +75,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // List investments (with detail join if type specified)
             let selectFields = '*';
-            if (type && RELATION_KEY[type as string]) {
-                selectFields = `*, ${RELATION_KEY[type as string]}(*)`;
+            if (type && DETAIL_TABLE[type as string]) {
+                selectFields = `*, ${DETAIL_TABLE[type as string]}(*)`;
             }
 
             let query = supabaseAdmin
@@ -92,6 +88,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (type) query = query.eq('type', type as string);
             if (startDate) query = query.gte('date', startDate as string);
             if (endDate) query = query.lt('date', endDate as string);
+
+            const { limit } = req.query;
+            if (limit) query = query.limit(parseInt(limit as string));
 
             const { data, error } = await query;
             if (error) throw error;

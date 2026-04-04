@@ -22,6 +22,27 @@ const RE_TYPES = ["Residential", "Commercial", "Plot", "Land"];
 const EXCHANGES = ["NSE", "BSE"];
 const SECTORS = ["Banking", "IT", "FMCG", "Pharma", "Auto", "Energy", "Telecom", "Metals", "Real Estate", "Other"];
 
+// Compounding frequency map — avoids fragile nested ternaries
+const COMPOUNDING_FREQ: Record<string, number> = {
+    "Monthly": 12,
+    "Quarterly": 4,
+    "Annually": 1,
+    "Cumulative": 4, // banks typically compound quarterly for cumulative FDs
+    "Simple Interest": 0,
+};
+
+// Safe month addition — JS Date.setMonth overflows (e.g. Jan 31 + 1 = Mar 3)
+const addMonths = (dateStr: string, months: number): string => {
+    const d = new Date(dateStr);
+    const originalDay = d.getDate();
+    d.setDate(1); // go to 1st to prevent overflow
+    d.setMonth(d.getMonth() + months);
+    // Clamp to last day of target month if original day exceeds it
+    const daysInTarget = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(originalDay, daysInTarget));
+    return d.toISOString().slice(0, 10);
+};
+
 const currencyFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
 // ─── Component ──────────────────────────────────────────────────
@@ -75,15 +96,14 @@ const AddInvestment = () => {
   // Auto-calculate FD maturity date and amount
   useEffect(() => {
     if (selectedType === "FD" && fd.start_date && fd.tenure_months) {
-      const start = new Date(fd.start_date);
-      start.setMonth(start.getMonth() + parseInt(fd.tenure_months));
       const p = parseFloat(fd.principal);
       const r = parseFloat(fd.interest_rate) / 100;
       const t = parseFloat(fd.tenure_months) / 12;
-      if (!isNaN(p) && !isNaN(r) && p > 0) {
-        const maturityAmt = fd.compounding === "Simple Interest"
-          ? p * (1 + r * t)
-          : p * Math.pow(1 + r / (fd.compounding === "Monthly" ? 12 : fd.compounding === "Annually" ? 1 : 4), (fd.compounding === "Monthly" ? 12 : fd.compounding === "Annually" ? 1 : 4) * t);
+      if (!isNaN(p) && !isNaN(r) && p > 0 && r > 0) {
+        const n = COMPOUNDING_FREQ[fd.compounding];
+        const maturityAmt = n === 0
+          ? p * (1 + r * t)             // Simple Interest
+          : p * Math.pow(1 + r / n, n * t); // Compound Interest
         setFd(prev => ({ ...prev, maturity_amount: maturityAmt.toFixed(2) }));
       }
     }
@@ -91,8 +111,9 @@ const AddInvestment = () => {
 
   const fetchRecent = async () => {
     try {
-      const data = await api.get("/api/investments");
-      setRecent((data || []).slice(0, 5));
+      // Limit=5 at the API level — avoids fetching all records and slicing on frontend
+      const data = await api.get("/api/investments?limit=5");
+      setRecent(data || []);
     } catch {}
   };
 
@@ -113,9 +134,8 @@ const AddInvestment = () => {
     if (selectedType === "Stock") return { ...stock, quantity: parseInt(stock.quantity), buy_price: parseFloat(stock.buy_price) };
     if (selectedType === "Gold") return { ...gold, grams: parseFloat(gold.grams), buy_price_per_gram: gold.buy_price_per_gram ? parseFloat(gold.buy_price_per_gram) : null };
     if (selectedType === "FD") {
-      const start = new Date(fd.start_date);
-      start.setMonth(start.getMonth() + parseInt(fd.tenure_months));
-      const maturity_date = start.toISOString().slice(0, 10);
+      // Use safe addMonths to avoid JS Date overflow bug (e.g. Jan 31 + 1mo = Mar 3)
+      const maturity_date = addMonths(fd.start_date, parseInt(fd.tenure_months));
       return { ...fd, maturity_date, principal: parseFloat(fd.principal), interest_rate: parseFloat(fd.interest_rate), tenure_months: parseInt(fd.tenure_months), maturity_amount: fd.maturity_amount ? parseFloat(fd.maturity_amount) : null };
     }
     if (selectedType === "Real Estate") return { property_name: name, ...re, area_sqft: re.area_sqft ? parseFloat(re.area_sqft) : null, buy_price_per_sqft: re.buy_price_per_sqft ? parseFloat(re.buy_price_per_sqft) : null, monthly_rental: parseFloat(re.monthly_rental) || 0, loan_emi: parseFloat(re.loan_emi) || 0 };
@@ -204,13 +224,13 @@ const AddInvestment = () => {
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Step 2 — Details</p>
                   <h2 className="text-lg font-bold text-white mt-1">{selectedType}</h2>
                 </div>
-                {/* Buy / Sell toggle (not for FD/RE) */}
-                {selectedType !== "FD" && selectedType !== "Real Estate" && (
-                  <div className="flex p-1 bg-slate-700/50 rounded-xl border border-white/5">
-                    <button type="button" onClick={() => setAction("buy")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${action === "buy" ? "bg-amber-500 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}>📈 Buy</button>
-                    <button type="button" onClick={() => setAction("sell")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${action === "sell" ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}>📉 Sell / Redeem</button>
-                  </div>
-                )}
+                {/* Buy / Sell toggle — available for all asset types */}
+                <div className="flex p-1 bg-slate-700/50 rounded-xl border border-white/5">
+                  <button type="button" onClick={() => setAction("buy")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${action === "buy" ? "bg-amber-500 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}>📈 Buy</button>
+                  <button type="button" onClick={() => setAction("sell")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${action === "sell" ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400 hover:text-white"}`}>
+                    {selectedType === "FD" ? "💰 Premature Closure" : selectedType === "Real Estate" ? "🏠 Sell Property" : "📉 Sell / Redeem"}
+                  </button>
+                </div>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-2 relative z-10">
@@ -407,11 +427,26 @@ const AddInvestment = () => {
 
                 <div>
                   <label className={labelCls}>
-                    Total Amount {(selectedType !== "FD") && <span className="text-amber-400 text-xs ml-1">(auto-calculated)</span>}
+                    Total Amount {selectedType !== "FD" && <span className="text-amber-400 text-xs ml-1">(auto-calculated)</span>}
                   </label>
-                  <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
-                    <input type="number" step="any" value={amount} onChange={e => setAmount(e.target.value)} className={inputCls + " pl-8 font-mono font-bold"} placeholder="0.00" required />
+                  <div className="relative">
+                    <span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
+                    <input
+                      type="number" step="any"
+                      value={amount}
+                      onChange={e => setAmount(e.target.value)}
+                      readOnly={selectedType !== "FD" && selectedType !== "Real Estate" && !!amount}
+                      className={inputCls + ` pl-8 font-mono font-bold ${
+                        selectedType !== "FD" && selectedType !== "Real Estate" && amount
+                          ? "opacity-80 cursor-not-allowed bg-slate-800/50"
+                          : ""
+                      }`}
+                      placeholder="0.00" required
+                    />
                   </div>
+                  {selectedType !== "FD" && selectedType !== "Real Estate" && amount && (
+                    <p className="text-[10px] text-slate-500 mt-1 ml-1">Auto-calculated from the fields above</p>
+                  )}
                 </div>
 
                 <div>
