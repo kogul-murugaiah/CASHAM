@@ -65,7 +65,7 @@ const MONTH_NAMES = [
 const ExpenseTracking = () => {
     const { accountTypes } = useAccountTypes();
     const { theme } = useTheme();
-    const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
+    const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -77,6 +77,28 @@ const ExpenseTracking = () => {
     });
     const [selectedYear, setSelectedYear] = useState(() => {
         return new Date().getFullYear().toString();
+    });
+    const [selectedDate, setSelectedDate] = useState(() => {
+        return new Date().toISOString().slice(0, 10);
+    });
+    const [selectedWeekStart, setSelectedWeekStart] = useState(() => {
+        const today = new Date();
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(today);
+        monday.setDate(diff);
+        return monday.toISOString().slice(0, 10);
+    });
+    const [weekInputValue, setWeekInputValue] = useState(() => {
+        const today = new Date();
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(today);
+        monday.setDate(diff);
+        const year = monday.getFullYear();
+        const startOfYear = new Date(year, 0, 1);
+        const weekNum = Math.ceil(((monday.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+        return `${year}-W${String(weekNum).padStart(2, '0')}`;
     });
 
     // Editing State
@@ -96,7 +118,17 @@ const ExpenseTracking = () => {
 
             let startDate, endDate;
 
-            if (viewMode === "monthly") {
+            if (viewMode === "daily") {
+                startDate = selectedDate;
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() + 1);
+                endDate = d.toISOString().slice(0, 10);
+            } else if (viewMode === "weekly") {
+                startDate = selectedWeekStart;
+                const d = new Date(selectedWeekStart);
+                d.setDate(d.getDate() + 7);
+                endDate = d.toISOString().slice(0, 10);
+            } else if (viewMode === "monthly") {
                 const [year, month] = selectedMonth.split("-").map(Number);
                 startDate = `${year}-${String(month).padStart(2, "0")}-01`;
                 const nextMonth = month === 12 ? 1 : month + 1;
@@ -129,7 +161,7 @@ const ExpenseTracking = () => {
 
     useEffect(() => {
         fetchData();
-    }, [viewMode, selectedMonth, selectedYear]);
+    }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart]);
 
     // Management Logic
     const handleEdit = (expense: Expense) => {
@@ -229,7 +261,25 @@ const ExpenseTracking = () => {
     const grandTotal = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
     const periodData: PeriodTotal[] = (() => {
-        if (viewMode === "monthly") {
+        if (viewMode === "daily") {
+            return categoryTotals.map(c => ({
+                period: c.categoryName,
+                label: c.categoryName,
+                total: c.total,
+            }));
+        } else if (viewMode === "weekly") {
+            const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            return Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(selectedWeekStart);
+                d.setDate(d.getDate() + i);
+                const dateStr = d.toISOString().slice(0, 10);
+                const total = expenses
+                    .filter(e => e.date === dateStr)
+                    .reduce((sum, e) => sum + e.amount, 0);
+                const shortDate = `${d.getDate()}/${d.getMonth() + 1}`;
+                return { period: DAY_NAMES[i], label: `${DAY_NAMES[i]} (${shortDate})`, total };
+            });
+        } else if (viewMode === "monthly") {
             const [year, month] = selectedMonth.split("-").map(Number);
             const daysInMonth = new Date(year, month, 0).getDate();
             return Array.from({ length: daysInMonth }, (_, i) => {
@@ -261,7 +311,7 @@ const ExpenseTracking = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [viewMode, selectedMonth, selectedYear]);
+    }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart]);
 
     const handleExport = () => {
         const exportData = expenses.map(exp => ({
@@ -279,7 +329,11 @@ const ExpenseTracking = () => {
         const wscols = [{ wch: 12 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 30 }];
         worksheet['!cols'] = wscols;
 
-        const fileName = viewMode === "monthly" ? `Expenses_${selectedMonth}.xlsx` : `Expenses_${selectedYear}.xlsx`;
+        const fileName =
+            viewMode === "daily"   ? `Expenses_${selectedDate}.xlsx` :
+            viewMode === "weekly"  ? `Expenses_Week_${selectedWeekStart}.xlsx` :
+            viewMode === "monthly" ? `Expenses_${selectedMonth}.xlsx` :
+                                     `Expenses_${selectedYear}.xlsx`;
         XLSX.writeFile(workbook, fileName);
     };
 
@@ -295,36 +349,95 @@ const ExpenseTracking = () => {
                             <h1 className="text-3xl font-bold font-heading text-white">Expense Tracking</h1>
                         </div>
                         <p className="text-slate-400">
-                            Manage and analyze {viewMode === "monthly" ? "monthly" : "yearly"} spendings
+                            Manage and analyze{
+                                viewMode === "daily"   ? " today's" :
+                                viewMode === "weekly"  ? " this week's" :
+                                viewMode === "monthly" ? " monthly" : " yearly"
+                            } spendings
                         </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex p-1 bg-slate-700/50 backdrop-blur rounded-xl border border-white/5">
                             <button
+                                id="view-mode-daily"
+                                onClick={() => setViewMode("daily")}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "daily" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                            >
+                                Daily
+                            </button>
+                            <button
+                                id="view-mode-weekly"
+                                onClick={() => setViewMode("weekly")}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "weekly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                            >
+                                Weekly
+                            </button>
+                            <button
+                                id="view-mode-monthly"
                                 onClick={() => setViewMode("monthly")}
-                                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
                             >
                                 Monthly
                             </button>
                             <button
+                                id="view-mode-yearly"
                                 onClick={() => setViewMode("yearly")}
-                                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
                             >
                                 Yearly
                             </button>
                         </div>
 
-                        {viewMode === "monthly" ? (
+                        {viewMode === "daily" && (
                             <input
+                                id="date-picker-daily"
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                style={{ colorScheme: theme }}
+                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                            />
+                        )}
+
+                        {viewMode === "weekly" && (
+                            <input
+                                id="date-picker-weekly"
+                                type="week"
+                                value={weekInputValue}
+                                onChange={(e) => {
+                                    const val = e.target.value; // e.g. "2026-W14"
+                                    setWeekInputValue(val);
+                                    const [yearStr, weekStr] = val.split("-W");
+                                    const year = parseInt(yearStr);
+                                    const week = parseInt(weekStr);
+                                    // ISO 8601 week to date (Monday)
+                                    const jan4 = new Date(year, 0, 4);
+                                    const startOfWeek1 = new Date(jan4);
+                                    startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+                                    const monday = new Date(startOfWeek1);
+                                    monday.setDate(startOfWeek1.getDate() + (week - 1) * 7);
+                                    setSelectedWeekStart(monday.toISOString().slice(0, 10));
+                                }}
+                                style={{ colorScheme: theme }}
+                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                            />
+                        )}
+
+                        {viewMode === "monthly" && (
+                            <input
+                                id="date-picker-monthly"
                                 type="month"
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 style={{ colorScheme: theme }}
                                 className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
                             />
-                        ) : (
+                        )}
+
+                        {viewMode === "yearly" && (
                             <input
+                                id="date-picker-yearly"
                                 type="number"
                                 min="2000"
                                 max="2100"
@@ -399,7 +512,12 @@ const ExpenseTracking = () => {
                                     </div>
 
                                     <div className="glass-card p-6">
-                                        <h3 className="text-lg font-bold text-white mb-6 font-heading">{viewMode === "monthly" ? "Daily Trend" : "Monthly Trend"}</h3>
+                                        <h3 className="text-lg font-bold text-white mb-6 font-heading">
+                                            {viewMode === "daily"   ? "Category Breakdown" :
+                                             viewMode === "weekly"  ? "Daily Trend (This Week)" :
+                                             viewMode === "monthly" ? "Daily Trend" :
+                                                                      "Monthly Trend"}
+                                        </h3>
                                         <div className="h-[300px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 {viewMode === "monthly" ? (
@@ -413,9 +531,28 @@ const ExpenseTracking = () => {
                                                 ) : (
                                                     <BarChart data={periodData}>
                                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                                        <XAxis dataKey="period" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => val.slice(0, 3)} dy={10} />
+                                                        <XAxis
+                                                            dataKey="period"
+                                                            stroke="#94a3b8"
+                                                            fontSize={11}
+                                                            tickLine={false}
+                                                            axisLine={false}
+                                                            tickFormatter={(val) => viewMode === "yearly" ? val.slice(0, 3) : val}
+                                                            dy={10}
+                                                        />
                                                         <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
-                                                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(val: any) => currencyFormatter.format(val)} />
+                                                        <Tooltip
+                                                            contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                                                            itemStyle={{ color: '#94a3b8' }}
+                                                            labelFormatter={(label) => {
+                                                                if (viewMode === "weekly") {
+                                                                    const entry = periodData.find(d => d.period === label);
+                                                                    return entry?.label || label;
+                                                                }
+                                                                return label;
+                                                            }}
+                                                            formatter={(val: any) => currencyFormatter.format(val)}
+                                                        />
                                                         <Bar dataKey="total" fill="#10b981" radius={[6, 6, 0, 0]} />
                                                     </BarChart>
                                                 )}

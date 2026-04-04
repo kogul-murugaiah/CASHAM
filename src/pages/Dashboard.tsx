@@ -118,6 +118,18 @@ const Dashboard = () => {
   const todayISO = new Date().toISOString().slice(0, 10);
   const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
 
+  const weeklyExpenses = (() => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Monday
+    const monday = new Date(today);
+    monday.setDate(diff);
+    const weekStart = monday.toISOString().slice(0, 10);
+    return expenses
+      .filter(exp => exp.date >= weekStart && exp.date <= todayISO)
+      .reduce((sum, exp) => sum + exp.amount, 0);
+  })();
+
   // Data for Charts
   const comparisonData = [
     { name: "Income", value: monthlyIncome, fill: "#10b981" }, // Blue
@@ -281,7 +293,7 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-8 animate-fade-in">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {/* Income */}
               <div className="glass-card p-6 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -344,6 +356,26 @@ const Dashboard = () => {
                 <div className="mt-4 flex items-center text-xs text-amber-300 bg-amber-500/10 w-fit px-2 py-1 rounded-lg">
                   <span className="w-2 h-2 rounded-full bg-amber-400 mr-2 animate-pulse"></span>
                   Portfolio
+                </div>
+              </div>
+
+              {/* This Week */}
+              <div className="glass-card p-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <div className="w-24 h-24 rounded-full bg-cyan-500 blur-2xl"></div>
+                </div>
+                <p className="text-sm font-medium text-slate-400">This Week's Spend</p>
+                <div className="mt-2 text-3xl font-bold text-cyan-400 font-heading">
+                  {currencyFormatter.format(weeklyExpenses)}
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center text-xs text-cyan-300 bg-cyan-500/10 w-fit px-2 py-1 rounded-lg">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 mr-2 animate-pulse"></span>
+                    Mon – Today
+                  </div>
+                  <div className="text-xs font-semibold text-red-400 px-2 py-1 bg-red-500/10 rounded-lg flex items-center border border-red-500/20 shadow-lg shadow-red-500/5">
+                    <span className="opacity-70 mr-1 pb-0.5">Today:</span> {todayExpenses > 0 ? "-" : ""}{currencyFormatter.format(todayExpenses)}
+                  </div>
                 </div>
               </div>
             </div>
