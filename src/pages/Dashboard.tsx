@@ -155,9 +155,35 @@ const Dashboard = () => {
                 <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Monthly Net Balance</p>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">THIS MONTH</span>
               </div>
-              <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter mb-12 ${monthlyBalance >= 0 ? "text-white" : "text-red-400"}`}>
-                {currencyFormatter.format(monthlyBalance)}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
+                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter ${monthlyBalance >= 0 ? "text-white" : "text-red-400"}`}>
+                  {currencyFormatter.format(monthlyBalance)}
+                </div>
+                
+                <div className="flex-1 max-w-xl self-end pb-4">
+                  <div className="flex justify-between items-end mb-2 font-mono">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Outbound</span>
+                      <span className="text-sm font-bold text-red-400">{currencyFormatter.format(monthlyExpenses)}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Income</span>
+                      <span className="text-sm font-bold text-emerald-400">{currencyFormatter.format(monthlyIncome)}</span>
+                    </div>
+                  </div>
+                  <div className="h-3 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm p-[2px]">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(16,185,129,0.3)] ${monthlyExpenses > monthlyIncome ? 'bg-red-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${Math.min((monthlyExpenses / (monthlyIncome || 1)) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 flex justify-between items-center text-[9px] font-bold uppercase tracking-tighter text-slate-600">
+                    <span>Usage: {((monthlyExpenses / (monthlyIncome || 1)) * 100).toFixed(1)}%</span>
+                    <span>Remaining: {currencyFormatter.format(Math.max(0, monthlyIncome - monthlyExpenses))}</span>
+                  </div>
+                </div>
               </div>
+
               <div className="grid grid-cols-2 md:grid-cols-5 gap-8 pt-8 border-t border-white/5">
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Income</p>
