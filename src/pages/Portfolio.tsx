@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
 import type { CashFlow } from "../lib/xirr";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { useAccountTypes } from "../hooks/useAccountTypes";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -193,6 +194,26 @@ const Portfolio = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [priceModal, setPriceModal] = useState<any>(null);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const { accountTypes } = useAccountTypes();
+  const [netWorthCash, setNetWorthCash] = useState(0);
+
+  const fetchBankBalances = async () => {
+    try {
+      const [exps, incs] = await Promise.all([
+        api.get("/api/expenses"),
+        api.get("/api/incomes")
+      ]);
+      
+      const balances = accountTypes.map(type => {
+        const totalInc = (incs || []).filter((i: any) => i.account_type === type).reduce((s: number, i: any) => s + i.amount, 0);
+        const totalExp = (exps || []).filter((e: any) => e.account_type === type).reduce((s: number, e: any) => s + e.amount, 0);
+        const totalInv = (allRecords || []).filter((inv: any) => inv.account_type === type && inv.action === 'buy').reduce((s: number, i: any) => s + i.amount, 0);
+        const totalRed = (allRecords || []).filter((inv: any) => inv.account_type === type && inv.action === 'sell').reduce((s: number, i: any) => s + i.amount, 0);
+        return totalInc - totalExp - totalInv + totalRed;
+      });
+      setNetWorthCash(balances.reduce((a, b) => a + b, 0));
+    } catch {}
+  };
 
   const fetchSummary = async () => {
     try {
@@ -214,11 +235,19 @@ const Portfolio = () => {
     } catch { setRecords([]); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchSummary(); }, []);
   useEffect(() => {
-    if (tab !== "overview" && tab !== "analysis") fetchRecords(TYPE_MAP[tab]);
-    else setLoading(false);
+    if (tab !== "overview" && tab !== "analysis") {
+        fetchRecords(TYPE_MAP[tab as Tab]);
+    } else {
+        setLoading(false);
+    }
   }, [tab]);
+
+  useEffect(() => {
+    if (accountTypes.length > 0 && (summary || allRecords.length > 0)) {
+        fetchBankBalances();
+    }
+  }, [accountTypes, summary, allRecords]);
 
   const handleRefreshPrices = async () => {
     setRefreshing(true);
@@ -528,6 +557,43 @@ const Portfolio = () => {
             <a href="/add-investment" className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all">Log Investment</a>
           </div>
         </header>
+
+        {/* Premium Global Net Worth Header */}
+        <div className="mb-10 glass-card p-10 relative overflow-hidden group border-amber-500/10 bg-slate-800/20">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-64 h-64 rounded-full bg-amber-500 blur-3xl" /></div>
+            <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                    <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Global Net Worth</p>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter">Live Assets</span>
+                </div>
+                <div className="text-6xl md:text-8xl font-black font-heading text-white tracking-tighter mb-10 drop-shadow-2xl">
+                    {currencyFormatter.format((summary?.total_current_value || 0) + netWorthCash)}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-8 border-t border-white/5">
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Value</p>
+                        <p className="text-xl font-bold text-amber-400 font-mono mt-1">{currencyFormatter.format(summary?.total_current_value || 0)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cash & Bank</p>
+                        <p className="text-xl font-bold text-emerald-400 font-mono mt-1">{currencyFormatter.format(netWorthCash)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net Change (Abs)</p>
+                        <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {currencyFormatter.format(summary?.total_pnl || 0)}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Return</p>
+                        <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_return_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                            {pctFmt(summary?.total_return_pct || 0)}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div className="flex overflow-x-auto gap-1 p-1 bg-slate-700/40 rounded-2xl border border-white/5 mb-8 backdrop-blur-sm">
           {TABS.map(({ key, label, emoji }) => (
             <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${tab === key ? "bg-amber-500 text-white" : "text-slate-400 hover:text-white"}`}><span>{emoji}</span> {label}</button>

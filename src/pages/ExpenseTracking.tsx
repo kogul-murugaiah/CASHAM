@@ -4,7 +4,7 @@ import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
 import * as XLSX from 'xlsx';
 import {
-    PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
+    PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from 'recharts';
 
@@ -490,73 +490,128 @@ const ExpenseTracking = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="glass-card p-6">
-                                        <h3 className="text-lg font-bold text-white mb-6 font-heading">Category Distribution</h3>
-                                        <div className="h-[300px] w-full">
+                                    {/* Daily Trend — NAV Style */}
+                                    <div className="glass-card p-8 bg-slate-800/10 border-white/5 relative overflow-hidden group">
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Daily Spend Tracker</p>
+                                                <h3 className="text-2xl font-bold text-white font-heading">Financial Trend</h3>
+                                            </div>
+                                            <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black border border-emerald-500/20 uppercase">
+                                                NAV Style
+                                            </div>
+                                        </div>
+                                        <div className="h-[280px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie
-                                                        data={categoryTotals.map(c => ({ name: c.categoryName, value: c.total }))}
-                                                        cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={4} dataKey="value"
-                                                    >
-                                                        {categoryTotals.map((_, index) => {
-                                                            const COLORS = ['#10b981', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1'];
-                                                            return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />;
-                                                        })}
-                                                    </Pie>
-                                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(val: any) => currencyFormatter.format(val)} />
-                                                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
-                                                </PieChart>
+                                                <LineChart data={periodData}>
+                                                    <defs>
+                                                        <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
+                                                    <XAxis 
+                                                        dataKey="period" 
+                                                        stroke="#475569" 
+                                                        fontSize={10} 
+                                                        tickLine={false} 
+                                                        axisLine={false} 
+                                                        dy={10}
+                                                        tickFormatter={(val) => viewMode === "monthly" ? val : val.slice(0,3)}
+                                                    />
+                                                    <YAxis hide domain={['auto', 'auto']} />
+                                                    <Tooltip 
+                                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }} 
+                                                        itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
+                                                        labelStyle={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}
+                                                        formatter={(val: any) => [currencyFormatter.format(val), 'Spent']}
+                                                    />
+                                                    <Line 
+                                                        type="monotone" 
+                                                        dataKey="total" 
+                                                        stroke="#10b981" 
+                                                        strokeWidth={4} 
+                                                        dot={false} 
+                                                        activeDot={{ r: 6, fill: '#10b981', stroke: '#0f172a', strokeWidth: 2 }}
+                                                        animationDuration={2000}
+                                                    />
+                                                </LineChart>
                                             </ResponsiveContainer>
                                         </div>
                                     </div>
 
-                                    <div className="glass-card p-6">
-                                        <h3 className="text-lg font-bold text-white mb-6 font-heading">
-                                            {viewMode === "daily"   ? "Category Breakdown" :
-                                             viewMode === "weekly"  ? "Daily Trend (This Week)" :
-                                             viewMode === "monthly" ? "Daily Trend" :
-                                                                      "Monthly Trend"}
-                                        </h3>
-                                        <div className="h-[300px] w-full">
+                                    {/* Weekly Comparison */}
+                                    <div className="glass-card p-8 bg-slate-800/10 border-white/5 relative overflow-hidden group">
+                                        <div className="flex justify-between items-start mb-8">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Weekly Tracker</p>
+                                                <h3 className="text-2xl font-bold text-white font-heading">Spend Intensity</h3>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
+                                            </div>
+                                        </div>
+                                        <div className="h-[280px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                {viewMode === "monthly" ? (
-                                                    <LineChart data={periodData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                                        <XAxis dataKey="period" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-                                                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
-                                                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(val: any) => currencyFormatter.format(val)} />
-                                                        <Line type="monotone" dataKey="total" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
-                                                    </LineChart>
-                                                ) : (
-                                                    <BarChart data={periodData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                                        <XAxis
-                                                            dataKey="period"
-                                                            stroke="#94a3b8"
-                                                            fontSize={11}
-                                                            tickLine={false}
-                                                            axisLine={false}
-                                                            tickFormatter={(val) => viewMode === "yearly" ? val.slice(0, 3) : val}
-                                                            dy={10}
-                                                        />
-                                                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
-                                                        <Tooltip
-                                                            contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
-                                                            itemStyle={{ color: '#94a3b8' }}
-                                                            labelFormatter={(label) => {
-                                                                if (viewMode === "weekly") {
-                                                                    const entry = periodData.find(d => d.period === label);
-                                                                    return entry?.label || label;
-                                                                }
-                                                                return label;
-                                                            }}
-                                                            formatter={(val: any) => currencyFormatter.format(val)}
-                                                        />
-                                                        <Bar dataKey="total" fill="#10b981" radius={[6, 6, 0, 0]} />
-                                                    </BarChart>
-                                                )}
+                                                <BarChart data={periodData.filter((_, i) => viewMode === 'monthly' ? i % 7 === 0 : true)}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
+                                                    <XAxis dataKey="period" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                                                    <YAxis hide />
+                                                    <Tooltip 
+                                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px' }}
+                                                        formatter={(val: any) => [currencyFormatter.format(val), 'Total']}
+                                                    />
+                                                    <Bar dataKey="total" fill="url(#barGradient)" radius={[6, 6, 0, 0]} animationDuration={1500}>
+                                                        <defs>
+                                                            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#f59e0b" stopOpacity={1}/>
+                                                                <stop offset="100%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                                                            </linearGradient>
+                                                        </defs>
+                                                        {periodData.map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.total > (grandTotal / periodData.length) * 1.5 ? '#f43f5e' : '#f59e0b'} />
+                                                        ))}
+                                                    </Bar>
+                                                </BarChart>
                                             </ResponsiveContainer>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Category Intensity (Pie) */}
+                                <div className="glass-card p-6 bg-slate-800/10 border-white/5">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-2 h-8 bg-emerald-500 rounded-full" />
+                                        <h3 className="text-lg font-bold text-white font-heading uppercase tracking-widest">Category Distribution</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                                        <div className="lg:col-span-1 h-[250px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie
+                                                        data={categoryTotals.map(c => ({ name: c.categoryName, value: c.total }))}
+                                                        cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={2} dataKey="value"
+                                                    >
+                                                        {categoryTotals.map((_, index) => (
+                                                            <Cell key={`cell-${index}`} fill={['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'][index % 5]} stroke="none" />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                            {categoryTotals.slice(0, 6).map((c, i) => (
+                                                <div key={c.categoryId} className="p-4 rounded-3xl bg-slate-800/40 border border-white/5 group hover:border-emerald-500/30 transition-all">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'][i % 5] }} />
+                                                        <p className="text-[10px] font-bold text-slate-500 uppercase truncate">{c.categoryName}</p>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-white font-mono">{currencyFormatter.format(c.total)}</p>
+                                                    <p className="text-[9px] text-slate-600 mt-1">{((c.total / grandTotal) * 100).toFixed(1)}% of total</p>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

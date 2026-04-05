@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
-import { xirr, xirrFmt } from "../lib/xirr";
 import {
   BarChart,
   Bar,
@@ -43,7 +41,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [portfolioSummary, setPortfolioSummary] = useState<any>(null);
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -79,13 +76,6 @@ const Dashboard = () => {
     };
     fetchData();
   }, [currentYear, currentMonth, accountTypes]);
-
-  useEffect(() => {
-    api.get('/api/investments?summary=true')
-      .then(data => setPortfolioSummary(data))
-      .catch(() => {});
-  }, []);
-
   // Derived state
   const monthlyIncome = income.reduce((sum, inc) => sum + inc.amount, 0);
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -93,13 +83,6 @@ const Dashboard = () => {
 
   const todayISO = new Date().toISOString().slice(0, 10);
   const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
-
-  const portfolioXirr = (() => {
-    if (!portfolioSummary?.cashflows || !portfolioSummary?.total_current_value) return null;
-    const cfs = (portfolioSummary.cashflows || []).map((cf: any) => ({ amount: cf.amount, date: new Date(cf.date) }));
-    cfs.push({ amount: portfolioSummary.total_current_value, date: new Date() });
-    return xirr(cfs);
-  })();
 
   const accountBalances = accountTypes.map((accountType) => {
     const accIncome = income.filter((inc) => inc.account_type === accountType).reduce((sum, inc) => sum + inc.amount, 0);
@@ -110,7 +93,6 @@ const Dashboard = () => {
   });
 
   const accountDistributionData = accountBalances.filter(a => a.balance > 0).map(a => ({ name: a.accountType, value: a.balance }));
-  const netWorthCash = accountBalances.reduce((sum, a) => sum + a.balance, 0);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -165,71 +147,48 @@ const Dashboard = () => {
         {error && <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-6 text-red-300"><p className="font-bold mb-1 font-heading text-lg">System Error</p><p className="text-sm">{error}</p></div>}
 
         <div className="space-y-8 animate-fade-in">
-          {/* Monthly KPI Row */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="glass-card p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><div className="w-24 h-24 rounded-full bg-emerald-500 blur-2xl" /></div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Monthly Income</p>
-              <div className="mt-2 text-3xl font-bold text-white font-heading">{currencyFormatter.format(monthlyIncome)}</div>
-            </div>
-            <div className="glass-card p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><div className="w-24 h-24 rounded-full bg-red-500 blur-2xl" /></div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Monthly Expense</p>
-              <div className="mt-2 text-3xl font-bold text-white font-heading">{currencyFormatter.format(monthlyExpenses)}</div>
-              <div className="mt-2 text-[10px] text-red-400 font-bold uppercase tracking-tighter">Today: {currencyFormatter.format(todayExpenses)}</div>
-            </div>
-            <div className="glass-card p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><div className={`w-24 h-24 rounded-full blur-2xl ${monthlyBalance >= 0 ? "bg-green-500" : "bg-orange-500"}`} /></div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Net Balance</p>
-              <div className={`mt-2 text-3xl font-bold font-heading ${monthlyBalance >= 0 ? "text-green-400" : "text-orange-400"}`}>{currencyFormatter.format(monthlyBalance)}</div>
-            </div>
-            <div className="glass-card p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><div className="w-24 h-24 rounded-full bg-amber-500 blur-2xl" /></div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Allocated Invest.</p>
-              <div className="mt-2 text-3xl font-bold text-amber-400 font-heading">{currencyFormatter.format(totalInvested)}</div>
-            </div>
-          </div>
-
-          {/* Premium Net Worth Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 glass-card p-8 relative overflow-hidden group border-emerald-500/10">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-48 h-48 rounded-full bg-emerald-500 blur-3xl" /></div>
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-sm font-bold text-slate-500 uppercase tracking-[0.2em]">Total Net Worth</p>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">LIVE</span>
+          {/* Monthly Net Balance Master Card */}
+          <div className="glass-card p-10 relative overflow-hidden group border-emerald-500/10 bg-slate-800/20">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-64 h-64 rounded-full bg-emerald-500 blur-3xl" /></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-4">
+                <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Monthly Net Balance</p>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">THIS MONTH</span>
+              </div>
+              <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter mb-12 ${monthlyBalance >= 0 ? "text-white" : "text-red-400"}`}>
+                {currencyFormatter.format(monthlyBalance)}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-8 pt-8 border-t border-white/5">
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Income</p>
+                  <p className="text-xl font-bold text-emerald-400 font-mono mt-1">{currencyFormatter.format(monthlyIncome)}</p>
                 </div>
-                <div className="text-5xl md:text-6xl font-bold text-white font-heading tracking-tight mb-8">
-                  {currencyFormatter.format((portfolioSummary?.total_current_value || 0) + netWorthCash)}
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Expense</p>
+                  <p className="text-xl font-bold text-red-400 font-mono mt-1">{currencyFormatter.format(monthlyExpenses)}</p>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-white/5">
-                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Portfolio</p><p className="text-lg font-bold text-amber-400 font-mono mt-0.5">{currencyFormatter.format(portfolioSummary?.total_current_value || 0)}</p></div>
-                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Cash & Bank</p><p className="text-lg font-bold text-emerald-400 font-mono mt-0.5">{currencyFormatter.format(netWorthCash)}</p></div>
-                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Annual XIRR</p><p className="text-lg font-bold text-white font-mono mt-0.5">{xirrFmt(portfolioXirr)}</p></div>
-                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Monthly SIP</p><p className="text-lg font-bold text-blue-400 font-mono mt-0.5">{currencyFormatter.format(portfolioSummary?.sip_outflow || 0)}</p></div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weekly Expense</p>
+                  <p className="text-xl font-bold text-orange-400 font-mono mt-1">
+                    {currencyFormatter.format(expenses.filter(e => {
+                        const d = new Date(e.date);
+                        const today = new Date();
+                        const monday = new Date(today);
+                        monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+                        monday.setHours(0,0,0,0);
+                        return d >= monday;
+                    }).reduce((s, e) => s + e.amount, 0))}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
+                  <p className="text-xl font-bold text-rose-400 font-mono mt-1">{currencyFormatter.format(todayExpenses)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Allocated Invest.</p>
+                  <p className="text-xl font-bold text-amber-400 font-mono mt-1">{currencyFormatter.format(totalInvested)}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="glass-card p-6 flex flex-col justify-between overflow-hidden">
-              <div>
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Allocation Health</h3>
-                <div className="space-y-6">
-                  {(portfolioSummary?.by_type || []).slice(0, 3).map((t: any) => (
-                    <div key={t.type}>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-white font-medium">{t.type}</span>
-                        <span className="text-[10px] font-bold text-slate-500">{((t.current_value / portfolioSummary.total_current_value) * 100).toFixed(1)}%</span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(t.current_value / portfolioSummary.total_current_value) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                  {(!portfolioSummary?.by_type || portfolioSummary.by_type.length === 0) && <p className="text-center text-slate-600 text-xs py-8 italic">No portfolio data yet</p>}
-                </div>
-              </div>
-              <Link to="/portfolio" className="mt-8 w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-center text-xs font-bold text-white transition-all border border-white/5">Full Portfolio Analysis →</Link>
             </div>
           </div>
 
