@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { api } from "../lib/api";
 import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
 import type { CashFlow } from "../lib/xirr";
@@ -81,15 +81,105 @@ const PriceModal = ({ inv, onClose, onSave }: { inv: any; onClose: () => void; o
   );
 };
 
+const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: any[]; onClose: () => void }) => {
+  const latestRow = history[0]; // records are sorted by date desc
+  const totalInvested = history.reduce((sum, h) => sum + (h.action === 'buy' ? h.amount : -h.amount), 0);
+  const currentVal = latestRow.current_value ?? latestRow.amount;
+  const absPnl = currentVal - totalInvested;
+  
+  // Weighted Average Cost calculation (simplified buy-side average)
+  const buyRows = history.filter(h => h.action === 'buy');
+  const totalUnits = buyRows.reduce((sum, h) => sum + (h.investment_mf?.[0]?.units || h.investment_stock?.[0]?.quantity || 1), 0);
+  const totalCost = buyRows.reduce((sum, h) => sum + h.amount, 0);
+  const avgCost = totalUnits > 0 ? (totalCost / totalUnits) : 0;
+
+  const individualXirr = (() => {
+    const cfs: CashFlow[] = history.map(cf => ({ amount: cf.action === 'buy' ? -cf.amount : cf.amount, date: new Date(cf.date) }));
+    if (currentVal > 0) cfs.push({ amount: currentVal, date: new Date() });
+    return xirr(cfs);
+  })();
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 overflow-y-auto pt-10 pb-10" onClick={onClose}>
+      <div className="w-full max-w-2xl glass-card p-8 animate-scale-up mt-auto mb-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{asset.type}</span>
+            <h2 className="text-3xl font-heading font-black text-white">{asset.name}</h2>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">✕</button>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Avg. Cost</p>
+                <p className="text-lg font-mono font-bold text-white">{currencyFormatter.format(avgCost)}</p>
+            </div>
+            <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Net Invested</p>
+                <p className="text-lg font-mono font-bold text-amber-400">{currencyFormatter.format(totalInvested)}</p>
+            </div>
+            <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">XIRR</p>
+                <p className={`text-lg font-mono font-bold ${individualXirr >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{xirrFmt(individualXirr)}</p>
+            </div>
+            <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Abs. P&L</p>
+                <p className={`text-lg font-mono font-bold ${absPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{currencyFormatter.format(absPnl)}</p>
+            </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Transaction History</h3>
+          <div className="overflow-x-auto rounded-3xl border border-white/5 bg-slate-900/50">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-800 text-slate-500 font-bold">
+                <tr>
+                  <th className="px-6 py-3 text-left">Date</th>
+                  <th className="px-6 py-3">Action</th>
+                  <th className="px-6 py-3">Amount</th>
+                  <th className="px-6 py-3">Details</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(h => {
+                   const detail = h.investment_mf?.[0] || h.investment_stock?.[0] || h.investment_gold?.[0] || {};
+                   return (
+                    <tr key={h.id} className="hover:bg-white/5">
+                      <td className="px-6 py-4 text-slate-300 font-mono">{h.date}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${h.action === 'buy' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                          {h.action}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-white font-mono">{currencyFormatter.format(h.amount)}</td>
+                      <td className="px-6 py-4 text-slate-500">
+                        {detail.units && `${detail.units} Units`}
+                        {detail.quantity && `${detail.quantity} Shares`}
+                        {detail.grams && `${detail.grams}g`}
+                      </td>
+                    </tr>
+                )})}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Portfolio Component ────────────────────────────────────
 
 const Portfolio = () => {
   const [tab, setTab] = useState<Tab>("overview");
   const [summary, setSummary] = useState<any>(null);
   const [records, setRecords] = useState<any[]>([]);
+  const [allRecords, setAllRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [priceModal, setPriceModal] = useState<any>(null);
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
   const fetchSummary = async () => {
     try {
@@ -103,6 +193,11 @@ const Portfolio = () => {
     try {
       const data = await api.get(`/api/investments?type=${encodeURIComponent(type)}`);
       setRecords(data || []);
+      // Also fetch ALL for history lookups if not already done
+      if (allRecords.length === 0) {
+        const all = await api.get("/api/investments");
+        setAllRecords(all || []);
+      }
     } catch { setRecords([]); } finally { setLoading(false); }
   };
 
@@ -127,9 +222,10 @@ const Portfolio = () => {
 
   const handlePriceUpdate = async (id: string, current_value: number, meta?: any) => {
     try {
-      const type = records.find(r => r.id === id)?.type;
+      const type = (records.find(r => r.id === id) || allRecords.find(r => r.id === id))?.type;
       await api.put("/api/investments", { id, current_value, type, detail: meta });
       setRecords(prev => prev.map(r => r.id === id ? { ...r, current_value } : r));
+      setAllRecords(prev => prev.map(r => r.id === id ? { ...r, current_value } : r));
       fetchSummary();
     } catch {}
   };
@@ -139,6 +235,7 @@ const Portfolio = () => {
     try {
       await api.delete(`/api/investments?id=${id}`);
       setRecords(prev => prev.filter(r => r.id !== id));
+      setAllRecords(prev => prev.filter(r => r.id !== id));
       fetchSummary();
     } catch {}
   };
@@ -219,34 +316,60 @@ const Portfolio = () => {
     if (!summary) return <LoadingRows />;
     const { total_current_value, holdings } = summary;
     const totalValue = total_current_value || 1;
-    const stockHoldings = (holdings || []).filter((h: any) => h.type === 'Stock');
     
+    // Net Worth Composition (Liquid vs Illiquid)
+    const liquidAssets = ['Mutual Fund', 'Stock', 'Gold'];
+    const illiquidAssets = ['FD', 'Real Estate'];
+    const liquidValue = (holdings || []).filter((h: any) => liquidAssets.includes(h.type)).reduce((s: number, h: any) => s + (h.current_value || 0), 0);
+    const illiquidValue = (holdings || []).filter((h: any) => illiquidAssets.includes(h.type)).reduce((s: number, h: any) => s + (h.current_value || 0), 0);
+
+    const stockHoldings = (holdings || []).filter((h: any) => h.type === 'Stock');
     const sectorMap: Record<string, number> = {};
     stockHoldings.forEach((h: any) => { const s = h.sector || 'Other'; sectorMap[s] = (sectorMap[s] || 0) + (h.current_value || 0); });
     const sectorData = Object.entries(sectorMap).map(([name, value]) => ({ name, value })).filter(d => d.value > 0);
 
-    const capData = [
-      { name: 'Large', value: 0, fill: '#10b981' },
-      { name: 'Mid', value: 0, fill: '#f59e0b' },
-      { name: 'Small', value: 0, fill: '#ef4444' },
-    ];
-    stockHoldings.forEach((h: any) => {
-      const cap = h.market_cap || 'Large';
-      const item = capData.find(c => c.name === cap);
-      if (item) item.value += (h.current_value || 0);
-    });
-
-    const riskyHoldings = (holdings || []).filter((h: any) => (h.current_value / totalValue) > 0.15);
+    // Concentration across ALL assets
+    const entityConcat: Record<string, number> = {};
+    (holdings || []).forEach((h: any) => { entityConcat[h.name] = (entityConcat[h.name] || 0) + (h.current_value || 0); });
+    const riskyEntities = Object.entries(entityConcat)
+        .map(([name, value]) => ({ name, value, pct: (value / totalValue) * 100 }))
+        .filter(e => e.pct > 15)
+        .sort((a,b) => b.pct - a.pct);
 
     return (
       <div className="space-y-8 animate-fade-in p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+           {/* Liquidity Meter */}
+           <div className="glass-card p-6 bg-slate-800/20">
+            <h3 className="text-lg font-heading font-bold text-white mb-6">Portfolio Liquidity</h3>
+            <div className="flex flex-col gap-6">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <p className="text-xs text-slate-500 uppercase font-bold mb-1">Liquid</p>
+                        <p className="text-xl font-mono font-bold text-emerald-400">{currencyFormatter.format(liquidValue)}</p>
+                    </div>
+                    <p className="text-sm font-black text-slate-400">{((liquidValue/totalValue)*100).toFixed(1)}%</p>
+                </div>
+                <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
+                    <div style={{ width: `${(liquidValue/totalValue)*100}%` }} className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-1000" />
+                    <div style={{ width: `${(illiquidValue/totalValue)*100}%` }} className="h-full bg-red-500/50" />
+                </div>
+                <div className="flex justify-between items-end">
+                    <div>
+                        <p className="text-xs text-slate-500 uppercase font-bold mb-1">Illiquid (FD/RE)</p>
+                        <p className="text-xl font-mono font-bold text-red-400">{currencyFormatter.format(illiquidValue)}</p>
+                    </div>
+                    <p className="text-sm font-black text-slate-400">{((illiquidValue/totalValue)*100).toFixed(1)}%</p>
+                </div>
+            </div>
+          </div>
+          {/* Sector Exposure (Existing) */}
           <div className="glass-card p-6 bg-slate-800/20">
-            <h3 className="text-lg font-heading font-bold text-white mb-6">Sector Exposure</h3>
-            <div className="h-64 w-full">
+            <h3 className="text-lg font-heading font-bold text-white mb-6">Stock Sector Exposure</h3>
+            <div className="h-48 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={sectorData} cx="50%" cy="50%" innerRadius={60} outerRadius={85} paddingAngle={2} dataKey="value">
+                  <Pie data={sectorData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={2} dataKey="value">
                     {sectorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />)}
                   </Pie>
                   <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none" }} formatter={(v: any) => currencyFormatter.format(v)} />
@@ -254,36 +377,29 @@ const Portfolio = () => {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="glass-card p-6 bg-slate-800/20">
-            <h3 className="text-lg font-heading font-bold text-white mb-6">Market Cap Distribution</h3>
-            <div className="h-64 w-full flex items-end justify-around px-4">
-              {capData.map(c => {
-                const totalCap = capData.reduce((s, x) => s + x.value, 0) || 1;
-                const pct = (c.value / totalCap) * 100;
-                return (
-                  <div key={c.name} className="flex flex-col items-center w-20">
-                    <div className="relative w-full bg-slate-800 rounded-t-xl overflow-hidden" style={{ height: '160px' }}>
-                      <div className="absolute bottom-0 w-full" style={{ height: `${pct}%`, backgroundColor: c.fill }} />
-                    </div>
-                    <p className="text-xs font-bold text-white mt-3">{c.name}</p>
-                    <p className="text-[10px] text-slate-500">{pct.toFixed(1)}%</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
+
+        {/* Global Concentration Risk */}
         <div className="glass-card p-6 border-amber-500/10 bg-slate-800/20">
           <h3 className="text-lg font-heading font-bold text-white mb-6 flex items-center gap-2">
-            <span className="text-amber-400">⚠️</span> Concentration Risk Check
+            <span className="text-amber-400">⚖️</span> Portfolio Concentration Risk
           </h3>
-          <div className="space-y-4">
-            {riskyHoldings.length > 0 ? riskyHoldings.map((h: any) => (
-              <div key={h.id} className="flex items-center justify-between p-4 rounded-2xl bg-red-500/5 border border-red-500/10">
-                <div><h4 className="font-bold text-white text-sm">{h.name}</h4><p className="text-[10px] text-slate-500">Exceeds 15% threshold</p></div>
-                <p className="text-sm font-black text-red-400 font-mono">{((h.current_value / totalValue) * 100).toFixed(1)}%</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {riskyEntities.length > 0 ? riskyEntities.map((e: any) => (
+              <div key={e.name} className="flex items-center justify-between p-5 rounded-3xl bg-red-500/5 border border-red-500/10">
+                <div>
+                    <h4 className="font-bold text-white text-sm">{e.name}</h4>
+                    <p className="text-[10px] text-slate-500">Global Concentration</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm font-black text-red-400 font-mono">{e.pct.toFixed(1)}%</p>
+                    <p className="text-[10px] text-slate-500">{currencyFormatter.format(e.value)}</p>
+                </div>
               </div>
-            )) : <p className="text-center text-emerald-400 font-bold text-sm py-8">Portfolio is well-diversified ✅</p>}
+            )) : <div className="col-span-2 py-10 flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl font-bold">✓</div>
+                    <p className="text-center text-emerald-400 font-bold text-sm">Portfolio is well-diversified across assets. No single holding exceeds 15% threshold.</p>
+                </div>}
           </div>
         </div>
       </div>
@@ -296,13 +412,13 @@ const Portfolio = () => {
     </div>
   );
 
-  const PriceCell = ({ inv, currentVal, invested }: { inv: any; currentVal: number | null; invested: number }) => {
+  const PriceCell = ({ inv, currentVal, invested, name }: { inv: any; currentVal: number | null; invested: number; name: string }) => {
     const val = currentVal ?? invested;
     const pnl = val - invested;
     const staleness = timeAgo(inv.current_value_updated_at);
     return (
-      <div className="flex items-start justify-center gap-2">
-        <div>
+      <div className="flex items-start justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="cursor-default">
           <p className="text-sm font-bold text-white font-mono">{currencyFormatter.format(val)}</p>
           <p className={`text-[10px] font-mono ${pnlColor(pnl)}`}>{pctFmt(invested > 0 ? (pnl / invested) * 100 : 0)}</p>
           {inv.current_value !== null && <p className="text-[9px] text-slate-600 mt-0.5">{staleness}</p>}
@@ -315,29 +431,34 @@ const Portfolio = () => {
   };
 
   const DeleteBtn = ({ id }: { id: string }) => (
-    <button onClick={() => handleDelete(id)} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
+    <button onClick={(e) => { e.stopPropagation(); handleDelete(id); }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
     </button>
   );
 
+  const openAssetHistory = (name: string, type: string) => {
+    const history = allRecords.filter(r => r.name === name && r.type === type);
+    setSelectedAsset({ name, type, history });
+  };
+
   const MFTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Fund</th><th className="px-6 py-4">Units</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">SIP</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const mf = inv.investment_mf?.[0]; return (<tr key={inv.id} className="group hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{mf?.units || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td><td className="px-6 py-4 text-[10px] text-blue-400">{mf?.sip_day ? `Day ${mf.sip_day}` : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Fund</th><th className="px-6 py-4">Units</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">SIP</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const mf = inv.investment_mf?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{mf?.units || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-blue-400">{mf?.sip_day ? `Day ${mf.sip_day}` : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
   );
 
   const StockTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Stock</th><th className="px-6 py-4">Qty</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Sector</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const s = inv.investment_stock?.[0]; return (<tr key={inv.id} className="group hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{s?.ticker}</span></td><td className="px-6 py-4 text-xs font-mono text-slate-300">{s?.quantity || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td><td className="px-6 py-4 text-[10px] text-slate-500">{s?.sector || "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Stock</th><th className="px-6 py-4">Qty</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Sector</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const s = inv.investment_stock?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{s?.ticker}</span></td><td className="px-6 py-4 text-xs font-mono text-slate-300">{s?.quantity || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-slate-500">{s?.sector || "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
   );
 
   const GoldTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Gold</th><th className="px-6 py-4">Grams</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Type</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const g = inv.investment_gold?.[0]; return (<tr key={inv.id} className="group hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{g?.grams}g</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td><td className="px-6 py-4 text-[10px] text-yellow-500 font-bold uppercase">{g?.gold_form}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Gold</th><th className="px-6 py-4">Grams</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Type</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const g = inv.investment_gold?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{g?.grams}g</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-yellow-500 font-bold uppercase">{g?.gold_form}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
   );
 
   const FDTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">FD</th><th className="px-6 py-4">Principal</th><th className="px-6 py-4">Maturity Date</th><th className="px-6 py-4">Days Left</th><th className="px-6 py-4">Maturity Val</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const fd = inv.investment_fd?.[0]; const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null; return (<tr key={inv.id} className="group hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{fd?.bank_name || inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td><td className="px-6 py-4 text-xs text-slate-400">{fd?.maturity_date || "—"}</td><td className="px-6 py-4 text-xs font-bold text-blue-400">{dl !== null ? `${dl}d` : "—"}</td><td className="px-6 py-4 text-xs font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">FD</th><th className="px-6 py-4">Principal</th><th className="px-6 py-4">Maturity Date</th><th className="px-6 py-4">Days Left</th><th className="px-6 py-4">Maturity Val</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const fd = inv.investment_fd?.[0]; const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{fd?.bank_name || inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td><td className="px-6 py-4 text-xs text-slate-400">{fd?.maturity_date || "—"}</td><td className="px-6 py-4 text-xs font-bold text-blue-400">{dl !== null ? `${dl}d` : "—"}</td><td className="px-6 py-4 text-xs font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
   );
 
   const RETable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Property</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Rent</th><th className="px-6 py-4">EMI</th><th className="px-6 py-4">Current Value</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const re = inv.investment_real_estate?.[0]; return (<tr key={inv.id} className="group hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4 text-xs text-emerald-400 font-mono">{re?.monthly_rental ? currencyFormatter.format(re.monthly_rental) : "—"}</td><td className="px-6 py-4 text-xs text-red-400 font-mono">{re?.loan_emi ? currencyFormatter.format(re.loan_emi) : "—"}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} /></td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Property</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Rent</th><th className="px-6 py-4">EMI</th><th className="px-6 py-4">Current Value</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const re = inv.investment_real_estate?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4 text-xs text-emerald-400 font-mono">{re?.monthly_rental ? currencyFormatter.format(re.monthly_rental) : "—"}</td><td className="px-6 py-4 text-xs text-red-400 font-mono">{re?.loan_emi ? currencyFormatter.format(re.loan_emi) : "—"}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
   );
 
   const tabContent: Record<Tab, React.ReactNode> = {
@@ -375,6 +496,7 @@ const Portfolio = () => {
         {loading ? <LoadingRows /> : tabContent[tab]}
       </div>
       {priceModal && <PriceModal inv={priceModal} onClose={() => setPriceModal(null)} onSave={handlePriceUpdate} />}
+      {selectedAsset && <AssetHistoryModal asset={selectedAsset} history={selectedAsset.history} onClose={() => setSelectedAsset(null)} />}
     </div>
   );
 };
