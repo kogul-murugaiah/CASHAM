@@ -7,7 +7,7 @@ import { useAccountTypes } from "../hooks/useAccountTypes";
 
 // ─── Types ──────────────────────────────────────────────────────
 
-type Tab = "overview" | "mf" | "stock" | "gold" | "fd" | "realestate" | "analysis";
+type Tab = "overview" | "mf" | "stock" | "gold" | "fd" | "realestate" | "crypto" | "pf" | "analysis";
 
 const TABS: { key: Tab; label: string; emoji: string }[] = [
   { key: "overview", label: "Overview", emoji: "📊" },
@@ -16,11 +16,13 @@ const TABS: { key: Tab; label: string; emoji: string }[] = [
   { key: "gold", label: "Gold", emoji: "🏅" },
   { key: "fd", label: "Fixed Deposits", emoji: "🏦" },
   { key: "realestate", label: "Real Estate", emoji: "🏠" },
+  { key: "crypto", label: "Crypto", emoji: "🪙" },
+  { key: "pf", label: "PF / Retirement", emoji: "🛡️" },
   { key: "analysis", label: "Risk & Analysis", emoji: "⚖️" },
 ];
 
 const TYPE_MAP: Record<Tab, string> = {
-  overview: "", mf: "Mutual Fund", stock: "Stock", gold: "Gold", fd: "FD", realestate: "Real Estate", analysis: "",
+  overview: "", mf: "Mutual Fund", stock: "Stock", gold: "Gold", fd: "FD", realestate: "Real Estate", crypto: "Crypto", pf: "PF", analysis: "",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -29,6 +31,8 @@ const TYPE_COLORS: Record<string, string> = {
   "Gold": "#fbbf24",
   "FD": "#3b82f6",
   "Real Estate": "#f43f5e",
+  "Crypto": "#a855f7",
+  "PF": "#64748b",
 };
 
 const COLORS = ["#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b", "#3b82f6", "#f97316"];
@@ -49,7 +53,9 @@ const PriceModal = ({ inv, onClose, onSave }: { inv: any; onClose: () => void; o
     if (inv.type === "Mutual Fund" && inv.investment_mf?.[0]?.units) return parseFloat(val) * inv.investment_mf[0].units;
     if (inv.type === "Stock" && inv.investment_stock?.[0]?.quantity) return parseFloat(val) * inv.investment_stock[0].quantity;
     if (inv.type === "Gold" && inv.investment_gold?.[0]?.grams) return parseFloat(val) * inv.investment_gold[0].grams;
+    if (inv.type === "Crypto" && inv.investment_crypto?.[0]?.quantity) return parseFloat(val) * inv.investment_crypto[0].quantity;
     if (inv.type === "FD") return parseFloat(inv.investment_fd?.[0]?.maturity_amount || inv.amount);
+    if (inv.type === "PF") return parseFloat(val);
     return parseFloat(val);
   };
   const handleSave = () => {
@@ -60,6 +66,8 @@ const PriceModal = ({ inv, onClose, onSave }: { inv: any; onClose: () => void; o
     else if (inv.type === "Stock") meta = { current_price: parseFloat(val) };
     else if (inv.type === "Gold") meta = { current_price_per_gram: parseFloat(val) };
     else if (inv.type === "Real Estate") meta = { current_value: parseFloat(val) };
+    else if (inv.type === "Crypto") meta = { current_price_inr: parseFloat(val) };
+    else if (inv.type === "PF") meta = { current_balance: parseFloat(val) };
     onSave(inv.id, inv.type === "Real Estate" ? parseFloat(val) : cv, meta);
     onClose();
   };
@@ -92,11 +100,11 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
 
   // Weighted Average Cost calculation
   const buyRows = history.filter(h => h.action === 'buy');
-  const totalUnits = buyRows.reduce((sum, h) => sum + (h.investment_mf?.[0]?.units || h.investment_stock?.[0]?.quantity || h.investment_gold?.[0]?.grams || 0), 0);
   const totalCost = buyRows.reduce((sum, h) => sum + h.amount, 0);
-  const avgCost = totalUnits > 0 ? (totalCost / totalUnits) : 0;
+  const totalQty = buyRows.reduce((sum, h) => sum + (h.investment_mf?.[0]?.units || h.investment_stock?.[0]?.quantity || h.investment_gold?.[0]?.grams || h.investment_crypto?.[0]?.quantity || 0), 0);
+  const avgCost = totalQty > 0 ? (totalCost / totalQty) : 0;
   
-  const canAverage = ['Stock', 'Mutual Fund', 'Gold'].includes(asset.type) && !isCategoryMode;
+  const canAverage = ['Stock', 'Mutual Fund', 'Gold', 'Crypto'].includes(asset.type) && !isCategoryMode;
 
   const individualXirr = (() => {
     const cfs: CashFlow[] = history.map(cf => ({ amount: cf.action === 'buy' ? -cf.amount : cf.amount, date: new Date(cf.date) }));
@@ -156,7 +164,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
               </thead>
               <tbody className="divide-y divide-white/5">
                 {history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(h => {
-                   const detail = h.investment_mf?.[0] || h.investment_stock?.[0] || h.investment_gold?.[0] || {};
+                   const detail = h.investment_mf?.[0] || h.investment_stock?.[0] || h.investment_gold?.[0] || h.investment_crypto?.[0] || h.investment_pf?.[0] || {};
                    return (
                     <tr key={h.id} className="hover:bg-white/5">
                       <td className="px-6 py-4 text-slate-300 font-mono">{h.date}</td>
@@ -168,9 +176,11 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
                       </td>
                       <td className="px-6 py-4 font-bold text-white font-mono">{currencyFormatter.format(h.amount)}</td>
                       <td className="px-6 py-4 text-slate-500">
-                        {detail.units && `${detail.units} Units`}
-                        {detail.quantity && `${detail.quantity} Shares`}
-                        {detail.grams && `${detail.grams}g`}
+                        {detail.units && `${detail.units} Units `}
+                        {detail.quantity && `${detail.quantity} Qt / Shares `}
+                        {detail.grams && `${detail.grams}g `}
+                        {h.type === 'Crypto' && `${detail.token_symbol} `}
+                        {h.type === 'PF' && `${detail.pf_type} `}
                       </td>
                     </tr>
                 )})}
@@ -530,6 +540,76 @@ const Portfolio = () => {
     </div>
   );
 
+  const CryptoTable = () => (
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="Crypto" /></div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-center">
+            <thead>
+              <tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <th className="px-6 py-4 text-left">Token</th>
+                <th className="px-6 py-4">Qty</th>
+                <th className="px-6 py-4">Invested</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Exchange</th>
+                <th className="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {records.map(inv => { 
+                const c = inv.investment_crypto?.[0]; 
+                return (
+                  <tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{c?.token_symbol}</span></td>
+                    <td className="px-6 py-4 text-xs font-mono text-slate-300">{c?.quantity}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                    <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td>
+                    <td className="px-6 py-4 text-[10px] text-slate-500">{c?.exchange || "—"}</td>
+                    <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                  </tr>
+                ); 
+              })}
+            </tbody>
+          </table>
+        </div>
+    </div>
+  );
+
+  const PFTable = () => (
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="PF" /></div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-center">
+            <thead>
+              <tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <th className="px-6 py-4 text-left">Scheme</th>
+                <th className="px-6 py-4">Type</th>
+                <th className="px-6 py-4">Invested</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Interest</th>
+                <th className="px-6 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {records.map(inv => { 
+                const pf = inv.investment_pf?.[0]; 
+                return (
+                  <tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td>
+                    <td className="px-6 py-4 text-[10px] text-slate-300 uppercase font-bold">{pf?.pf_type || "PF"}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                    <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td>
+                    <td className="px-6 py-4 text-xs font-bold text-blue-400">{pf?.interest_rate ? `${pf.interest_rate}%` : "—"}</td>
+                    <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
+                  </tr>
+                ); 
+              })}
+            </tbody>
+          </table>
+        </div>
+    </div>
+  );
+
   const tabContent: Record<Tab, React.ReactNode> = {
     overview: <OverviewTab />,
     analysis: <AnalysisTab />,
@@ -538,6 +618,8 @@ const Portfolio = () => {
     gold: <GoldTable />,
     fd: <FDTable />,
     realestate: <RETable />,
+    crypto: <CryptoTable />,
+    pf: <PFTable />,
   };
 
   return (

@@ -4,7 +4,7 @@ import { useAccountTypes } from "../hooks/useAccountTypes";
 
 // ─── Types ───────────────────────────────────────────────────────
 
-type AssetType = "Mutual Fund" | "Stock" | "Gold" | "FD" | "Real Estate";
+type AssetType = "Mutual Fund" | "Stock" | "Gold" | "FD" | "Real Estate" | "Crypto" | "PF";
 
 const ASSET_TYPES: { type: AssetType; emoji: string; color: string; bg: string; desc: string }[] = [
   { type: "Mutual Fund", emoji: "📈", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30", desc: "SIP / Lumpsum" },
@@ -12,6 +12,8 @@ const ASSET_TYPES: { type: AssetType; emoji: string; color: string; bg: string; 
   { type: "Gold", emoji: "🏅", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", desc: "Physical / SGB / Digital" },
   { type: "FD", emoji: "🏦", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30", desc: "Fixed Deposit" },
   { type: "Real Estate", emoji: "🏠", color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/30", desc: "Property / Plot" },
+  { type: "Crypto", emoji: "🪙", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/30", desc: "BTC / ETH / SOL" },
+  { type: "PF", emoji: "🛡️", color: "text-slate-400", bg: "bg-slate-500/10 border-slate-500/30", desc: "EPF / PPF / NPS" },
 ];
 
 const MF_CATEGORIES = ["Equity", "Debt", "Hybrid", "ELSS", "Index Fund", "Overnight", "Liquid"];
@@ -73,6 +75,10 @@ const AddInvestment = () => {
   const [fd, setFd] = useState({ bank_name: "", fd_number: "", principal: "", interest_rate: "", tenure_months: "", start_date: date, compounding: "Quarterly", maturity_amount: "" });
   // RE
   const [re, setRe] = useState({ property_type: "Residential", address: "", area_sqft: "", buy_price_per_sqft: "", monthly_rental: "", loan_emi: "" });
+  // Crypto
+  const [crypto, setCrypto] = useState({ token_symbol: "", exchange: "Binance", quantity: "", buy_price_inr: "", buy_price_usd: "" });
+  // PF
+  const [pf, setPf] = useState({ pf_type: "EPF", account_number: "", current_balance: "", interest_rate: "8.1", monthly_contribution: "", employer_contribution: "" });
 
   // Auto-calculate amount for each type
   useEffect(() => {
@@ -90,6 +96,11 @@ const AddInvestment = () => {
     } else if (selectedType === "Real Estate") {
       const a = parseFloat(re.area_sqft), p = parseFloat(re.buy_price_per_sqft);
       if (!isNaN(a) && !isNaN(p) && a > 0 && p > 0) setAmount((a * p).toFixed(2));
+    } else if (selectedType === "Crypto") {
+      const q = parseFloat(crypto.quantity), p = parseFloat(crypto.buy_price_inr);
+      if (!isNaN(q) && !isNaN(p) && q > 0 && p > 0) setAmount((q * p).toFixed(2));
+    } else if (selectedType === "PF") {
+      if (pf.current_balance) setAmount(pf.current_balance);
     }
   }, [mf.units, mf.nav_at_purchase, stock.quantity, stock.buy_price, gold.grams, gold.buy_price_per_gram, fd.principal, re.area_sqft, re.buy_price_per_sqft, selectedType]);
 
@@ -127,6 +138,8 @@ const AddInvestment = () => {
     setGold({ gold_form: "Physical", grams: "", purity: "24K", buy_price_per_gram: "" });
     setFd({ bank_name: "", fd_number: "", principal: "", interest_rate: "", tenure_months: "", start_date: new Date().toISOString().slice(0, 10), compounding: "Quarterly", maturity_amount: "" });
     setRe({ property_type: "Residential", address: "", area_sqft: "", buy_price_per_sqft: "", monthly_rental: "", loan_emi: "" });
+    setCrypto({ token_symbol: "", exchange: "Binance", quantity: "", buy_price_inr: "", buy_price_usd: "" });
+    setPf({ pf_type: "EPF", account_number: "", current_balance: "", interest_rate: "8.1", monthly_contribution: "", employer_contribution: "" });
   };
 
   const buildDetail = (): any => {
@@ -139,6 +152,8 @@ const AddInvestment = () => {
       return { ...fd, maturity_date, principal: parseFloat(fd.principal), interest_rate: parseFloat(fd.interest_rate), tenure_months: parseInt(fd.tenure_months), maturity_amount: fd.maturity_amount ? parseFloat(fd.maturity_amount) : null };
     }
     if (selectedType === "Real Estate") return { property_name: name, ...re, area_sqft: re.area_sqft ? parseFloat(re.area_sqft) : null, buy_price_per_sqft: re.buy_price_per_sqft ? parseFloat(re.buy_price_per_sqft) : null, monthly_rental: parseFloat(re.monthly_rental) || 0, loan_emi: parseFloat(re.loan_emi) || 0 };
+    if (selectedType === "Crypto") return { ...crypto, quantity: parseFloat(crypto.quantity), buy_price_inr: parseFloat(crypto.buy_price_inr), buy_price_usd: crypto.buy_price_usd ? parseFloat(crypto.buy_price_usd) : null };
+    if (selectedType === "PF") return { ...pf, current_balance: parseFloat(pf.current_balance), interest_rate: parseFloat(pf.interest_rate) || 0, monthly_contribution: parseFloat(pf.monthly_contribution) || 0, employer_contribution: parseFloat(pf.employer_contribution) || 0 };
     return null;
   };
 
@@ -428,6 +443,72 @@ const AddInvestment = () => {
                     <label className={labelCls}>Address</label>
                     <input type="text" value={re.address} onChange={e => setRe(p => ({ ...p, address: e.target.value }))} className={inputCls} placeholder="Optional — street, city" />
                   </div>
+                </>)}
+
+                {/* ── Crypto specific ── */}
+                {selectedType === "Crypto" && (<>
+                  <div>
+                    <label className={labelCls}>Token Symbol *</label>
+                    <input type="text" value={crypto.token_symbol} onChange={e => setCrypto(p => ({ ...p, token_symbol: e.target.value.toUpperCase() }))} className={inputCls + " font-mono"} placeholder="BTC, ETH, SOL..." required />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Exchange / Wallet</label>
+                    <input type="text" value={crypto.exchange} onChange={e => setCrypto(p => ({ ...p, exchange: e.target.value }))} className={inputCls} placeholder="Binance, Ledger, Kraken..." />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Quantity *</label>
+                    <input type="number" step="any" value={crypto.quantity} onChange={e => setCrypto(p => ({ ...p, quantity: e.target.value }))} className={inputCls} placeholder="0.5" required />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Buy Price (INR) *</label>
+                    <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
+                      <input type="number" step="any" value={crypto.buy_price_inr} onChange={e => setCrypto(p => ({ ...p, buy_price_inr: e.target.value }))} className={inputCls + " pl-8"} placeholder="5000000" required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Buy Price (USD)</label>
+                    <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">$</span>
+                      <input type="number" step="any" value={crypto.buy_price_usd} onChange={e => setCrypto(p => ({ ...p, buy_price_usd: e.target.value }))} className={inputCls + " pl-8"} placeholder="65000" />
+                    </div>
+                  </div>
+                </>)}
+
+                {/* ── PF specific ── */}
+                {selectedType === "PF" && (<>
+                  <div>
+                    <label className={labelCls}>PF Type *</label>
+                    <select value={pf.pf_type} onChange={e => setPf(p => ({ ...p, pf_type: e.target.value }))} className={inputCls + " appearance-none cursor-pointer"}>
+                      {["EPF", "PPF", "NPS", "Other"].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Account / PRAN Number</label>
+                    <input type="text" value={pf.account_number} onChange={e => setPf(p => ({ ...p, account_number: e.target.value }))} className={inputCls} placeholder="Optional" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Current Balance *</label>
+                    <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
+                      <input type="number" value={pf.current_balance} onChange={e => setPf(p => ({ ...p, current_balance: e.target.value }))} className={inputCls + " pl-8"} placeholder="50000" required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Interest Rate (% p.a.)</label>
+                    <input type="number" step="0.01" value={pf.interest_rate} onChange={e => setPf(p => ({ ...p, interest_rate: e.target.value }))} className={inputCls} placeholder="8.1" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Monthly Contribution</label>
+                    <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
+                      <input type="number" value={pf.monthly_contribution} onChange={e => setPf(p => ({ ...p, monthly_contribution: e.target.value }))} className={inputCls + " pl-8"} placeholder="2500" />
+                    </div>
+                  </div>
+                  {pf.pf_type === "EPF" && (
+                    <div>
+                      <label className={labelCls}>Employer Contribution</label>
+                      <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
+                        <input type="number" value={pf.employer_contribution} onChange={e => setPf(p => ({ ...p, employer_contribution: e.target.value }))} className={inputCls + " pl-8"} placeholder="2500" />
+                      </div>
+                    </div>
+                  )}
                 </>)}
 
                 {/* ── Common: Date, Total Amount, Account ── */}
