@@ -87,17 +87,19 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
   const currentVal = latestRow.current_value ?? latestRow.amount;
   const absPnl = currentVal - totalInvested;
   
+  const isCategoryMode = !!asset.isCategory;
+
   // Weighted Average Cost calculation
   const buyRows = history.filter(h => h.action === 'buy');
   const totalUnits = buyRows.reduce((sum, h) => sum + (h.investment_mf?.[0]?.units || h.investment_stock?.[0]?.quantity || h.investment_gold?.[0]?.grams || 0), 0);
   const totalCost = buyRows.reduce((sum, h) => sum + h.amount, 0);
   const avgCost = totalUnits > 0 ? (totalCost / totalUnits) : 0;
   
-  const canAverage = ['Stock', 'Mutual Fund', 'Gold'].includes(asset.type);
+  const canAverage = ['Stock', 'Mutual Fund', 'Gold'].includes(asset.type) && !isCategoryMode;
 
   const individualXirr = (() => {
     const cfs: CashFlow[] = history.map(cf => ({ amount: cf.action === 'buy' ? -cf.amount : cf.amount, date: new Date(cf.date) }));
-    if (currentVal > 0) cfs.push({ amount: currentVal, date: new Date() });
+    if (currentVal > 0 && !isCategoryMode) cfs.push({ amount: currentVal, date: new Date() });
     return xirr(cfs);
   })();
 
@@ -106,8 +108,8 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
       <div className="w-full max-w-2xl glass-card p-8 animate-scale-up mt-auto mb-auto" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{asset.type} History</span>
-            <h2 className="text-3xl font-heading font-black text-white">{asset.name}</h2>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{isCategoryMode ? `Global ${asset.type} Ledger` : `${asset.type} History`}</span>
+            <h2 className="text-3xl font-heading font-black text-white">{isCategoryMode ? `All ${asset.type}s` : asset.name}</h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">✕</button>
         </div>
@@ -125,7 +127,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
               </div>
             )}
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
-                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Net Invested</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">{isCategoryMode ? 'Total Deployed' : 'Net Invested'}</p>
                 <p className="text-lg font-mono font-bold text-amber-400">{currencyFormatter.format(totalInvested)}</p>
             </div>
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
@@ -145,6 +147,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
               <thead className="bg-slate-800 text-slate-500 font-bold">
                 <tr>
                   <th className="px-6 py-3 text-left">Date</th>
+                  {isCategoryMode && <th className="px-6 py-3 text-left">Asset</th>}
                   <th className="px-6 py-3">Action</th>
                   <th className="px-6 py-3">Amount</th>
                   <th className="px-6 py-3">Details</th>
@@ -156,6 +159,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
                    return (
                     <tr key={h.id} className="hover:bg-white/5">
                       <td className="px-6 py-4 text-slate-300 font-mono">{h.date}</td>
+                      {isCategoryMode && <td className="px-6 py-4 text-white font-bold">{h.name}</td>}
                       <td className="px-6 py-4">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${h.action === 'buy' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                           {h.action}
@@ -450,24 +454,51 @@ const Portfolio = () => {
     setSelectedAsset({ name, type, history });
   };
 
+  const openCategoryHistory = (type: string) => {
+    const history = allRecords.filter(r => r.type === type);
+    setSelectedAsset({ name: "All", type, history, isCategory: true });
+  };
+
+  const HistoryBtn = ({ type }: { type: string }) => (
+    <button onClick={() => openCategoryHistory(type)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all text-[10px] font-bold uppercase tracking-widest border border-white/5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20v-6M6 20V10M18 20V4" /></svg>
+        Full History
+    </button>
+  );
+
   const MFTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Fund</th><th className="px-6 py-4">Units</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">SIP</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const mf = inv.investment_mf?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{mf?.units || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-blue-400">{mf?.sip_day ? `Day ${mf.sip_day}` : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="Mutual Fund" /></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Fund</th><th className="px-6 py-4">Units</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">SIP</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const mf = inv.investment_mf?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{mf?.units || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-blue-400">{mf?.sip_day ? `Day ${mf.sip_day}` : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    </div>
   );
 
   const StockTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Stock</th><th className="px-6 py-4">Qty</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Sector</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const s = inv.investment_stock?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{s?.ticker}</span></td><td className="px-6 py-4 text-xs font-mono text-slate-300">{s?.quantity || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-slate-500">{s?.sector || "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="Stock" /></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Stock</th><th className="px-6 py-4">Qty</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Sector</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const s = inv.investment_stock?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{s?.ticker}</span></td><td className="px-6 py-4 text-xs font-mono text-slate-300">{s?.quantity || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-slate-500">{s?.sector || "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    </div>
   );
 
   const GoldTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Gold</th><th className="px-6 py-4">Grams</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Type</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const g = inv.investment_gold?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{g?.grams}g</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-yellow-500 font-bold uppercase">{g?.gold_form}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="Gold" /></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Gold</th><th className="px-6 py-4">Grams</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Type</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const g = inv.investment_gold?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{g?.grams}g</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-yellow-500 font-bold uppercase">{g?.gold_form}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    </div>
   );
 
   const FDTable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">FD</th><th className="px-6 py-4">Principal</th><th className="px-6 py-4">Maturity Date</th><th className="px-6 py-4">Days Left</th><th className="px-6 py-4">Maturity Val</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const fd = inv.investment_fd?.[0]; const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{fd?.bank_name || inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td><td className="px-6 py-4 text-xs text-slate-400">{fd?.maturity_date || "—"}</td><td className="px-6 py-4 text-xs font-bold text-blue-400">{dl !== null ? `${dl}d` : "—"}</td><td className="px-6 py-4 text-xs font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="FD" /></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">FD</th><th className="px-6 py-4">Principal</th><th className="px-6 py-4">Maturity Date</th><th className="px-6 py-4">Days Left</th><th className="px-6 py-4">Maturity Val</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const fd = inv.investment_fd?.[0]; const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{fd?.bank_name || inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td><td className="px-6 py-4 text-xs text-slate-400">{fd?.maturity_date || "—"}</td><td className="px-6 py-4 text-xs font-bold text-blue-400">{dl !== null ? `${dl}d` : "—"}</td><td className="px-6 py-4 text-xs font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    </div>
   );
 
   const RETable = () => (
-    <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Property</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Rent</th><th className="px-6 py-4">EMI</th><th className="px-6 py-4">Current Value</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const re = inv.investment_real_estate?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4 text-xs text-emerald-400 font-mono">{re?.monthly_rental ? currencyFormatter.format(re.monthly_rental) : "—"}</td><td className="px-6 py-4 text-xs text-red-400 font-mono">{re?.loan_emi ? currencyFormatter.format(re.loan_emi) : "—"}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    <div className="space-y-4">
+        <div className="flex justify-end px-2"><HistoryBtn type="Real Estate" /></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Property</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Rent</th><th className="px-6 py-4">EMI</th><th className="px-6 py-4">Current Value</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const re = inv.investment_real_estate?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4 text-xs text-emerald-400 font-mono">{re?.monthly_rental ? currencyFormatter.format(re.monthly_rental) : "—"}</td><td className="px-6 py-4 text-xs text-red-400 font-mono">{re?.loan_emi ? currencyFormatter.format(re.loan_emi) : "—"}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+    </div>
   );
 
   const tabContent: Record<Tab, React.ReactNode> = {
