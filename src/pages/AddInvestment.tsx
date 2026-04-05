@@ -64,9 +64,9 @@ const AddInvestment = () => {
   const [notes, setNotes] = useState("");
 
   // MF
-  const [mf, setMf] = useState({ fund_house: "", fund_category: "Equity", folio_number: "", units: "", nav_at_purchase: "", is_sip: false, sip_day: "" });
+  const [mf, setMf] = useState({ fund_house: "", fund_category: "Equity", folio_number: "", units: "", nav_at_purchase: "", is_sip: false, sip_day: "", amfi_code: "" });
   // Stock
-  const [stock, setStock] = useState({ ticker: "", exchange: "NSE", quantity: "", buy_price: "", sector: "" });
+  const [stock, setStock] = useState({ ticker: "", exchange: "NSE", quantity: "", buy_price: "", sector: "", market_cap: "" });
   // Gold
   const [gold, setGold] = useState({ gold_form: "Physical", grams: "", purity: "24K", buy_price_per_gram: "" });
   // FD
@@ -122,16 +122,16 @@ const AddInvestment = () => {
   const resetAll = () => {
     setSelectedType(null); setAction("buy");
     setName(""); setDate(new Date().toISOString().slice(0, 10)); setAmount(""); setAccountType(""); setNotes("");
-    setMf({ fund_house: "", fund_category: "Equity", folio_number: "", units: "", nav_at_purchase: "", is_sip: false, sip_day: "" });
-    setStock({ ticker: "", exchange: "NSE", quantity: "", buy_price: "", sector: "" });
+    setMf({ fund_house: "", fund_category: "Equity", folio_number: "", units: "", nav_at_purchase: "", is_sip: false, sip_day: "", amfi_code: "" });
+    setStock({ ticker: "", exchange: "NSE", quantity: "", buy_price: "", sector: "", market_cap: "" });
     setGold({ gold_form: "Physical", grams: "", purity: "24K", buy_price_per_gram: "" });
     setFd({ bank_name: "", fd_number: "", principal: "", interest_rate: "", tenure_months: "", start_date: new Date().toISOString().slice(0, 10), compounding: "Quarterly", maturity_amount: "" });
     setRe({ property_type: "Residential", address: "", area_sqft: "", buy_price_per_sqft: "", monthly_rental: "", loan_emi: "" });
   };
 
   const buildDetail = (): any => {
-    if (selectedType === "Mutual Fund") return { ...mf, units: parseFloat(mf.units), nav_at_purchase: mf.nav_at_purchase ? parseFloat(mf.nav_at_purchase) : null, sip_day: mf.sip_day ? parseInt(mf.sip_day) : null };
-    if (selectedType === "Stock") return { ...stock, quantity: parseInt(stock.quantity), buy_price: parseFloat(stock.buy_price) };
+    if (selectedType === "Mutual Fund") return { ...mf, units: parseFloat(mf.units), nav_at_purchase: mf.nav_at_purchase ? parseFloat(mf.nav_at_purchase) : null, sip_day: mf.sip_day ? parseInt(mf.sip_day) : null, amfi_code: mf.amfi_code || null };
+    if (selectedType === "Stock") return { ...stock, quantity: parseInt(stock.quantity), buy_price: parseFloat(stock.buy_price), market_cap: stock.market_cap || null };
     if (selectedType === "Gold") return { ...gold, grams: parseFloat(gold.grams), buy_price_per_gram: gold.buy_price_per_gram ? parseFloat(gold.buy_price_per_gram) : null };
     if (selectedType === "FD") {
       // Use safe addMonths to avoid JS Date overflow bug (e.g. Jan 31 + 1mo = Mar 3)
@@ -281,6 +281,10 @@ const AddInvestment = () => {
                     </label>
                     {mf.is_sip && <input type="number" min="1" max="31" value={mf.sip_day} onChange={e => setMf(p => ({ ...p, sip_day: e.target.value }))} className="w-20 rounded-xl border border-white/10 bg-slate-700/50 px-3 py-2 text-sm text-white outline-none" placeholder="Day" />}
                   </div>
+                  <div>
+                    <label className={labelCls}>AMFI Code <span className="text-[10px] text-slate-500 ml-1">(for auto-NAV updates)</span></label>
+                    <input type="text" value={mf.amfi_code} onChange={e => setMf(p => ({ ...p, amfi_code: e.target.value }))} className={inputCls} placeholder="e.g. 119063" />
+                  </div>
                 </>)}
 
                 {/* ── Stock specific ── */}
@@ -310,6 +314,13 @@ const AddInvestment = () => {
                     <select value={stock.sector} onChange={e => setStock(p => ({ ...p, sector: e.target.value }))} className={inputCls + " appearance-none cursor-pointer"}>
                       <option value="">Select sector...</option>
                       {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Market Cap</label>
+                    <select value={stock.market_cap} onChange={e => setStock(p => ({ ...p, market_cap: e.target.value }))} className={inputCls + " appearance-none cursor-pointer"}>
+                      <option value="">Select Cap...</option>
+                      {["Large", "Mid", "Small"].map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                 </>)}

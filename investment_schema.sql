@@ -26,6 +26,7 @@ CREATE TABLE public.investments (
     account_type TEXT DEFAULT NULL,
     date DATE NOT NULL,
     notes TEXT DEFAULT NULL,
+    is_automated BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT timezone('utc', now()) NOT NULL
 );
 
@@ -50,7 +51,8 @@ CREATE TABLE public.investment_mf (
     nav_at_purchase NUMERIC DEFAULT NULL,
     current_nav NUMERIC DEFAULT NULL,      -- manually updated
     is_sip BOOLEAN DEFAULT FALSE,
-    sip_day INTEGER DEFAULT NULL           -- day of month for SIP, e.g. 5
+    sip_day INTEGER DEFAULT NULL,          -- day of month for SIP, e.g. 5
+    amfi_code TEXT DEFAULT NULL            -- code for NAV automation
 );
 
 ALTER TABLE public.investment_mf ENABLE ROW LEVEL SECURITY;
@@ -68,7 +70,8 @@ CREATE TABLE public.investment_stock (
     quantity INTEGER NOT NULL,
     buy_price NUMERIC NOT NULL,            -- price per share at purchase
     current_price NUMERIC DEFAULT NULL,   -- manually updated
-    sector TEXT DEFAULT NULL               -- Banking, IT, FMCG, Pharma etc.
+    sector TEXT DEFAULT NULL,              -- Banking, IT, FMCG, Pharma etc.
+    market_cap TEXT DEFAULT NULL CHECK (market_cap IN ('Large', 'Mid', 'Small'))
 );
 
 ALTER TABLE public.investment_stock ENABLE ROW LEVEL SECURITY;

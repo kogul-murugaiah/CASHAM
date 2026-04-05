@@ -29,7 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (summary === 'true') {
                 const { data: all, error } = await supabaseAdmin
                     .from('investments')
-                    .select('type, action, amount, current_value')
+                    .select('type, action, amount, current_value, date, current_value_updated_at')
                     .eq('user_id', user.id);
 
                 if (error) throw error;
@@ -64,12 +64,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     { invested: 0, current: 0 }
                 );
 
+                // Build cashflows for XIRR computation on the frontend.
+                // Buys are negative (outflows), sells are positive (inflows).
+                // Sorted oldest→newest so the XIRR function picks the correct base date.
+                const cashflows = (all || [])
+                    .map(inv => ({
+                        date: inv.date,
+                        amount: inv.action === 'buy' ? -(inv.amount) : +(inv.amount),
+                    }))
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                // Calculate SIP Outflow: Latest amount for each unique SIP mutual fund
+                const { data: mfs } = await supabaseAdmin
+                    .from('investment_mf')
+                    .select('investment_id, fund_house, is_sip')
+                    .eq('user_id', user.id)
+                    .eq('is_sip', true);
+
+                let sipOutflow = 0;
+                if (mfs && mfs.length > 0) {
+                    const sipInvIds = mfs.map(m => m.investment_id);
+                    const { data: sipInvs } = await supabaseAdmin
+                        .from('investments')
+                        .select('name, amount, date')
+                        .in('id', sipInvIds)
+                        .order('date', { ascending: false });
+
+                    const seen = new Set();
+                    for (const inv of sipInvs || []) {
+                        if (!seen.has(inv.name)) {
+                            sipOutflow += inv.amount;
+                            seen.add(inv.name);
+                        }
+                    }
+                }
+
+                // Get the most recent update timestamp for price staleness
+                const latestUpdate = (all || [])
+                    .filter(i => i.current_value_updated_at)
+                    .reduce((latest, i) => {
+                        const d = new Date(i.current_value_updated_at).getTime();
+                        return d > latest ? d : latest;
+                    }, 0);
+
                 return res.status(200).json({
                     by_type: types,
                     total_invested: totals.invested,
                     total_current_value: totals.current,
                     total_pnl: totals.current - totals.invested,
                     total_return_pct: totals.invested > 0 ? ((totals.current - totals.invested) / totals.invested) * 100 : 0,
+                    cashflows, // for XIRR on frontend
+                    sip_outflow: sipOutflow,
+                    last_updated_at: latestUpdate ? new Date(latestUpdate).toISOString() : null
                 });
             }
 
@@ -107,37 +153,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ──────────────────────────────────────────────
     if (method === 'POST') {
         try {
-            const { type, name, action, amount, date, account_type, notes, detail } = req.body;
+            const items = Array.isArray(req.body) ? req.body : [req.body];
+            const results = [];
 
-            if (!type || !name || !amount || !date) {
-                return res.status(400).json({ error: 'type, name, amount, and date are required' });
+            for (const item of items) {
+                const { type, name, action, amount, date, account_type, notes, detail } = item;
+
+                if (!type || !name || !amount || !date) {
+                    throw new Error(`Missing required fields for investment: ${name || 'unknown'}`);
+                }
+
+                // 1. Insert core investment row
+                const { data: inv, error: invErr } = await supabaseAdmin
+                    .from('investments')
+                    .insert([{
+                        user_id: user.id, type, name,
+                        action: action || 'buy',
+                        amount: Number(amount),
+                        account_type: account_type || null,
+                        date, notes: notes || null,
+                    }])
+                    .select()
+                    .single();
+
+                if (invErr) throw invErr;
+
+                // 2. Insert type-specific detail
+                const detailTable = DETAIL_TABLE[type];
+                if (detailTable && detail) {
+                    const { error: detailErr } = await supabaseAdmin
+                        .from(detailTable)
+                        .insert([{ ...detail, investment_id: inv.id, user_id: user.id }]);
+                    if (detailErr) throw detailErr;
+                }
+                results.push(inv);
             }
 
-            // 1. Insert core investment row
-            const { data: inv, error: invErr } = await supabaseAdmin
-                .from('investments')
-                .insert([{
-                    user_id: user.id, type, name,
-                    action: action || 'buy',
-                    amount: Number(amount),
-                    account_type: account_type || null,
-                    date, notes: notes || null,
-                }])
-                .select()
-                .single();
-
-            if (invErr) throw invErr;
-
-            // 2. Insert type-specific detail
-            const detailTable = DETAIL_TABLE[type];
-            if (detailTable && detail) {
-                const { error: detailErr } = await supabaseAdmin
-                    .from(detailTable)
-                    .insert([{ ...detail, investment_id: inv.id, user_id: user.id }]);
-                if (detailErr) throw detailErr;
-            }
-
-            return res.status(201).json(inv);
+            return res.status(201).json(Array.isArray(req.body) ? results : results[0]);
         } catch (error: any) {
             return res.status(500).json({ error: error.message });
         }

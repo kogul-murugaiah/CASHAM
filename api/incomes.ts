@@ -50,22 +50,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     else if (method === 'POST') {
         try {
-            const { amount, date, source, description, source_id, account_type } = req.body;
+            const items = Array.isArray(req.body) ? req.body : [req.body];
+            const dataToInsert = items.map(item => ({
+                ...item,
+                user_id: user.id,
+                description: item.description || null,
+                source_id: item.source_id || null
+            }));
+
             const { data, error } = await supabaseAdmin
                 .from('income')
-                .insert([{
-                    user_id: user.id,
-                    amount,
-                    date,
-                    source,
-                    description: description || null,
-                    source_id: source_id || null,
-                    account_type
-                }])
+                .insert(dataToInsert)
                 .select();
 
             if (error) throw error;
-            return res.status(201).json(data[0]);
+            return res.status(201).json(Array.isArray(req.body) ? data : data[0]);
         } catch (error: any) {
             return res.status(500).json({ error: error.message });
         }
