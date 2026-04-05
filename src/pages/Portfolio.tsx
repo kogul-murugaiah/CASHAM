@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
 import type { CashFlow } from "../lib/xirr";
@@ -132,7 +132,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
             </div>
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">XIRR</p>
-                <p className={`text-lg font-mono font-bold ${individualXirr >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{xirrFmt(individualXirr)}</p>
+                <p className={`text-lg font-mono font-bold ${(individualXirr !== null && individualXirr >= 0) ? 'text-emerald-400' : 'text-red-400'}`}>{xirrFmt(individualXirr)}</p>
             </div>
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Abs. P&L</p>
@@ -425,7 +425,7 @@ const Portfolio = () => {
     </div>
   );
 
-  const PriceCell = ({ inv, currentVal, invested, name }: { inv: any; currentVal: number | null; invested: number; name: string }) => {
+  const PriceCell = ({ inv, currentVal, invested }: { inv: any; currentVal: number | null; invested: number; name: string }) => {
     const val = currentVal ?? invested;
     const pnl = val - invested;
     const staleness = timeAgo(inv.current_value_updated_at);
