@@ -82,16 +82,18 @@ const PriceModal = ({ inv, onClose, onSave }: { inv: any; onClose: () => void; o
 };
 
 const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: any[]; onClose: () => void }) => {
-  const latestRow = history[0]; // records are sorted by date desc
+  const latestRow = history[0]; 
   const totalInvested = history.reduce((sum, h) => sum + (h.action === 'buy' ? h.amount : -h.amount), 0);
   const currentVal = latestRow.current_value ?? latestRow.amount;
   const absPnl = currentVal - totalInvested;
   
-  // Weighted Average Cost calculation (simplified buy-side average)
+  // Weighted Average Cost calculation
   const buyRows = history.filter(h => h.action === 'buy');
-  const totalUnits = buyRows.reduce((sum, h) => sum + (h.investment_mf?.[0]?.units || h.investment_stock?.[0]?.quantity || 1), 0);
+  const totalUnits = buyRows.reduce((sum, h) => sum + (h.investment_mf?.[0]?.units || h.investment_stock?.[0]?.quantity || h.investment_gold?.[0]?.grams || 0), 0);
   const totalCost = buyRows.reduce((sum, h) => sum + h.amount, 0);
   const avgCost = totalUnits > 0 ? (totalCost / totalUnits) : 0;
+  
+  const canAverage = ['Stock', 'Mutual Fund', 'Gold'].includes(asset.type);
 
   const individualXirr = (() => {
     const cfs: CashFlow[] = history.map(cf => ({ amount: cf.action === 'buy' ? -cf.amount : cf.amount, date: new Date(cf.date) }));
@@ -104,17 +106,24 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
       <div className="w-full max-w-2xl glass-card p-8 animate-scale-up mt-auto mb-auto" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{asset.type}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{asset.type} History</span>
             <h2 className="text-3xl font-heading font-black text-white">{asset.name}</h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">✕</button>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
+            {canAverage ? (
+              <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Avg. Cost</p>
                 <p className="text-lg font-mono font-bold text-white">{currencyFormatter.format(avgCost)}</p>
-            </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5 bg-slate-800/10 opacity-50">
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Avg. Cost</p>
+                <p className="text-sm font-bold text-slate-600">N/A</p>
+              </div>
+            )}
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Net Invested</p>
                 <p className="text-lg font-mono font-bold text-amber-400">{currencyFormatter.format(totalInvested)}</p>
