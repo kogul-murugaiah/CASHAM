@@ -11,6 +11,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
 import MobileBottomNav from './components/MobileBottomNav';
+import AIAssistant from './components/AIAssistant';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -89,6 +90,7 @@ function App() {
                       <Footer />
                       {/* Mobile: only the FAB quick-entry button */}
                       <MobileBottomNav />
+                      <AIAssistant />
                     </div>
                   </ProtectedRoute>
                 }
