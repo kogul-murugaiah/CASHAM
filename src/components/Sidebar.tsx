@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -38,6 +38,12 @@ const NAV_GROUPS = [
         items: [
             { to: "/budget-planner", icon: FiPieChart, label: "Budget Planner" },
             { to: "/import", icon: FiUpload, label: "Bulk Import" },
+        ],
+    },
+    {
+        label: "Configuration",
+        items: [
+            { to: "/settings", icon: FiSettings, label: "Settings" },
         ],
     },
 ];
