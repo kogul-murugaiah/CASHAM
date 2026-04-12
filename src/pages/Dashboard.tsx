@@ -177,19 +177,19 @@ const Dashboard = () => {
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">THIS MONTH</span>
               </div>
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
-                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter transition-all ${hideBalance ? 'blur-md select-none' : (monthlyBalance >= 0 ? "text-white" : "text-red-400")}`}>
+                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter text-center lg:text-left transition-all ${hideBalance ? 'blur-md select-none' : (monthlyBalance >= 0 ? "text-white" : "text-red-400")}`}>
                   {formatCurrency(monthlyBalance, currencyStyle)}
                 </div>
                 
-                <div className="flex-1 max-w-xl self-end pb-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-3 font-mono gap-4 sm:gap-0">
+                <div className="flex-1 max-w-xl w-full lg:self-end pb-4">
+                  <div className="flex justify-between items-end mb-3 font-mono">
                     <div className="flex flex-col">
-                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Expense</span>
-                      <span className={`text-xl font-bold text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyExpenses, currencyStyle)}</span>
+                      <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest">Expense</span>
+                      <span className={`text-lg sm:text-xl font-bold text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyExpenses, currencyStyle)}</span>
                     </div>
-                    <div className="flex flex-col items-start sm:items-end">
-                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Income</span>
-                      <span className={`text-xl font-bold text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyIncome, currencyStyle)}</span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest">Income</span>
+                      <span className={`text-lg sm:text-xl font-bold text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyIncome, currencyStyle)}</span>
                     </div>
                   </div>
                   <div className="h-5 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm p-[2px]">
