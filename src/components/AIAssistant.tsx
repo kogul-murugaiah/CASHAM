@@ -182,7 +182,7 @@ const AIAssistant: React.FC = () => {
               </div>
               <div>
                 <dt className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">CASHAM AI</dt>
-                <dd className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-tighter">Elite Support Protocol</dd>
+                <dd className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-tighter">Smart Assistant</dd>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white transition-all p-1">
