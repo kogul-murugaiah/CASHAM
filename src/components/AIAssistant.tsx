@@ -88,9 +88,10 @@ const AIAssistant: React.FC = () => {
 
       const aiResponse = await askGemini(userMsg, currentHistory);
       setMessages(prev => [...prev, { role: "model", content: aiResponse }]);
-    } catch (e) {
+    } catch (e: any) {
       setHasError(true);
-      setMessages(prev => [...prev, { role: "model", content: "I encountered a protocol error. Please check your connection or API configuration." }]);
+      const errorMessage = e?.message || "I encountered a protocol error. Please check your connection or API configuration.";
+      setMessages(prev => [...prev, { role: "model", content: errorMessage }]);
     } finally {
       setLoading(false);
     }

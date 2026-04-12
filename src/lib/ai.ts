@@ -4,7 +4,7 @@
  */
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-1.5-flash";
+const GEMINI_MODEL = "gemini-2.0-flash";
 
 export interface ChatMessage {
   role: "user" | "model" | "system";
@@ -21,7 +21,7 @@ export async function askGemini(message: string, history: ChatMessage[] = []): P
     throw new Error("Gemini API Key is missing. Please add VITE_GEMINI_API_KEY to your .env.local file.");
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
   // Format history for Gemini API
   const contents = [
@@ -35,17 +35,21 @@ export async function askGemini(message: string, history: ChatMessage[] = []): P
     }
   ];
 
-  // If there's a system prompt, we prepend it to the FIRST message
+  // Extract system prompt
   const systemPrompt = history.find(m => m.role === 'system')?.content;
-  if (systemPrompt && contents.length > 0) {
-    contents[0].parts[0].text = `SYSTEM CONTEXT: ${systemPrompt}\n\nUSER QUESTION: ${contents[0].parts[0].text}`;
+  
+  const body: any = { contents };
+  if (systemPrompt) {
+    body.system_instruction = {
+      parts: [{ text: systemPrompt }]
+    };
   }
 
   try {
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
