@@ -185,7 +185,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="pb-24 pt-8 md:pb-8 animate-fade-in">
+    <div className="pb-24 pt-8 md:pb-8 animate-fade-in text-left">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <header className="mb-8">
           <p className="text-slate-400 font-medium text-sm uppercase tracking-wider mb-1">Configuration</p>
@@ -194,7 +194,7 @@ const Settings = () => {
 
         <div className="flex flex-col gap-8">
           {/* Top Horizontal Nav */}
-          <div className="w-full border-b border-slate-800">
+          <div className="w-full border-b border-white/5">
             <nav className="flex overflow-x-auto hide-scrollbar gap-6">
               {TABS.map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -203,14 +203,14 @@ const Settings = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 pb-3 transition-all whitespace-nowrap border-b-2 relative top-[1px] ${
+                    className={`flex items-center gap-2 pb-3 transition-all whitespace-nowrap border-b-2 relative top-[1px] group ${
                       isActive
-                        ? "text-emerald-400 border-emerald-400"
-                        : "text-slate-400 border-transparent hover:text-slate-200 hover:border-slate-700"
+                        ? "text-emerald-400 border-emerald-500 shadow-[0_4px_12px_-4px_rgba(16,185,129,0.3)]"
+                        : "text-slate-500 border-transparent hover:text-slate-300 hover:border-slate-800"
                     }`}
                   >
-                    <Icon size={16} className={isActive ? "text-emerald-400" : "text-slate-500"} />
-                    <span className="font-semibold text-sm">{tab.label}</span>
+                    <Icon size={16} className={`${isActive ? "text-emerald-400" : "text-slate-600 group-hover:text-slate-400"} transition-colors`} />
+                    <span className="font-bold text-sm tracking-tight">{tab.label}</span>
                   </button>
                 );
               })}
@@ -228,20 +228,20 @@ const Settings = () => {
                 {/* Form placeholder */}
                 <div className="space-y-4 max-w-md">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Display Name</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Display Name</label>
                     <input 
                       type="text" 
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       disabled={loading}
                       placeholder="e.g. John Doe" 
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors" 
+                      className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all backdrop-blur-sm" 
                     />
-                    <p className="text-[10px] text-slate-500 mt-1">This will be used to greet you on the dashboard.</p>
+                    <p className="text-[10px] text-slate-500 mt-2 font-medium">This will be used to greet you on the dashboard.</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
-                    <input type="email" value={email} disabled placeholder="user@example.com" className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 cursor-not-allowed" />
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Email Address</label>
+                    <input type="email" value={email} disabled placeholder="user@example.com" className="w-full bg-slate-950/20 border border-white/5 rounded-2xl px-5 py-3 text-slate-600 cursor-not-allowed italic" />
                   </div>
                   <button 
                     onClick={handleSaveProfile}
@@ -265,7 +265,7 @@ const Settings = () => {
                 <div className="space-y-4">
                   {/* Add New Category */}
                   <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Create New Template</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Create New Template</label>
                       <div className="flex gap-2">
                         <input 
                             type="text" 
@@ -273,14 +273,14 @@ const Settings = () => {
                             onChange={(e) => setNewCatName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
                             placeholder="e.g. Subscriptions, Travel" 
-                            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors" 
+                            className="flex-1 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-3 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-600" 
                         />
                         <button 
                             onClick={handleAddCategory}
                             disabled={addingCat || !newCatName.trim()}
-                            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:text-slate-500 text-white px-5 rounded-xl font-bold transition-all flex items-center gap-2"
+                            className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-white px-6 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
                         >
-                            {addingCat ? "..." : <FiPlus />} Add
+                            {addingCat ? "..." : <FiPlus strokeWidth={3} />} Add
                         </button>
                       </div>
                       {catError && <p className="text-rose-400 text-xs mt-2">{catError}</p>}
@@ -288,13 +288,13 @@ const Settings = () => {
 
                   {/* List Categories */}
                   <div className="mt-8">
-                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Categories</label>
+                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 font-heading">Your Categories</label>
                      {categoriesLoading ? (
                          <div className="text-slate-400 text-sm animate-pulse">Loading categories...</div>
                      ) : (
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {categories.map((cat) => (
-                                <div key={cat.id} className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 flex items-center justify-between group hover:border-emerald-500/30 transition-colors">
+                             {categories.map((cat) => (
+                                <div key={cat.id} className="bg-slate-800/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-emerald-500/40 hover:bg-slate-800/60 transition-all duration-300">
                                     {editingItem?.type === "category" && editingItem.id === cat.id ? (
                                         <div className="flex-1 flex gap-2">
                                             <input 
@@ -303,26 +303,26 @@ const Settings = () => {
                                                 onChange={(e) => setEditValue(e.target.value)}
                                                 onBlur={saveRename}
                                                 onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                                                className="bg-slate-800 border border-emerald-500/50 rounded-lg px-2 py-0.5 text-sm text-white focus:outline-none w-full"
+                                                className="bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-1 text-sm text-white focus:outline-none w-full"
                                             />
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-slate-200 font-medium text-sm">{cat.name}</span>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-white font-bold text-sm tracking-wide">{cat.name}</span>
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
                                                 <button 
                                                     onClick={() => startRename({ id: cat.id, name: cat.name, type: "category" })}
-                                                    className="text-slate-500 hover:text-emerald-400 p-1.5 transition-colors"
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
                                                     title="Rename"
                                                 >
-                                                    <FiEdit2 size={14} />
+                                                    <FiEdit2 size={12} />
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                                    className="text-slate-500 hover:text-rose-400 transition-colors p-1.5"
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                                                     title="Delete Category"
                                                 >
-                                                    <FiTrash2 size={14} />
+                                                    <FiTrash2 size={12} />
                                                 </button>
                                             </div>
                                         </>
@@ -351,7 +351,7 @@ const Settings = () => {
                 <div className="space-y-4">
                   {/* Add New Account */}
                   <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Configure New Account</label>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Configure New Account</label>
                       <div className="flex gap-2">
                         <input 
                             type="text" 
@@ -359,14 +359,14 @@ const Settings = () => {
                             onChange={(e) => setNewAccName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddAccount()}
                             placeholder="e.g. HDFC, Petrol Card" 
-                            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors" 
+                            className="flex-1 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-3 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-600" 
                         />
                         <button 
                             onClick={handleAddAccount}
                             disabled={addingAcc || !newAccName.trim()}
-                            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:text-slate-500 text-white px-5 rounded-xl font-bold transition-all flex items-center gap-2"
+                            className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-white px-6 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
                         >
-                            {addingAcc ? "..." : <FiPlus />} Add
+                            {addingAcc ? "..." : <FiPlus strokeWidth={3} />} Add
                         </button>
                       </div>
                       {accError && <p className="text-rose-400 text-xs mt-2">{accError}</p>}
@@ -374,13 +374,13 @@ const Settings = () => {
 
                   {/* List Accounts */}
                   <div className="mt-8">
-                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Tracked Wallets</label>
+                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 font-heading">Your Tracked Wallets</label>
                      {accountsLoading ? (
                          <div className="text-slate-400 text-sm animate-pulse">Loading accounts...</div>
                      ) : (
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {accountTypes.map((accName) => (
-                                <div key={accName} className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 flex items-center justify-between group hover:border-emerald-500/30 transition-colors">
+                             {accountTypes.map((accName) => (
+                                <div key={accName} className="bg-slate-800/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-emerald-500/40 hover:bg-slate-800/60 transition-all duration-300">
                                     {editingItem?.type === "account" && editingItem.name === accName ? (
                                         <div className="flex-1 flex gap-2">
                                             <input 
@@ -389,26 +389,26 @@ const Settings = () => {
                                                 onChange={(e) => setEditValue(e.target.value)}
                                                 onBlur={saveRename}
                                                 onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                                                className="bg-slate-800 border border-emerald-500/50 rounded-lg px-2 py-0.5 text-sm text-white focus:outline-none w-full"
+                                                className="bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-1 text-sm text-white focus:outline-none w-full"
                                             />
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-slate-200 font-medium text-sm">{accName}</span>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-white font-bold text-sm tracking-wide">{accName}</span>
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
                                                 <button 
                                                     onClick={() => startRename({ name: accName, type: "account" })}
-                                                    className="text-slate-500 hover:text-emerald-400 p-1.5 transition-colors"
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
                                                     title="Rename Account"
                                                 >
-                                                    <FiEdit2 size={14} />
+                                                    <FiEdit2 size={12} />
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteAccount(accName)}
-                                                    className="text-slate-500 hover:text-rose-400 transition-colors p-1.5"
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                                                     title="Delete Account"
                                                 >
-                                                    <FiTrash2 size={14} />
+                                                    <FiTrash2 size={12} />
                                                 </button>
                                             </div>
                                         </>
@@ -428,7 +428,7 @@ const Settings = () => {
             )}
 
             {activeTab === "system" && (
-              <div className="animate-fade-in space-y-8 glass-card p-6 md:p-8 rounded-2xl max-w-2xl">
+              <div className="animate-fade-in space-y-8 glass-card p-6 md:p-8 rounded-2xl max-w-2xl text-left">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">System Preferences</h2>
                   <p className="text-sm text-slate-400 mt-1">Basic adjustments for a personalized Indian experience.</p>
@@ -436,45 +436,45 @@ const Settings = () => {
 
                 <div className="space-y-6">
                   {/* Privacy Mode */}
-                  <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                   <div className="group flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-3xl hover:bg-slate-950/40 hover:border-emerald-500/20 transition-all">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-xl ${hideBalance ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
-                        {hideBalance ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                      <div className={`p-3.5 rounded-2xl transition-all ${hideBalance ? 'bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-slate-800 text-slate-500'}`}>
+                        {hideBalance ? <FiEyeOff size={22} /> : <FiEye size={22} />}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">Privacy Mode</p>
-                        <p className="text-xs text-slate-500">Hide/Mask balances on your dashboard</p>
+                        <p className="text-sm font-bold text-white tracking-tight">Privacy Mode</p>
+                        <p className="text-[11px] text-slate-500 font-medium">Hide sensitive balances across the app</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => updatePreference("hideBalance", !hideBalance)}
-                      className={`w-12 h-6 rounded-full transition-all relative ${hideBalance ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                      className={`w-14 h-7 rounded-full transition-all relative p-1 ${hideBalance ? 'bg-emerald-500' : 'bg-slate-700'}`}
                     >
-                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${hideBalance ? 'right-1' : 'left-1'}`} />
+                      <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-md ${hideBalance ? 'translate-x-7' : 'translate-x-0'}`} />
                     </button>
                   </div>
 
                   {/* Currency Styling */}
-                  <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                   <div className="group flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-3xl hover:bg-slate-950/40 hover:border-emerald-500/20 transition-all">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-slate-800 text-slate-400">
-                        <FiCreditCard size={20} />
+                      <div className="p-3.5 rounded-2xl bg-slate-800 text-slate-500 group-hover:text-emerald-400 transition-colors">
+                        <FiCreditCard size={22} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">Currency Display</p>
-                        <p className="text-xs text-slate-500">Choose between Symbol (₹) or Label (Rs.)</p>
+                        <p className="text-sm font-bold text-white tracking-tight">Currency Display</p>
+                        <p className="text-[11px] text-slate-500 font-medium">Toggle between Symbol (₹) and Label (Rs.)</p>
                       </div>
                     </div>
-                    <div className="flex bg-slate-800 p-1 rounded-lg">
+                    <div className="flex bg-slate-900/80 p-1 rounded-xl border border-white/5">
                       <button 
                          onClick={() => updatePreference("currencyStyle", "symbol")}
-                         className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${currencyStyle === 'symbol' ? 'bg-slate-700 text-emerald-400 shadow-sm' : 'text-slate-500'}`}
+                         className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${currencyStyle === 'symbol' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                       >
                         ₹
                       </button>
                       <button 
                          onClick={() => updatePreference("currencyStyle", "text")}
-                         className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${currencyStyle === 'text' ? 'bg-slate-700 text-emerald-400 shadow-sm' : 'text-slate-500'}`}
+                         className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${currencyStyle === 'text' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                       >
                         Rs.
                       </button>
@@ -482,43 +482,46 @@ const Settings = () => {
                   </div>
 
                   {/* Language */}
-                  <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                  <div className="group flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-3xl hover:bg-slate-950/40 hover:border-emerald-500/20 transition-all">
                     <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-slate-800 text-slate-400">
-                        <FiGlobe size={20} />
+                      <div className="p-3.5 rounded-2xl bg-slate-800 text-slate-500 group-hover:text-emerald-400 transition-colors">
+                        <FiGlobe size={22} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">App Language</p>
-                        <p className="text-xs text-slate-500">Switch between English and Hindi</p>
+                        <p className="text-sm font-bold text-white tracking-tight">App Language</p>
+                        <p className="text-[11px] text-slate-500 font-medium">Localized interface for individual preference</p>
                       </div>
                     </div>
                     <select 
                       value={language}
                       onChange={(e) => updatePreference("language", e.target.value as any)}
-                      className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg border-none focus:ring-0 cursor-pointer"
+                      className="bg-slate-900 text-white text-[10px] font-black px-4 py-2 rounded-xl border border-white/5 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer outline-none appearance-none text-center min-w-[100px]"
                     >
-                      <option value="en">English</option>
+                      <option value="en">ENGLISH</option>
                       <option value="hi">हिन्दी (Hindi)</option>
                     </select>
                   </div>
 
                   {/* Data Export */}
-                  <div className="pt-4 border-t border-slate-800/50">
+                  <div className="pt-6 border-t border-white/5">
                     <button 
                         onClick={handleExportCSV}
                         disabled={exporting}
-                        className="w-full flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-2xl font-bold transition-all group"
+                        className="w-full relative overflow-hidden flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-4.5 rounded-2xl font-black text-sm transition-all shadow-xl shadow-emerald-900/20 active:scale-[0.98]"
                     >
+                      <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
                       {exporting ? (
-                          <span className="animate-pulse">Preparing Report...</span>
+                          <span className="animate-pulse flex items-center gap-2">
+                             <FiDownload className="animate-bounce" /> Generating Report...
+                          </span>
                       ) : (
                           <>
-                            <FiDownload className="text-emerald-400 group-hover:translate-y-0.5 transition-transform" /> 
-                            Download Excel Report
+                            <FiDownload className="text-white" strokeWidth={3} /> 
+                            DOWNLOAD EXCEL REPORT
                           </>
                       )}
                     </button>
-                    <p className="text-[10px] text-slate-600 mt-2 text-center text-pretty">Your full transaction history will be downloaded as a .csv file compatible with Microsoft Excel.</p>
+                    <p className="text-[10px] text-slate-500 mt-4 text-center leading-relaxed">Your secure transaction ledger will be prepared in <b>.csv format</b>, perfectly structured for analysis in Microsoft Excel or Google Sheets.</p>
                   </div>
                 </div>
               </div>
