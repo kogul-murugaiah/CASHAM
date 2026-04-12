@@ -25,41 +25,64 @@ const AIAssistant: React.FC = () => {
     try {
       // 1. Get Dashboard Summary
       const d = new Date();
+      const todayISO = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
       const dash = await api.get(`/api/dashboard?year=${d.getFullYear()}&month=${d.getMonth() + 1}`);
       const invs = await api.get("/api/investments?summary=true");
       const user = await api.get("/api/auth/user");
 
-      // 2. Fetch all expenses for top categories
+      // 2. Fetch all expenses
       const exps = await api.get("/api/expenses");
+      const expList = exps || [];
+
+      // Today's expenses
+      const todayExpenses = expList.filter((e: { date: string }) => e.date?.slice(0, 10) === todayISO);
+
+      // Top categories (all-time or current month)
       const categoryMap: Record<string, number> = {};
-      (exps || []).forEach((e: any) => { categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount; });
+      expList.forEach((e: { category: string; amount: number }) => {
+        categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
+      });
       const topCategories = Object.entries(categoryMap)
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // 3. Process Bank Balances
+      // 10 most recent expenses (sorted newest first)
+      const recentExpenses = [...expList]
+        .sort((a: { date: string }, b: { date: string }) => b.date.localeCompare(a.date))
+        .slice(0, 10);
+
+      // 3. Fetch all incomes
       const incs = await api.get("/api/incomes");
+      const incList = incs || [];
+
+      // Today's income
+      const todayIncome = incList.filter((i: { date: string }) => i.date?.slice(0, 10) === todayISO);
+
+      // 4. Process Bank Balances
       const allInvs = await api.get("/api/investments");
       const balances = accountTypes.map(type => {
-        const totalInc = (incs || []).filter((i: any) => i.account_type === type).reduce((s: number, i: any) => s + i.amount, 0);
-        const totalExp = (exps || []).filter((e: any) => e.account_type === type).reduce((s: number, e: any) => s + e.amount, 0);
-        const totalInv = (allInvs || []).filter((inv: any) => inv.account_type === type && inv.action === 'buy').reduce((s: number, i: any) => s + i.amount, 0);
-        const totalRed = (allInvs || []).filter((inv: any) => inv.account_type === type && inv.action === 'sell').reduce((s: number, i: any) => s + i.amount, 0);
+        const totalInc = incList.filter((i: { account_type: string }) => i.account_type === type).reduce((s: number, i: { amount: number }) => s + i.amount, 0);
+        const totalExp = expList.filter((e: { account_type: string }) => e.account_type === type).reduce((s: number, e: { amount: number }) => s + e.amount, 0);
+        const totalInv = (allInvs || []).filter((inv: { account_type: string; action: string }) => inv.account_type === type && inv.action === 'buy').reduce((s: number, i: { amount: number }) => s + i.amount, 0);
+        const totalRed = (allInvs || []).filter((inv: { account_type: string; action: string }) => inv.account_type === type && inv.action === 'sell').reduce((s: number, i: { amount: number }) => s + i.amount, 0);
         return totalInc - totalExp - totalInv + totalRed;
       });
       const cashBalance = balances.reduce((a, b) => a + b, 0);
 
-      // 4. Build the final context
+      // 5. Build the enriched context
       const context = buildFinancialContext({
         userEmail: user?.user?.email,
-        monthlyIncome: (dash.income || []).reduce((s: number, i: any) => s + i.amount, 0),
-        monthlyExpenses: (dash.expenses || []).reduce((s: number, e: any) => s + e.amount, 0),
-        monthlyBalance: ((dash.income || []).reduce((s: number, i: any) => s + i.amount, 0)) - ((dash.expenses || []).reduce((s: number, e: any) => s + e.amount, 0)),
+        monthlyIncome: (dash.income || []).reduce((s: number, i: { amount: number }) => s + i.amount, 0),
+        monthlyExpenses: (dash.expenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0),
+        monthlyBalance: ((dash.income || []).reduce((s: number, i: { amount: number }) => s + i.amount, 0)) - ((dash.expenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0)),
         netWorth: (invs?.total_current_value || 0) + cashBalance,
         portfolioValue: invs?.total_current_value || 0,
         cashBalance,
         topCategories,
         investmentBreakdown: invs?.by_type || [],
+        todayExpenses,
+        todayIncome,
+        recentExpenses,
       });
 
       return context;
@@ -88,9 +111,9 @@ const AIAssistant: React.FC = () => {
 
       const aiResponse = await askGemini(userMsg, currentHistory);
       setMessages(prev => [...prev, { role: "model", content: aiResponse }]);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setHasError(true);
-      const errorMessage = e?.message || "I encountered a protocol error. Please check your connection or API configuration.";
+      const errorMessage = e instanceof Error ? e.message : "I encountered a protocol error. Please check your connection or API configuration.";
       setMessages(prev => [...prev, { role: "model", content: errorMessage }]);
     } finally {
       setLoading(false);
