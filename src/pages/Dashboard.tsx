@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useUserPreferences } from "../hooks/useUserPreferences";
+import { formatCurrency } from "../lib/formatters";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import {
   BarChart,
   Bar,
@@ -21,11 +24,7 @@ type Income = { id: number; amount: number; date: string; account_type: string; 
 type Expense = { id: number; amount: number; date: string; account_type: string; };
 type Transfer = { id: string; from_account: string; to_account: string; amount: number; date: string; note: string | null; };
 
-export const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+
 
 const COLORS = ["#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -40,6 +39,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const { hideBalance, currencyStyle, toggleHideBalance } = useUserPreferences();
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -53,6 +54,7 @@ const Dashboard = () => {
         const userData = await api.get('/api/auth/user');
         if (!userData?.user) throw new Error("User not authenticated");
         setUserEmail(userData.user.email ?? null);
+        setDisplayName(userData.user.display_name ?? null);
 
         const data = await api.get(`/api/dashboard?year=${currentYear}&month=${currentMonth}`);
         setIncome(data.income || []);
@@ -129,7 +131,7 @@ const Dashboard = () => {
           <div className="flex flex-col gap-1">
             <p className="text-slate-400 font-medium text-sm uppercase tracking-wider">Overview</p>
             <h1 className="text-4xl font-bold font-heading text-white">
-              {getGreeting()}, <span className="text-gradient">{userEmail ? userEmail.split('@')[0] : 'User'}</span>
+              {getGreeting()}, <span className="text-gradient">{displayName || (userEmail ? userEmail.split('@')[0] : 'User')}</span>
             </h1>
             <p className="text-slate-400 mt-1">
               Financial summary for <span className="text-white font-semibold">{MONTH_NAMES[currentMonth - 1]} {currentYear}</span>
@@ -140,16 +142,26 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-700/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md self-start md:self-auto">
-            <button onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(y => y - 1); } else setCurrentMonth(m => m - 1); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg></button>
-            <div className="flex items-center gap-2 px-2">
-              <select value={currentMonth} onChange={(e) => setCurrentMonth(parseInt(e.target.value))} className="bg-transparent text-white font-semibold focus:outline-none appearance-none cursor-pointer hover:text-emerald-400 transition-colors">
-                {MONTH_NAMES.map((name, i) => <option key={name} value={i + 1} className="bg-slate-900 text-white">{name}</option>)}
-              </select>
-              <span className="text-slate-600">/</span>
-              <input type="number" value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value))} className="bg-transparent text-white font-semibold w-16 focus:outline-none hover:text-emerald-400 transition-colors" />
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <button 
+                onClick={toggleHideBalance}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all text-xs font-bold"
+            >
+              {hideBalance ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+              {hideBalance ? "Reveal Balances" : "Privacy Mode"}
+            </button>
+
+            <div className="flex items-center gap-2 bg-slate-700/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md self-start md:self-auto">
+              <button onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(y => y - 1); } else setCurrentMonth(m => m - 1); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg></button>
+              <div className="flex items-center gap-2 px-2">
+                <select value={currentMonth} onChange={(e) => setCurrentMonth(parseInt(e.target.value))} className="bg-transparent text-white font-semibold focus:outline-none appearance-none cursor-pointer hover:text-emerald-400 transition-colors">
+                  {MONTH_NAMES.map((name, i) => <option key={name} value={i + 1} className="bg-slate-900 text-white">{name}</option>)}
+                </select>
+                <span className="text-slate-600">/</span>
+                <input type="number" value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value))} className="bg-transparent text-white font-semibold w-16 focus:outline-none hover:text-emerald-400 transition-colors" />
+              </div>
+              <button onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(y => y + 1); } else setCurrentMonth(m => m + 1); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></button>
             </div>
-            <button onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(y => y + 1); } else setCurrentMonth(m => m + 1); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></button>
           </div>
         </header>
 
@@ -165,19 +177,19 @@ const Dashboard = () => {
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">THIS MONTH</span>
               </div>
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
-                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter ${monthlyBalance >= 0 ? "text-white" : "text-red-400"}`}>
-                  {currencyFormatter.format(monthlyBalance)}
+                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter transition-all ${hideBalance ? 'blur-md select-none' : (monthlyBalance >= 0 ? "text-white" : "text-red-400")}`}>
+                  {formatCurrency(monthlyBalance, currencyStyle)}
                 </div>
                 
                 <div className="flex-1 max-w-xl self-end pb-4">
                   <div className="flex justify-between items-end mb-3 font-mono">
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Expense</span>
-                      <span className="text-xl font-bold text-red-400">{currencyFormatter.format(monthlyExpenses)}</span>
+                      <span className={`text-xl font-bold text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyExpenses, currencyStyle)}</span>
                     </div>
                     <div className="flex flex-col items-end">
                       <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Income</span>
-                      <span className="text-xl font-bold text-emerald-400">{currencyFormatter.format(monthlyIncome)}</span>
+                      <span className={`text-xl font-bold text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyIncome, currencyStyle)}</span>
                     </div>
                   </div>
                   <div className="h-5 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm p-[2px]">
@@ -188,7 +200,7 @@ const Dashboard = () => {
                   </div>
                   <div className="mt-2 flex justify-between items-center text-[9px] font-bold uppercase tracking-tighter text-slate-600">
                     <span>Usage: {((monthlyExpenses / (monthlyIncome || 1)) * 100).toFixed(1)}%</span>
-                    <span>Remaining: {currencyFormatter.format(Math.max(0, monthlyIncome - monthlyExpenses))}</span>
+                    <span>Remaining: <span className={hideBalance ? 'blur-[2px] select-none' : ''}>{formatCurrency(Math.max(0, monthlyIncome - monthlyExpenses), currencyStyle)}</span></span>
                   </div>
                 </div>
               </div>
@@ -206,27 +218,27 @@ const Dashboard = () => {
                         ))}
                   </select>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
-                  <p className="text-xl font-bold text-orange-400 font-mono mt-1">{currencyFormatter.format(avgDailySpend)}</p>
+                  <p className={`text-xl font-bold text-orange-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemaining} days remaining`}>Daily Limit Left</p>
-                  <p className="text-xl font-bold text-teal-400 font-mono mt-1">{currencyFormatter.format(avgDailyLimitRemaining)}</p>
+                  <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
-                  <p className="text-xl font-bold text-rose-400 font-mono mt-1">{currencyFormatter.format(todayExpenses)}</p>
+                  <p className={`text-xl font-bold text-rose-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(todayExpenses, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weekly Expense</p>
-                  <p className="text-xl font-bold text-amber-500 font-mono mt-1">
-                    {currencyFormatter.format(expenses.filter(e => {
+                  <p className={`text-xl font-bold text-amber-500 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>
+                    {formatCurrency(expenses.filter(e => {
                         const d = new Date(e.date);
                         const t = new Date();
                         const monday = new Date(t);
                         monday.setDate(t.getDate() - ((t.getDay() + 6) % 7));
                         monday.setHours(0,0,0,0);
                         return d >= monday;
-                    }).reduce((s, e) => s + e.amount, 0))}
+                    }).reduce((s, e) => s + e.amount, 0), currencyStyle)}
                   </p>
                 </div>
               </div>
@@ -242,7 +254,7 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(val) => `₹${val / 1000}k`} />
-                    <Tooltip cursor={{ fill: '#334155', opacity: 0.2 }} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#f8fafc' }} labelStyle={{ color: '#94a3b8' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                     <Tooltip cursor={{ fill: '#334155', opacity: 0.2 }} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#f8fafc' }} labelStyle={{ color: '#94a3b8' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                     <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={50}>
                       {[{ fill: "#10b981" }, { fill: "#ef4444" }].map((_, index) => <Cell key={index} fill={_.fill} />)}
                     </Bar>
@@ -260,7 +272,7 @@ const Dashboard = () => {
                       <Pie data={accountDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                         {accountDistributionData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />)}
                       </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                       <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#f8fafc' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                       <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(v) => <span className="text-slate-400 text-sm ml-1">{v}</span>} />
                     </PieChart>
                   </ResponsiveContainer>
@@ -277,10 +289,10 @@ const Dashboard = () => {
               {accountBalances.map((acc) => (
                 <div key={acc.accountType} className="rounded-2xl border border-white/5 bg-slate-700/50 p-4 hover:bg-slate-700/80 transition-colors">
                   <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">{acc.accountType}</span><div className={`h-2 w-2 rounded-full ${acc.balance >= 0 ? "bg-green-500" : "bg-red-500"}`} /></div>
-                  <div className="text-xl font-bold text-white mb-3">{currencyFormatter.format(acc.balance)}</div>
+                  <div className={`text-xl font-bold text-white mb-3 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(acc.balance, currencyStyle)}</div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px]"><span className="text-slate-500">Inbound</span><span className="text-green-400">+{currencyFormatter.format(acc.income)}</span></div>
-                    <div className="flex justify-between text-[10px]"><span className="text-slate-500">Outbound</span><span className="text-red-400">-{currencyFormatter.format(acc.expenses)}</span></div>
+                    <div className="flex justify-between text-[10px]"><span className="text-slate-500">Inbound</span><span className={`text-green-400 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>+{formatCurrency(acc.income, currencyStyle)}</span></div>
+                    <div className="flex justify-between text-[10px]"><span className="text-slate-500">Outbound</span><span className={`text-red-400 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>-{formatCurrency(acc.expenses, currencyStyle)}</span></div>
                   </div>
                 </div>
               ))}

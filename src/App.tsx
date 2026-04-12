@@ -31,6 +31,7 @@ const BudgetPlanner = lazy(() => import('./pages/BudgetPlanner'));
 const AddTransfer = lazy(() => import('./pages/AddTransfer'));
 const Portfolio = lazy(() => import('./pages/Portfolio'));
 const ImportCenter = lazy(() => import('./pages/ImportCenter'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -84,6 +85,7 @@ function App() {
                             <Route path="/budget-planner" element={<BudgetPlanner />} />
                             <Route path="/transfer" element={<AddTransfer />} />
                             <Route path="/import" element={<ImportCenter />} />
+                            <Route path="/settings" element={<Settings />} />
                           </Routes>
                         </Suspense>
                       </div>

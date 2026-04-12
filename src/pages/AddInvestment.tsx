@@ -1,6 +1,8 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useUserPreferences } from "../hooks/useUserPreferences";
+import { formatCurrency } from "../lib/formatters";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -45,12 +47,13 @@ const addMonths = (dateStr: string, months: number): string => {
     return d.toISOString().slice(0, 10);
 };
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+
 
 // ─── Component ──────────────────────────────────────────────────
 
 const AddInvestment = () => {
   const { accountTypes } = useAccountTypes();
+  const { currencyStyle } = useUserPreferences();
   const [selectedType, setSelectedType] = useState<AssetType | null>(null);
   const [action, setAction] = useState<"buy" | "sell">("buy");
   const [loading, setLoading] = useState(false);
@@ -279,7 +282,7 @@ const AddInvestment = () => {
                   <div>
                     <label className={labelCls}>NAV at Purchase</label>
                     <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
-                      <input type="number" step="any" value={mf.nav_at_purchase} onChange={e => setMf(p => ({ ...p, nav_at_purchase: e.target.value }))} className={inputCls + " pl-8"} placeholder="39.84" />
+                      <input type="number" step="any" value={mf.nav_at_purchase} onChange={e => setMf(p => ({ ...p, nav_at_purchase: e.target.value }))} className={inputCls + (currencyStyle === 'symbol' ? " pl-8" : " pl-12")} placeholder="39.84" />
                     </div>
                   </div>
                   <div>
@@ -320,8 +323,8 @@ const AddInvestment = () => {
                   </div>
                   <div>
                     <label className={labelCls}>Buy Price / Share *</label>
-                    <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">₹</span>
-                      <input type="number" step="any" value={stock.buy_price} onChange={e => setStock(p => ({ ...p, buy_price: e.target.value }))} className={inputCls + " pl-8"} placeholder="1500.00" required />
+                    <div className="relative"><span className="absolute left-4 top-3 text-slate-400 text-sm">{currencyStyle === 'symbol' ? '₹' : 'Rs.'}</span>
+                      <input type="number" step="any" value={stock.buy_price} onChange={e => setStock(p => ({ ...p, buy_price: e.target.value }))} className={inputCls + (currencyStyle === 'symbol' ? " pl-8" : " pl-12")} placeholder="1500.00" required />
                     </div>
                   </div>
                   <div>
@@ -403,8 +406,8 @@ const AddInvestment = () => {
                   {fd.maturity_amount && (
                     <div className="sm:col-span-2 rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
                       <p className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-1">Estimated Maturity Amount</p>
-                      <p className="text-2xl font-bold text-white font-mono">{currencyFormatter.format(parseFloat(fd.maturity_amount))}</p>
-                      <p className="text-xs text-slate-400 mt-1">Gain: +{currencyFormatter.format(parseFloat(fd.maturity_amount) - parseFloat(fd.principal))}</p>
+                      <p className="text-2xl font-bold text-white font-mono">{formatCurrency(parseFloat(fd.maturity_amount), currencyStyle)}</p>
+                      <p className="text-xs text-slate-400 mt-1">Gain: +{formatCurrency(parseFloat(fd.maturity_amount) - parseFloat(fd.principal), currencyStyle)}</p>
                     </div>
                   )}
                 </>)}
@@ -591,7 +594,7 @@ const AddInvestment = () => {
                       <td className="px-6 py-4 text-sm font-medium text-white">{inv.name}</td>
                       <td className="px-6 py-4"><span className="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-white/5">{inv.type}</span></td>
                       <td className="px-6 py-4"><span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${inv.action === "buy" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}`}>{inv.action === "buy" ? "↑ Buy" : "↓ Sell"}</span></td>
-                      <td className={`px-6 py-4 text-sm font-bold text-right font-mono ${inv.action === "buy" ? "text-amber-400" : "text-emerald-400"}`}>{currencyFormatter.format(inv.amount)}</td>
+                      <td className={`px-6 py-4 text-sm font-bold text-right font-mono ${inv.action === "buy" ? "text-amber-400" : "text-emerald-400"}`}>{formatCurrency(inv.amount, currencyStyle)}</td>
                     </tr>
                   ))}
                 </tbody>

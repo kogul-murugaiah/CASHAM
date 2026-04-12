@@ -45,6 +45,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     }
 
+    else if (method === 'PATCH') {
+        try {
+            const { id, name } = req.body;
+            if (!id || !name) return res.status(400).json({ error: 'ID and Name are required' });
+
+            const { data, error } = await supabaseAdmin
+                .from('income_sources')
+                .update({ name })
+                .eq('id', id)
+                .eq('user_id', user.id)
+                .select();
+
+            if (error) throw error;
+            return res.status(200).json(data[0]);
+        } catch (error: any) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
+
     else if (method === 'DELETE') {
         try {
             const { id } = req.query;

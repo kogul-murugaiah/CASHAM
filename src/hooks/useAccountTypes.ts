@@ -69,6 +69,29 @@ export const useAccountTypes = () => {
     }
   };
 
+  // Rename an account type (Propagates globally)
+  const renameAccountType = async (oldName: string, newName: string) => {
+    if (!newName.trim()) throw new Error("New name cannot be empty");
+    if (oldName === newName) return;
+
+    try {
+      await api.patch('/api/accounts', { oldName, newName: newName.trim() });
+      setAccountTypes(prev => prev.map(name => name === oldName ? newName.trim() : name));
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to rename account");
+    }
+  };
+
+  // Delete an account type
+  const deleteAccountType = async (name: string) => {
+    try {
+      await api.delete(`/api/accounts?name=${encodeURIComponent(name)}`);
+      setAccountTypes(prev => prev.filter(t => t !== name));
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to delete account");
+    }
+  };
+
   // Refresh account types
   const refresh = async () => {
     await fetchAccountTypes();
@@ -91,6 +114,8 @@ export const useAccountTypes = () => {
     error,
     refresh,
     addAccountType,
+    renameAccountType,
+    deleteAccountType,
     resetToDefaults,
   };
 };
