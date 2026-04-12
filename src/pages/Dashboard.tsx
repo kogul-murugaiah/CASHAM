@@ -37,7 +37,6 @@ const Dashboard = () => {
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
-  const [totalInvested, setTotalInvested] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -58,16 +57,6 @@ const Dashboard = () => {
         setIncome(data.income || []);
         setExpenses(data.expenses || []);
         setTransfers(data.transfers || []);
-
-        try {
-          const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
-          const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
-          const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
-          const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-          const invData = await api.get(`/api/investments?startDate=${startDate}&endDate=${endDate}`);
-          const bought = (invData || []).filter((i: any) => i.action === 'buy').reduce((s: number, i: any) => s + i.amount, 0);
-          setTotalInvested(bought);
-        } catch { setTotalInvested(0); }
       } catch (err: any) {
         setError(err.message || "Failed to fetch data");
       } finally {
@@ -173,17 +162,17 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="flex-1 max-w-xl self-end pb-4">
-                  <div className="flex justify-between items-end mb-2 font-mono">
+                  <div className="flex justify-between items-end mb-3 font-mono">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Outbound</span>
-                      <span className="text-sm font-bold text-red-400">{currencyFormatter.format(monthlyExpenses)}</span>
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Expense</span>
+                      <span className="text-xl font-bold text-red-400">{currencyFormatter.format(monthlyExpenses)}</span>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Income</span>
-                      <span className="text-sm font-bold text-emerald-400">{currencyFormatter.format(monthlyIncome)}</span>
+                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Income</span>
+                      <span className="text-xl font-bold text-emerald-400">{currencyFormatter.format(monthlyIncome)}</span>
                     </div>
                   </div>
-                  <div className="h-3 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm p-[2px]">
+                  <div className="h-5 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm p-[2px]">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(16,185,129,0.3)] ${monthlyExpenses > monthlyIncome ? 'bg-red-500' : 'bg-emerald-500'}`}
                       style={{ width: `${Math.min((monthlyExpenses / (monthlyIncome || 1)) * 100, 100)}%` }}
@@ -196,15 +185,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 pt-8 border-t border-white/5">
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Income</p>
-                  <p className="text-xl font-bold text-emerald-400 font-mono mt-1">{currencyFormatter.format(monthlyIncome)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Expense</p>
-                  <p className="text-xl font-bold text-red-400 font-mono mt-1">{currencyFormatter.format(monthlyExpenses)}</p>
-                </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8 border-t border-white/5">
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
                   <p className="text-xl font-bold text-orange-400 font-mono mt-1">{currencyFormatter.format(avgDailySpend)}</p>
@@ -229,10 +210,6 @@ const Dashboard = () => {
                         return d >= monday;
                     }).reduce((s, e) => s + e.amount, 0))}
                   </p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Allocated Invest.</p>
-                  <p className="text-xl font-bold text-blue-400 font-mono mt-1">{currencyFormatter.format(totalInvested)}</p>
                 </div>
               </div>
             </div>
