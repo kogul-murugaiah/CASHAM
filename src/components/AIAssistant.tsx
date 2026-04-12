@@ -23,69 +23,102 @@ const AIAssistant: React.FC = () => {
 
   const fetchContextData = async () => {
     try {
-      // 1. Get Dashboard Summary
       const d = new Date();
-      const todayISO = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-      const dash = await api.get(`/api/dashboard?year=${d.getFullYear()}&month=${d.getMonth() + 1}`);
-      const invs = await api.get("/api/investments?summary=true");
-      const user = await api.get("/api/auth/user");
+      const todayISO     = d.toISOString().slice(0, 10);
+      const yesterdayISO = new Date(d.getTime() - 86400000).toISOString().slice(0, 10);
 
-      // 2. Fetch all expenses
-      const exps = await api.get("/api/expenses");
-      const expList = exps || [];
+      // ── Parallel fetches for speed ────────────────────────────────────────
+      const [dash, invs, user, exps, incs, allInvs] = await Promise.all([
+        api.get(`/api/dashboard?year=${d.getFullYear()}&month=${d.getMonth() + 1}`),
+        api.get("/api/investments?summary=true"),
+        api.get("/api/auth/user"),
+        api.get("/api/expenses"),
+        api.get("/api/incomes"),
+        api.get("/api/investments"),
+      ]);
 
-      // Today's expenses
-      const todayExpenses = expList.filter((e: { date: string }) => e.date?.slice(0, 10) === todayISO);
+      const expList: { date: string; category: string; description?: string; amount: number; account_type?: string }[] = exps || [];
+      const incList: { date: string; source?: string; description?: string; amount: number; account_type?: string }[] = incs || [];
 
-      // Top categories (all-time or current month)
+      // ── Today & Yesterday ────────────────────────────────────────────────
+      const todayExpenses     = expList.filter(e => e.date?.slice(0, 10) === todayISO);
+      const todayIncome       = incList.filter(i => i.date?.slice(0, 10) === todayISO);
+      const yesterdayExpenses = expList.filter(e => e.date?.slice(0, 10) === yesterdayISO);
+      const yesterdayIncome   = incList.filter(i => i.date?.slice(0, 10) === yesterdayISO);
+
+      // ── Last 7 days daily totals ─────────────────────────────────────────
+      const last7DaysTotals = Array.from({ length: 7 }, (_, i) => {
+        const dt  = new Date(d.getTime() - i * 86400000);
+        const iso = dt.toISOString().slice(0, 10);
+        return {
+          date:     iso,
+          totalExp: expList.filter(e => e.date?.slice(0, 10) === iso).reduce((s, e) => s + e.amount, 0),
+          totalInc: incList.filter(i => i.date?.slice(0, 10) === iso).reduce((s, i) => s + i.amount, 0),
+        };
+      }).reverse(); // oldest → newest
+
+      // ── Last 6 months monthly breakdown ─────────────────────────────────
+      const last6MonthsBreakdown = Array.from({ length: 6 }, (_, i) => {
+        const dt      = new Date(d.getFullYear(), d.getMonth() - i, 1);
+        const monthKey = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+        const mExps   = expList.filter(e => e.date?.slice(0, 7) === monthKey);
+        const mIncs   = incList.filter(i => i.date?.slice(0, 7) === monthKey);
+        const catMap: Record<string, number> = {};
+        mExps.forEach(e => { catMap[e.category] = (catMap[e.category] || 0) + e.amount; });
+        const topCats = Object.entries(catMap)
+          .map(([name, value]) => ({ name, value }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 3);
+        return {
+          month:         monthKey,
+          totalExp:      mExps.reduce((s, e) => s + e.amount, 0),
+          totalInc:      mIncs.reduce((s, i) => s + i.amount, 0),
+          topCategories: topCats,
+        };
+      }).reverse(); // oldest → newest
+
+      // ── All-time top categories ────────────────────────────────────────
       const categoryMap: Record<string, number> = {};
-      expList.forEach((e: { category: string; amount: number }) => {
-        categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount;
-      });
+      expList.forEach(e => { categoryMap[e.category] = (categoryMap[e.category] || 0) + e.amount; });
       const topCategories = Object.entries(categoryMap)
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
 
-      // 10 most recent expenses (sorted newest first)
+      // ── 10 most recent expenses ────────────────────────────────────────
       const recentExpenses = [...expList]
-        .sort((a: { date: string }, b: { date: string }) => b.date.localeCompare(a.date))
+        .sort((a, b) => b.date.localeCompare(a.date))
         .slice(0, 10);
 
-      // 3. Fetch all incomes
-      const incs = await api.get("/api/incomes");
-      const incList = incs || [];
-
-      // Today's income
-      const todayIncome = incList.filter((i: { date: string }) => i.date?.slice(0, 10) === todayISO);
-
-      // 4. Process Bank Balances
-      const allInvs = await api.get("/api/investments");
+      // ── Cash balance per account type ──────────────────────────────────
       const balances = accountTypes.map(type => {
-        const totalInc = incList.filter((i: { account_type: string }) => i.account_type === type).reduce((s: number, i: { amount: number }) => s + i.amount, 0);
-        const totalExp = expList.filter((e: { account_type: string }) => e.account_type === type).reduce((s: number, e: { amount: number }) => s + e.amount, 0);
-        const totalInv = (allInvs || []).filter((inv: { account_type: string; action: string }) => inv.account_type === type && inv.action === 'buy').reduce((s: number, i: { amount: number }) => s + i.amount, 0);
-        const totalRed = (allInvs || []).filter((inv: { account_type: string; action: string }) => inv.account_type === type && inv.action === 'sell').reduce((s: number, i: { amount: number }) => s + i.amount, 0);
+        const totalInc = incList.filter(i => i.account_type === type).reduce((s, i) => s + i.amount, 0);
+        const totalExp = expList.filter(e => e.account_type === type).reduce((s, e) => s + e.amount, 0);
+        const totalInv = (allInvs || []).filter((inv: { account_type: string; action: string }) => inv.account_type === type && inv.action === "buy").reduce((s: number, i: { amount: number }) => s + i.amount, 0);
+        const totalRed = (allInvs || []).filter((inv: { account_type: string; action: string }) => inv.account_type === type && inv.action === "sell").reduce((s: number, i: { amount: number }) => s + i.amount, 0);
         return totalInc - totalExp - totalInv + totalRed;
       });
       const cashBalance = balances.reduce((a, b) => a + b, 0);
 
-      // 5. Build the enriched context
-      const context = buildFinancialContext({
+      // ── Build context ──────────────────────────────────────────────────
+      return buildFinancialContext({
         userEmail: user?.user?.email,
-        monthlyIncome: (dash.income || []).reduce((s: number, i: { amount: number }) => s + i.amount, 0),
-        monthlyExpenses: (dash.expenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0),
-        monthlyBalance: ((dash.income || []).reduce((s: number, i: { amount: number }) => s + i.amount, 0)) - ((dash.expenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0)),
-        netWorth: (invs?.total_current_value || 0) + cashBalance,
-        portfolioValue: invs?.total_current_value || 0,
+        monthlyIncome:    (dash.income   || []).reduce((s: number, i: { amount: number }) => s + i.amount, 0),
+        monthlyExpenses:  (dash.expenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0),
+        monthlyBalance:   (dash.income   || []).reduce((s: number, i: { amount: number }) => s + i.amount, 0)
+                        - (dash.expenses || []).reduce((s: number, e: { amount: number }) => s + e.amount, 0),
+        netWorth:         (invs?.total_current_value || 0) + cashBalance,
+        portfolioValue:   invs?.total_current_value || 0,
         cashBalance,
         topCategories,
         investmentBreakdown: invs?.by_type || [],
         todayExpenses,
         todayIncome,
+        yesterdayExpenses,
+        yesterdayIncome,
+        last7DaysTotals,
+        last6MonthsBreakdown,
         recentExpenses,
       });
-
-      return context;
     } catch (e) {
       console.error("AI Context Retrieval Failed:", e);
       return "You are the CASHAM Advisor. Help the user optimize their financial protocols.";
