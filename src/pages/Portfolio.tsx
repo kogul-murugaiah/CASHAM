@@ -4,6 +4,8 @@ import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
 import type { CashFlow } from "../lib/xirr";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useUserPreferences } from "../hooks/useUserPreferences";
+import { formatCurrency } from "../lib/formatters";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -36,7 +38,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const COLORS = ["#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b", "#3b82f6", "#f97316"];
-const currencyFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+
 const pctFmt = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -91,6 +93,7 @@ const PriceModal = ({ inv, onClose, onSave }: { inv: any; onClose: () => void; o
 };
 
 const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: any[]; onClose: () => void }) => {
+  const { currencyStyle, hideBalance } = useUserPreferences();
   const latestRow = history[0]; 
   const totalInvested = history.reduce((sum, h) => sum + (h.action === 'buy' ? h.amount : -h.amount), 0);
   const currentVal = latestRow.current_value ?? latestRow.amount;
@@ -127,7 +130,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
             {canAverage ? (
               <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Avg. Cost</p>
-                <p className="text-lg font-mono font-bold text-white">{currencyFormatter.format(avgCost)}</p>
+                <p className={`text-lg font-mono font-bold text-white ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgCost, currencyStyle)}</p>
               </div>
             ) : (
               <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5 bg-slate-800/10 opacity-50">
@@ -137,7 +140,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
             )}
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">{isCategoryMode ? 'Total Deployed' : 'Net Invested'}</p>
-                <p className="text-lg font-mono font-bold text-amber-400">{currencyFormatter.format(totalInvested)}</p>
+                <p className={`text-lg font-mono font-bold text-amber-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(totalInvested, currencyStyle)}</p>
             </div>
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">XIRR</p>
@@ -145,7 +148,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
             </div>
             <div className="p-4 rounded-3xl bg-slate-800/40 border border-white/5">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Abs. P&L</p>
-                <p className={`text-lg font-mono font-bold ${absPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{currencyFormatter.format(absPnl)}</p>
+                <p className={`text-lg font-mono font-bold ${absPnl >= 0 ? 'text-emerald-400' : 'text-red-400'} ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(absPnl, currencyStyle)}</p>
             </div>
         </div>
 
@@ -174,7 +177,7 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
                           {h.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-white font-mono">{currencyFormatter.format(h.amount)}</td>
+                      <td className={`px-6 py-4 font-bold text-white font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(h.amount, currencyStyle)}</td>
                       <td className="px-6 py-4 text-slate-500">
                         {detail.units && `${detail.units} Units `}
                         {detail.quantity && `${detail.quantity} Qt / Shares `}
@@ -205,6 +208,7 @@ const Portfolio = () => {
   const [priceModal, setPriceModal] = useState<any>(null);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const { accountTypes } = useAccountTypes();
+  const { currencyStyle, hideBalance } = useUserPreferences();
   const [netWorthCash, setNetWorthCash] = useState(0);
 
   const fetchBankBalances = async () => {
@@ -398,7 +402,7 @@ const Portfolio = () => {
                 <div className="flex justify-between items-end">
                     <div>
                         <p className="text-xs text-slate-500 uppercase font-bold mb-1">Liquid</p>
-                        <p className="text-xl font-mono font-bold text-emerald-400">{currencyFormatter.format(liquidValue)}</p>
+                        <p className={`text-xl font-mono font-bold text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(liquidValue, currencyStyle)}</p>
                     </div>
                     <p className="text-sm font-black text-slate-400">{((liquidValue/totalValue)*100).toFixed(1)}%</p>
                 </div>
@@ -409,7 +413,7 @@ const Portfolio = () => {
                 <div className="flex justify-between items-end">
                     <div>
                         <p className="text-xs text-slate-500 uppercase font-bold mb-1">Illiquid (FD/RE)</p>
-                        <p className="text-xl font-mono font-bold text-red-400">{currencyFormatter.format(illiquidValue)}</p>
+                        <p className={`text-xl font-mono font-bold text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(illiquidValue, currencyStyle)}</p>
                     </div>
                     <p className="text-sm font-black text-slate-400">{((illiquidValue/totalValue)*100).toFixed(1)}%</p>
                 </div>
@@ -445,7 +449,7 @@ const Portfolio = () => {
                 </div>
                 <div className="text-right">
                     <p className="text-sm font-black text-red-400 font-mono">{e.pct.toFixed(1)}%</p>
-                    <p className="text-[10px] text-slate-500">{currencyFormatter.format(e.value)}</p>
+                    <p className={`text-[10px] text-slate-500 ${hideBalance ? 'blur-[1px] select-none' : ''}`}>{formatCurrency(e.value, currencyStyle)}</p>
                 </div>
               </div>
             )) : <div className="col-span-2 py-10 flex flex-col items-center gap-3">
@@ -471,7 +475,7 @@ const Portfolio = () => {
     return (
       <div className="flex items-start justify-center gap-2" onClick={(e) => e.stopPropagation()}>
         <div className="cursor-default">
-          <p className="text-sm font-bold text-white font-mono">{currencyFormatter.format(val)}</p>
+          <p className={`text-sm font-bold text-white font-mono ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(val, currencyStyle)}</p>
           <p className={`text-[10px] font-mono ${pnlColor(pnl)}`}>{pctFmt(invested > 0 ? (pnl / invested) * 100 : 0)}</p>
           {inv.current_value !== null && <p className="text-[9px] text-slate-600 mt-0.5">{staleness}</p>}
         </div>
@@ -508,35 +512,35 @@ const Portfolio = () => {
   const MFTable = () => (
     <div className="space-y-4">
         <div className="flex justify-end px-2"><HistoryBtn type="Mutual Fund" /></div>
-        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Fund</th><th className="px-6 py-4">Units</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">SIP</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const mf = inv.investment_mf?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{mf?.units || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-blue-400">{mf?.sip_day ? `Day ${mf.sip_day}` : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Fund</th><th className="px-6 py-4">Units</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">SIP</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const mf = inv.investment_mf?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{mf?.units || "—"}</td><td className={`px-6 py-4 text-xs font-bold text-amber-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(inv.amount, currencyStyle)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-blue-400">{mf?.sip_day ? `Day ${mf.sip_day}` : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
     </div>
   );
 
   const StockTable = () => (
     <div className="space-y-4">
         <div className="flex justify-end px-2"><HistoryBtn type="Stock" /></div>
-        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Stock</th><th className="px-6 py-4">Qty</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Sector</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const s = inv.investment_stock?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{s?.ticker}</span></td><td className="px-6 py-4 text-xs font-mono text-slate-300">{s?.quantity || "—"}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-slate-500">{s?.sector || "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Stock</th><th className="px-6 py-4">Qty</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Sector</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const s = inv.investment_stock?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{s?.ticker}</span></td><td className="px-6 py-4 text-xs font-mono text-slate-300">{s?.quantity || "—"}</td><td className={`px-6 py-4 text-xs font-bold text-amber-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(inv.amount, currencyStyle)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-slate-500">{s?.sector || "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
     </div>
   );
 
   const GoldTable = () => (
     <div className="space-y-4">
         <div className="flex justify-end px-2"><HistoryBtn type="Gold" /></div>
-        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Gold</th><th className="px-6 py-4">Grams</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Type</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const g = inv.investment_gold?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{g?.grams}g</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-yellow-500 font-bold uppercase">{g?.gold_form}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Gold</th><th className="px-6 py-4">Grams</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Status</th><th className="px-6 py-4">Type</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const g = inv.investment_gold?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{g?.grams}g</td><td className={`px-6 py-4 text-xs font-bold text-amber-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(inv.amount, currencyStyle)}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-4 text-[10px] text-yellow-500 font-bold uppercase">{g?.gold_form}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
     </div>
   );
 
   const FDTable = () => (
     <div className="space-y-4">
         <div className="flex justify-end px-2"><HistoryBtn type="FD" /></div>
-        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">FD</th><th className="px-6 py-4">Principal</th><th className="px-6 py-4">Maturity Date</th><th className="px-6 py-4">Days Left</th><th className="px-6 py-4">Maturity Val</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const fd = inv.investment_fd?.[0]; const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{fd?.bank_name || inv.name}</td><td className="px-6 py-4 text-xs font-mono text-slate-300">{fd?.principal ? currencyFormatter.format(fd.principal) : "—"}</td><td className="px-6 py-4 text-xs text-slate-400">{fd?.maturity_date || "—"}</td><td className="px-6 py-4 text-xs font-bold text-blue-400">{dl !== null ? `${dl}d` : "—"}</td><td className="px-6 py-4 text-xs font-bold text-emerald-400 font-mono">{fd?.maturity_amount ? currencyFormatter.format(fd.maturity_amount) : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">FD</th><th className="px-6 py-4">Principal</th><th className="px-6 py-4">Maturity Date</th><th className="px-6 py-4">Days Left</th><th className="px-6 py-4">Maturity Val</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const fd = inv.investment_fd?.[0]; const dl = fd?.maturity_date ? daysLeft(fd.maturity_date) : null; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{fd?.bank_name || inv.name}</td><td className={`px-6 py-4 text-xs font-mono text-slate-300 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{fd?.principal ? formatCurrency(fd.principal, currencyStyle) : "—"}</td><td className="px-6 py-4 text-xs text-slate-400">{fd?.maturity_date || "—"}</td><td className="px-6 py-4 text-xs font-bold text-blue-400">{dl !== null ? `${dl}d` : "—"}</td><td className={`px-6 py-4 text-xs font-bold text-emerald-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{fd?.maturity_amount ? formatCurrency(fd.maturity_amount, currencyStyle) : "—"}</td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
     </div>
   );
 
   const RETable = () => (
     <div className="space-y-4">
         <div className="flex justify-end px-2"><HistoryBtn type="Real Estate" /></div>
-        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Property</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Rent</th><th className="px-6 py-4">EMI</th><th className="px-6 py-4">Current Value</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const re = inv.investment_real_estate?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td><td className="px-6 py-4 text-xs text-emerald-400 font-mono">{re?.monthly_rental ? currencyFormatter.format(re.monthly_rental) : "—"}</td><td className="px-6 py-4 text-xs text-red-400 font-mono">{re?.loan_emi ? currencyFormatter.format(re.loan_emi) : "—"}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full text-center"><thead><tr className="border-b border-white/5 bg-slate-700/40 text-[10px] font-bold uppercase tracking-widest text-slate-500"><th className="px-6 py-4 text-left">Property</th><th className="px-6 py-4">Invested</th><th className="px-6 py-4">Rent</th><th className="px-6 py-4">EMI</th><th className="px-6 py-4">Current Value</th><th className="px-6 py-4"></th></tr></thead><tbody className="divide-y divide-white/5">{records.map(inv => { const re = inv.investment_real_estate?.[0]; return (<tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors"><td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td><td className={`px-6 py-4 text-xs font-bold text-amber-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(inv.amount, currencyStyle)}</td><td className={`px-6 py-4 text-xs text-emerald-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{re?.monthly_rental ? formatCurrency(re.monthly_rental, currencyStyle) : "—"}</td><td className={`px-6 py-4 text-xs text-red-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{re?.loan_emi ? formatCurrency(re.loan_emi, currencyStyle) : "—"}</td><td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td><td className="px-6 py-3"><DeleteBtn id={inv.id} /></td></tr>); })}</tbody></table></div>
     </div>
   );
 
@@ -562,7 +566,7 @@ const Portfolio = () => {
                   <tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name} <span className="text-[10px] text-slate-500">{c?.token_symbol}</span></td>
                     <td className="px-6 py-4 text-xs font-mono text-slate-300">{c?.quantity}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                    <td className={`px-6 py-4 text-xs font-bold text-amber-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(inv.amount, currencyStyle)}</td>
                     <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td>
                     <td className="px-6 py-4 text-[10px] text-slate-500">{c?.exchange || "—"}</td>
                     <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
@@ -597,7 +601,7 @@ const Portfolio = () => {
                   <tr key={inv.id} onClick={() => openAssetHistory(inv.name, inv.type)} className="group cursor-pointer hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4 text-left font-medium text-white text-sm">{inv.name}</td>
                     <td className="px-6 py-4 text-[10px] text-slate-300 uppercase font-bold">{pf?.pf_type || "PF"}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-amber-400 font-mono">{currencyFormatter.format(inv.amount)}</td>
+                    <td className={`px-6 py-4 text-xs font-bold text-amber-400 font-mono ${hideBalance ? 'blur-[2px] select-none' : ''}`}>{formatCurrency(inv.amount, currencyStyle)}</td>
                     <td className="px-6 py-4"><PriceCell inv={inv} currentVal={inv.current_value} invested={inv.amount} name={inv.name} /></td>
                     <td className="px-6 py-4 text-xs font-bold text-blue-400">{pf?.interest_rate ? `${pf.interest_rate}%` : "—"}</td>
                     <td className="px-6 py-3"><DeleteBtn id={inv.id} /></td>
@@ -648,22 +652,22 @@ const Portfolio = () => {
                     <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Global Net Worth</p>
                     <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter">Live Assets</span>
                 </div>
-                <div className="text-6xl md:text-8xl font-black font-heading text-white tracking-tighter mb-10 drop-shadow-2xl">
-                    {currencyFormatter.format((summary?.total_current_value || 0) + netWorthCash)}
+                <div className={`text-6xl md:text-8xl font-black font-heading text-white tracking-tighter mb-10 drop-shadow-2xl transition-all ${hideBalance ? 'blur-md select-none' : ''}`}>
+                    {formatCurrency((summary?.total_current_value || 0) + netWorthCash, currencyStyle)}
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-8 border-t border-white/5">
                     <div>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Value</p>
-                        <p className="text-xl font-bold text-amber-400 font-mono mt-1">{currencyFormatter.format(summary?.total_current_value || 0)}</p>
+                        <p className={`text-xl font-bold text-amber-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(summary?.total_current_value || 0, currencyStyle)}</p>
                     </div>
                     <div>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cash & Bank</p>
-                        <p className="text-xl font-bold text-emerald-400 font-mono mt-1">{currencyFormatter.format(netWorthCash)}</p>
+                        <p className={`text-xl font-bold text-emerald-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(netWorthCash, currencyStyle)}</p>
                     </div>
                     <div>
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net Change (Abs)</p>
                         <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {currencyFormatter.format(summary?.total_pnl || 0)}
+                            {formatCurrency(summary?.total_pnl || 0, currencyStyle)}
                         </p>
                     </div>
                     <div>

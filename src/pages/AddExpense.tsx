@@ -2,13 +2,11 @@ import { useState, useEffect, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useUserPreferences } from "../hooks/useUserPreferences";
+import { formatCurrency } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+
 
 const initialForm = {
   amount: "",
@@ -22,6 +20,7 @@ const initialForm = {
 const AddExpense = () => {
   const { accountTypes } = useAccountTypes();
   const { categories, loading: categoriesLoading, addCategory } = useExpenseCategories();
+  const { currencyStyle } = useUserPreferences();
   const [form, setForm] = useState(() => {
     const today = new Date().toISOString().slice(0, 10);
     return {
@@ -128,7 +127,7 @@ const AddExpense = () => {
           <div className="mx-auto w-fit bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl backdrop-blur-sm shadow-xl shadow-red-500/5 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Today's Spend</p>
             <p className="text-3xl font-bold text-red-400 font-heading">
-              {todayExpenses > 0 ? "-" : ""}{currencyFormatter.format(todayExpenses)}
+              {formatCurrency(todayExpenses, currencyStyle)}
             </p>
           </div>
         </header>
@@ -175,7 +174,7 @@ const AddExpense = () => {
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <span className="text-slate-400">₹</span>
+                  <span className="text-slate-400 font-bold text-xs">{currencyStyle === 'symbol' ? '₹' : 'Rs.'}</span>
                 </div>
                 <input
                   type="number"
@@ -183,7 +182,7 @@ const AddExpense = () => {
                   id="amount"
                   value={form.amount}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
+                  className={`block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur ${currencyStyle === 'symbol' ? 'pl-10' : 'pl-12'} pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none`}
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -315,7 +314,7 @@ const AddExpense = () => {
                           {expense.description || "-"}
                         </td>
                         <td className="px-6 py-4 text-sm font-bold text-right text-red-400 font-mono">
-                          -₹{expense.amount.toFixed(2)}
+                          {formatCurrency(expense.amount, currencyStyle)}
                         </td>
                       </tr>
                     ))}

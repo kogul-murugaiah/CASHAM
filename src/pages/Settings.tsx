@@ -3,7 +3,8 @@ import { FiUser, FiList, FiCreditCard, FiSliders, FiCheck, FiPlus, FiTrash2 } fr
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
-import { FiEdit2, FiAlertTriangle } from "react-icons/fi";
+import { useUserPreferences } from "../hooks/useUserPreferences";
+import { FiEdit2, FiAlertTriangle, FiDownload, FiGlobe, FiEye, FiEyeOff } from "react-icons/fi";
 
 const TABS = [
   { id: "profile", label: "Profile & Identity", icon: FiUser },
@@ -34,6 +35,9 @@ const Settings = () => {
   const [editValue, setEditValue] = useState("");
 
   const [deleteTarget, setDeleteTarget] = useState<{ id?: number; name: string; type: "category" | "account" } | null>(null);
+
+  const { hideBalance, currencyStyle, language, updatePreference } = useUserPreferences();
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -136,6 +140,47 @@ const Settings = () => {
       setEditingItem(null);
     } catch (err: any) {
       alert(err.message || "Failed to rename");
+    }
+  };
+
+  const handleExportCSV = async () => {
+    setExporting(true);
+    try {
+      const expenses = await api.get('/api/expenses');
+      if (!expenses || expenses.length === 0) {
+        alert("No expenses to export!");
+        return;
+      }
+
+      // Basic CSV Generation
+      const headers = ["Date", "Item", "Amount", "Category", "Account", "Description"];
+      const rows = expenses.map((ex: any) => [
+        ex.date,
+        ex.item,
+        ex.amount,
+        ex.categories?.name || "Uncategorized",
+        ex.account_type || "Unknown",
+        ex.description || ""
+      ]);
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row: any[]) => row.map(cell => `"${cell}"`).join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `CASHAM_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export data");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -383,14 +428,98 @@ const Settings = () => {
             )}
 
             {activeTab === "system" && (
-              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
+              <div className="animate-fade-in space-y-8 glass-card p-6 md:p-8 rounded-2xl max-w-2xl">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">System Preferences</h2>
-                  <p className="text-sm text-slate-400 mt-1">Control application behavior and data exports.</p>
+                  <p className="text-sm text-slate-400 mt-1">Basic adjustments for a personalized Indian experience.</p>
                 </div>
-                <div className="border border-dashed border-slate-700 rounded-xl p-8 text-center flex flex-col items-center justify-center">
-                    <FiSliders size={32} className="text-slate-600 mb-3" />
-                    <p className="text-slate-400 font-medium">Data Export & Theme Settings coming here.</p>
+
+                <div className="space-y-6">
+                  {/* Privacy Mode */}
+                  <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-xl ${hideBalance ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                        {hideBalance ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Privacy Mode</p>
+                        <p className="text-xs text-slate-500">Hide/Mask balances on your dashboard</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => updatePreference("hideBalance", !hideBalance)}
+                      className={`w-12 h-6 rounded-full transition-all relative ${hideBalance ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${hideBalance ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+
+                  {/* Currency Styling */}
+                  <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-slate-800 text-slate-400">
+                        <FiCreditCard size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Currency Display</p>
+                        <p className="text-xs text-slate-500">Choose between Symbol (₹) or Label (Rs.)</p>
+                      </div>
+                    </div>
+                    <div className="flex bg-slate-800 p-1 rounded-lg">
+                      <button 
+                         onClick={() => updatePreference("currencyStyle", "symbol")}
+                         className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${currencyStyle === 'symbol' ? 'bg-slate-700 text-emerald-400 shadow-sm' : 'text-slate-500'}`}
+                      >
+                        ₹
+                      </button>
+                      <button 
+                         onClick={() => updatePreference("currencyStyle", "text")}
+                         className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${currencyStyle === 'text' ? 'bg-slate-700 text-emerald-400 shadow-sm' : 'text-slate-500'}`}
+                      >
+                        Rs.
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Language */}
+                  <div className="flex items-center justify-between p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-xl bg-slate-800 text-slate-400">
+                        <FiGlobe size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">App Language</p>
+                        <p className="text-xs text-slate-500">Switch between English and Hindi</p>
+                      </div>
+                    </div>
+                    <select 
+                      value={language}
+                      onChange={(e) => updatePreference("language", e.target.value as any)}
+                      className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg border-none focus:ring-0 cursor-pointer"
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">हिन्दी (Hindi)</option>
+                    </select>
+                  </div>
+
+                  {/* Data Export */}
+                  <div className="pt-4 border-t border-slate-800/50">
+                    <button 
+                        onClick={handleExportCSV}
+                        disabled={exporting}
+                        className="w-full flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-2xl font-bold transition-all group"
+                    >
+                      {exporting ? (
+                          <span className="animate-pulse">Preparing Report...</span>
+                      ) : (
+                          <>
+                            <FiDownload className="text-emerald-400 group-hover:translate-y-0.5 transition-transform" /> 
+                            Download Excel Report
+                          </>
+                      )}
+                    </button>
+                    <p className="text-[10px] text-slate-600 mt-2 text-center text-pretty">Your full transaction history will be downloaded as a .csv file compatible with Microsoft Excel.</p>
+                  </div>
                 </div>
               </div>
             )}
