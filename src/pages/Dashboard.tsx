@@ -43,6 +43,7 @@ const Dashboard = () => {
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [dailyLimitAccount, setDailyLimitAccount] = useState<string>("All");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +74,14 @@ const Dashboard = () => {
   const todayISO = new Date().toISOString().slice(0, 10);
   const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
 
+  const accountBalances = accountTypes.map((accountType) => {
+    const accIncome = income.filter((inc) => inc.account_type === accountType).reduce((sum, inc) => sum + inc.amount, 0);
+    const accExp = expenses.filter((exp) => exp.account_type === accountType).reduce((sum, exp) => sum + exp.amount, 0);
+    const accTransferIn = transfers.filter((t) => t.to_account === accountType).reduce((sum, t) => sum + t.amount, 0);
+    const accTransferOut = transfers.filter((t) => t.from_account === accountType).reduce((sum, t) => sum + t.amount, 0);
+    return { accountType, balance: accIncome - accExp + accTransferIn - accTransferOut, income: accIncome, expenses: accExp, transferIn: accTransferIn, transferOut: accTransferOut };
+  });
+
   // Daily Average Limits Logic
   const today = new Date();
   const isCurrentMonth = today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear;
@@ -81,17 +90,16 @@ const Dashboard = () => {
   const daysPassed = isCurrentMonth ? today.getDate() : totalDaysInMonth;
   const daysRemaining = isCurrentMonth ? Math.max(1, totalDaysInMonth - daysPassed) : 1;
   
-  const avgDailySpend = monthlyExpenses / (daysPassed || 1);
-  const remainingBalance = Math.max(0, monthlyIncome - monthlyExpenses);
-  const avgDailyLimitRemaining = remainingBalance / daysRemaining;
+  const targetExpenses = dailyLimitAccount === 'All' 
+    ? monthlyExpenses 
+    : expenses.filter(e => e.account_type === dailyLimitAccount).reduce((s, e) => s + e.amount, 0);
+    
+  const targetBalance = dailyLimitAccount === 'All'
+    ? Math.max(0, monthlyIncome - monthlyExpenses)
+    : Math.max(0, accountBalances.find(a => a.accountType === dailyLimitAccount)?.balance || 0);
 
-  const accountBalances = accountTypes.map((accountType) => {
-    const accIncome = income.filter((inc) => inc.account_type === accountType).reduce((sum, inc) => sum + inc.amount, 0);
-    const accExp = expenses.filter((exp) => exp.account_type === accountType).reduce((sum, exp) => sum + exp.amount, 0);
-    const accTransferIn = transfers.filter((t) => t.to_account === accountType).reduce((sum, t) => sum + t.amount, 0);
-    const accTransferOut = transfers.filter((t) => t.from_account === accountType).reduce((sum, t) => sum + t.amount, 0);
-    return { accountType, balance: accIncome - accExp + accTransferIn - accTransferOut, income: accIncome, expenses: accExp, transferIn: accTransferIn, transferOut: accTransferOut };
-  });
+  const avgDailySpend = targetExpenses / (daysPassed || 1);
+  const avgDailyLimitRemaining = targetBalance / daysRemaining;
 
   const accountDistributionData = accountBalances.filter(a => a.balance > 0).map(a => ({ name: a.accountType, value: a.balance }));
 
@@ -186,8 +194,18 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8 border-t border-white/5">
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
+                <div className="flex flex-col relative justify-end">
+                  <select 
+                    value={dailyLimitAccount} 
+                    onChange={(e) => setDailyLimitAccount(e.target.value)} 
+                    className="absolute -top-3 left-0 bg-transparent border-b border-emerald-500/30 pb-0.5 focus:outline-none text-[8px] font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 cursor-pointer transition-colors max-w-[120px]"
+                  >
+                        <option value="All" className="bg-slate-900 text-slate-300">Target: All</option>
+                        {accountTypes.map(acc => (
+                           <option key={acc} value={acc} className="bg-slate-900 text-slate-300">Target: {acc}</option>
+                        ))}
+                  </select>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
                   <p className="text-xl font-bold text-orange-400 font-mono mt-1">{currencyFormatter.format(avgDailySpend)}</p>
                 </div>
                 <div>
