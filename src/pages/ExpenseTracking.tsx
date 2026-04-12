@@ -559,7 +559,9 @@ const ExpenseTracking = () => {
                                                     <XAxis dataKey="period" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
                                                     <YAxis hide />
                                                     <Tooltip 
-                                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px' }}
+                                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', color: '#f8fafc' }}
+                                                        itemStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
+                                                        labelStyle={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase' as const }}
                                                         formatter={(val: any) => [currencyFormatter.format(val), 'Total']}
                                                     />
                                                     <Bar dataKey="total" fill="url(#barGradient)" radius={[6, 6, 0, 0]} animationDuration={1500}>
@@ -597,7 +599,7 @@ const ExpenseTracking = () => {
                                                             <Cell key={`cell-${index}`} fill={['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'][index % 5]} stroke="none" />
                                                         ))}
                                                     </Pie>
-                                                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                                                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         </div>

@@ -335,7 +335,7 @@ const Portfolio = () => {
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
                     {pieData.map((entry: any) => <Cell key={entry.name} fill={TYPE_COLORS[entry.name] || "#64748b"} stroke="none" />)}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none" }} formatter={(v: any) => currencyFormatter.format(v)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -424,7 +424,7 @@ const Portfolio = () => {
                   <Pie data={sectorData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={2} dataKey="value">
                     {sectorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />)}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none" }} formatter={(v: any) => currencyFormatter.format(v)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
