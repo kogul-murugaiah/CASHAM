@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiUser, FiList, FiCreditCard, FiSliders, FiCheck } from "react-icons/fi";
+import { api } from "../lib/api";
 
 const TABS = [
   { id: "profile", label: "Profile & Identity", icon: FiUser },
@@ -10,6 +11,42 @@ const TABS = [
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { user } = await api.get('/api/auth/user');
+        if (user) {
+          setEmail(user.email || "");
+          setDisplayName(user.display_name || "");
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setSuccessMsg("");
+    try {
+      await api.post('/api/profile', { displayName });
+      setSuccessMsg("Profile updated successfully!");
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="pb-24 pt-8 md:pb-8 animate-fade-in">
@@ -56,16 +93,28 @@ const Settings = () => {
                 <div className="space-y-4 max-w-md">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Display Name</label>
-                    <input type="text" placeholder="e.g. John Doe" className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors" />
+                    <input 
+                      type="text" 
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      disabled={loading}
+                      placeholder="e.g. John Doe" 
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors" 
+                    />
                     <p className="text-[10px] text-slate-500 mt-1">This will be used to greet you on the dashboard.</p>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
-                    <input type="email" disabled placeholder="user@example.com" className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 cursor-not-allowed" />
+                    <input type="email" value={email} disabled placeholder="user@example.com" className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-slate-500 cursor-not-allowed" />
                   </div>
-                  <button className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold transition-all text-sm">
-                    <FiCheck /> Save Changes
+                  <button 
+                    onClick={handleSaveProfile}
+                    disabled={saving || loading}
+                    className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:text-slate-500 text-white px-6 py-2.5 rounded-lg font-bold transition-all text-sm w-max min-w-[140px]"
+                  >
+                    {saving ? "Saving..." : <><FiCheck /> Save Changes</>}
                   </button>
+                  {successMsg && <p className="text-emerald-400 text-sm font-medium animate-fade-in">{successMsg}</p>}
                 </div>
               </div>
             )}

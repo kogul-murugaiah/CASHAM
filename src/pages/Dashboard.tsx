@@ -40,6 +40,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -53,6 +54,7 @@ const Dashboard = () => {
         const userData = await api.get('/api/auth/user');
         if (!userData?.user) throw new Error("User not authenticated");
         setUserEmail(userData.user.email ?? null);
+        setDisplayName(userData.user.display_name ?? null);
 
         const data = await api.get(`/api/dashboard?year=${currentYear}&month=${currentMonth}`);
         setIncome(data.income || []);
@@ -129,7 +131,7 @@ const Dashboard = () => {
           <div className="flex flex-col gap-1">
             <p className="text-slate-400 font-medium text-sm uppercase tracking-wider">Overview</p>
             <h1 className="text-4xl font-bold font-heading text-white">
-              {getGreeting()}, <span className="text-gradient">{userEmail ? userEmail.split('@')[0] : 'User'}</span>
+              {getGreeting()}, <span className="text-gradient">{displayName || (userEmail ? userEmail.split('@')[0] : 'User')}</span>
             </h1>
             <p className="text-slate-400 mt-1">
               Financial summary for <span className="text-white font-semibold">{MONTH_NAMES[currentMonth - 1]} {currentYear}</span>

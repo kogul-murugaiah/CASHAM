@@ -83,7 +83,11 @@ const Sidebar = () => {
         navigate("/");
     };
 
-    const getInitials = (email: string) => email?.charAt(0).toUpperCase() || "?";
+    const getInitials = (userValue: any) => {
+        if (!userValue) return "?";
+        if (userValue.display_name) return userValue.display_name.charAt(0).toUpperCase();
+        return userValue.email?.charAt(0).toUpperCase() || "?";
+    };
 
     const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => (
         <div className="flex flex-col h-full">
@@ -160,11 +164,11 @@ const Sidebar = () => {
                 {user && (
                     <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/3 ${isCollapsed ? "justify-center" : ""}`}>
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
-                            {getInitials(user.email)}
+                            {getInitials(user)}
                         </div>
                         {!isCollapsed && (
                             <div className="overflow-hidden">
-                                <p className="text-xs font-semibold text-slate-300 truncate">{user.email}</p>
+                                <p className="text-xs font-semibold text-white truncate font-heading tracking-wide">{user.display_name || user.email}</p>
                                 <p className="text-[10px] text-slate-500">Signed in</p>
                             </div>
                         )}
@@ -226,7 +230,7 @@ const Sidebar = () => {
                             onClick={() => setMobileOpen(true)}
                             className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-[10px] font-bold text-white shadow-lg border border-white/10"
                         >
-                            {getInitials(user.email)}
+                            {getInitials(user)}
                         </button>
                     ) : (
                         <div className="w-8 h-8" />
