@@ -68,6 +68,15 @@ export const useExpenseCategories = () => {
     }
   };
 
+  const deleteCategory = async (id: number) => {
+    try {
+      await api.delete(`/api/categories?id=${id}`);
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to delete category');
+    }
+  };
+
   // Reset to defaults (for logout)
   const resetToDefaults = () => {
     setCategories([]);
@@ -85,5 +94,6 @@ export const useExpenseCategories = () => {
     error,
     refetch: fetchCategories,
     addCategory,
+    deleteCategory,
   };
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { FiUser, FiList, FiCreditCard, FiSliders, FiCheck } from "react-icons/fi";
+import { FiUser, FiList, FiCreditCard, FiSliders, FiCheck, FiPlus, FiTrash2 } from "react-icons/fi";
 import { api } from "../lib/api";
+import { useExpenseCategories } from "../hooks/useExpenseCategories";
 
 const TABS = [
   { id: "profile", label: "Profile & Identity", icon: FiUser },
@@ -16,6 +17,11 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  
+  const { categories, addCategory, deleteCategory, loading: categoriesLoading } = useExpenseCategories();
+  const [newCatName, setNewCatName] = useState("");
+  const [addingCat, setAddingCat] = useState(false);
+  const [catError, setCatError] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -45,6 +51,29 @@ const Settings = () => {
       console.error(err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCatName.trim()) return;
+    setAddingCat(true);
+    setCatError("");
+    try {
+        await addCategory(newCatName);
+        setNewCatName("");
+    } catch (err: any) {
+        setCatError(err.message || "Failed to add category");
+    } finally {
+        setAddingCat(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    try {
+        await deleteCategory(id);
+    } catch (err: any) {
+        setCatError(err.message || "Failed to delete category");
     }
   };
 
@@ -120,14 +149,63 @@ const Settings = () => {
             )}
 
             {activeTab === "categories" && (
-              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl max-w-2xl">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">Custom Categories</h2>
-                  <p className="text-sm text-slate-400 mt-1">Add, edit, or remove your tracking categories.</p>
+                  <p className="text-sm text-slate-400 mt-1">Add, edit, or remove your tracking categories. Default categories cannot be removed.</p>
                 </div>
-                <div className="border border-dashed border-slate-700 rounded-xl p-8 text-center flex flex-col items-center justify-center">
-                    <FiList size={32} className="text-slate-600 mb-3" />
-                    <p className="text-slate-400 font-medium">Category Management coming here.</p>
+                
+                <div className="space-y-4">
+                  {/* Add New Category */}
+                  <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Create New Template</label>
+                      <div className="flex gap-2">
+                        <input 
+                            type="text" 
+                            value={newCatName}
+                            onChange={(e) => setNewCatName(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+                            placeholder="e.g. Subscriptions, Travel" 
+                            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors" 
+                        />
+                        <button 
+                            onClick={handleAddCategory}
+                            disabled={addingCat || !newCatName.trim()}
+                            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:text-slate-500 text-white px-5 rounded-xl font-bold transition-all flex items-center gap-2"
+                        >
+                            {addingCat ? "..." : <FiPlus />} Add
+                        </button>
+                      </div>
+                      {catError && <p className="text-rose-400 text-xs mt-2">{catError}</p>}
+                  </div>
+
+                  {/* List Categories */}
+                  <div className="mt-8">
+                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Categories</label>
+                     {categoriesLoading ? (
+                         <div className="text-slate-400 text-sm animate-pulse">Loading categories...</div>
+                     ) : (
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {categories.map((cat) => (
+                                <div key={cat.id} className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 flex items-center justify-between group hover:border-emerald-500/30 transition-colors">
+                                    <span className="text-slate-200 font-medium text-sm">{cat.name}</span>
+                                    <button 
+                                        onClick={() => handleDeleteCategory(cat.id)}
+                                        className="text-slate-600 hover:text-rose-400 transition-colors p-1.5 opacity-0 group-hover:opacity-100"
+                                        title="Delete Category"
+                                    >
+                                        <FiTrash2 size={16} />
+                                    </button>
+                                </div>
+                            ))}
+                            {categories.length === 0 && (
+                                <div className="col-span-2 text-center p-8 border border-dashed border-slate-700 rounded-xl text-slate-500">
+                                    No custom categories created yet.
+                                </div>
+                            )}
+                         </div>
+                     )}
+                  </div>
                 </div>
               </div>
             )}
