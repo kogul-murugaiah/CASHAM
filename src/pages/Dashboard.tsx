@@ -44,7 +44,11 @@ const Dashboard = () => {
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [dailyLimitAccount, setDailyLimitAccount] = useState<string>("All");
+  const [dailyLimitAccount, setDailyLimitAccount] = useState<string>(() => localStorage.getItem("dashboard_daily_limit_account") || "All");
+
+  useEffect(() => {
+    localStorage.setItem("dashboard_daily_limit_account", dailyLimitAccount);
+  }, [dailyLimitAccount]);
 
   useEffect(() => {
     const fetchData = async () => {
