@@ -77,6 +77,19 @@ export const useExpenseCategories = () => {
     }
   };
 
+  const updateCategory = async (id: number, name: string) => {
+    const trimmedName = name.trim();
+    if (!trimmedName) throw new Error('Name cannot be empty');
+    
+    try {
+      const data = await api.patch('/api/categories', { id, name: trimmedName });
+      setCategories(prev => prev.map(cat => cat.id === id ? data : cat));
+      return data;
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to update category');
+    }
+  };
+
   // Reset to defaults (for logout)
   const resetToDefaults = () => {
     setCategories([]);
@@ -95,5 +108,6 @@ export const useExpenseCategories = () => {
     refetch: fetchCategories,
     addCategory,
     deleteCategory,
+    updateCategory,
   };
 };
