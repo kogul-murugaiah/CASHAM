@@ -294,7 +294,7 @@ const Settings = () => {
                      ) : (
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {categories.map((cat) => (
-                                <div key={cat.id} className="bg-slate-800/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-emerald-500/40 hover:bg-slate-800/60 transition-all duration-300">
+                                <div key={cat.id} className="relative bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border border-emerald-200/50 dark:border-emerald-500/20 rounded-2xl p-5 flex items-center justify-between group hover:border-emerald-500/50 hover:bg-emerald-500/[0.05] dark:hover:bg-emerald-500/[0.1] transition-all duration-300">
                                     {editingItem?.type === "category" && editingItem.id === cat.id ? (
                                         <div className="flex-1 flex gap-2">
                                             <input 
@@ -303,26 +303,26 @@ const Settings = () => {
                                                 onChange={(e) => setEditValue(e.target.value)}
                                                 onBlur={saveRename}
                                                 onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                                                className="bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-1 text-sm text-white focus:outline-none w-full"
+                                                className="bg-white dark:bg-slate-950 border-2 border-emerald-500 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none w-full shadow-lg"
                                             />
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-white font-bold text-sm tracking-wide">{cat.name}</span>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
+                                            <span className="text-slate-800 dark:text-emerald-50 font-bold text-sm tracking-tight">{cat.name}</span>
+                                            <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-all">
                                                 <button 
                                                     onClick={() => startRename({ id: cat.id, name: cat.name, type: "category" })}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-white/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white transition-all shadow-sm"
                                                     title="Rename"
                                                 >
-                                                    <FiEdit2 size={12} />
+                                                    <FiEdit2 size={16} />
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                                                     title="Delete Category"
                                                 >
-                                                    <FiTrash2 size={12} />
+                                                    <FiTrash2 size={16} />
                                                 </button>
                                             </div>
                                         </>
@@ -380,7 +380,7 @@ const Settings = () => {
                      ) : (
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              {accountTypes.map((accName) => (
-                                <div key={accName} className="bg-slate-800/40 backdrop-blur-md border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-emerald-500/40 hover:bg-slate-800/60 transition-all duration-300">
+                                <div key={accName} className="relative bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border border-emerald-200/50 dark:border-emerald-500/20 rounded-2xl p-5 flex items-center justify-between group hover:border-emerald-500/50 hover:bg-emerald-500/[0.05] dark:hover:bg-emerald-500/[0.1] transition-all duration-300">
                                     {editingItem?.type === "account" && editingItem.name === accName ? (
                                         <div className="flex-1 flex gap-2">
                                             <input 
@@ -389,26 +389,26 @@ const Settings = () => {
                                                 onChange={(e) => setEditValue(e.target.value)}
                                                 onBlur={saveRename}
                                                 onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                                                className="bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-1 text-sm text-white focus:outline-none w-full"
+                                                className="bg-white dark:bg-slate-950 border-2 border-emerald-500 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none w-full shadow-lg"
                                             />
                                         </div>
                                     ) : (
                                         <>
-                                            <span className="text-white font-bold text-sm tracking-wide">{accName}</span>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
+                                            <span className="text-slate-800 dark:text-emerald-50 font-bold text-sm tracking-tight">{accName}</span>
+                                            <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-all">
                                                 <button 
                                                     onClick={() => startRename({ name: accName, type: "account" })}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-white/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white transition-all shadow-sm"
                                                     title="Rename Account"
                                                 >
-                                                    <FiEdit2 size={12} />
+                                                    <FiEdit2 size={16} />
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteAccount(accName)}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                                                     title="Delete Account"
                                                 >
-                                                    <FiTrash2 size={12} />
+                                                    <FiTrash2 size={16} />
                                                 </button>
                                             </div>
                                         </>
