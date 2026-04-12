@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiZap
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -44,6 +44,12 @@ const NAV_GROUPS = [
         label: "Configuration",
         items: [
             { to: "/settings", icon: FiSettings, label: "Settings" },
+            { 
+               to: "#ai", 
+               icon: FiZap, 
+               label: "Ask AI Assistant",
+               isAction: true 
+            },
         ],
     },
 ];
@@ -110,31 +116,48 @@ const Sidebar = () => {
                                 </p>
                             )}
                             <ul className="space-y-1">
-                                {group.items.map(({ to, icon: Icon, label }) => (
+                                {group.items.map(({ to, icon: Icon, label, isAction }) => (
                                     <li key={to}>
-                                        <NavLink
-                                            to={to}
-                                            className={({ isActive }) =>
-                                                `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${isActive
-                                                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
-                                                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent"
-                                                } ${isCollapsed ? "justify-center" : ""}`
-                                            }
-                                            title={isCollapsed ? label : undefined}
-                                        >
-                                            {({ isActive }) => (
-                                                <>
-                                                    <Icon
-                                                        size={18}
-                                                        strokeWidth={isActive ? 2.5 : 1.8}
-                                                        className="flex-shrink-0"
-                                                    />
-                                                    {!isCollapsed && (
-                                                        <span className="text-sm font-medium font-heading">{label}</span>
-                                                    )}
-                                                </>
-                                            )}
-                                        </NavLink>
+                                        {isAction ? (
+                                            <button
+                                                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
+                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent ${isCollapsed ? "justify-center" : ""}`}
+                                                title={isCollapsed ? label : undefined}
+                                            >
+                                                <Icon
+                                                    size={18}
+                                                    strokeWidth={1.8}
+                                                    className="flex-shrink-0"
+                                                />
+                                                {!isCollapsed && (
+                                                    <span className="text-sm font-medium font-heading">{label}</span>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <NavLink
+                                                to={to}
+                                                className={({ isActive }) =>
+                                                    `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${isActive
+                                                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                                                        : "text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent"
+                                                    } ${isCollapsed ? "justify-center" : ""}`
+                                                }
+                                                title={isCollapsed ? label : undefined}
+                                            >
+                                                {({ isActive }) => (
+                                                    <>
+                                                        <Icon
+                                                            size={18}
+                                                            strokeWidth={isActive ? 2.5 : 1.8}
+                                                            className="flex-shrink-0"
+                                                        />
+                                                        {!isCollapsed && (
+                                                            <span className="text-sm font-medium font-heading">{label}</span>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </NavLink>
+                                        )}
                                     </li>
                                 ))}
                             </ul>

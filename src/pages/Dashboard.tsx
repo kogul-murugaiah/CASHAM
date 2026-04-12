@@ -182,12 +182,12 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="flex-1 max-w-xl self-end pb-4">
-                  <div className="flex justify-between items-end mb-3 font-mono">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-3 font-mono gap-4 sm:gap-0">
                     <div className="flex flex-col">
                       <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Expense</span>
                       <span className={`text-xl font-bold text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyExpenses, currencyStyle)}</span>
                     </div>
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-start sm:items-end">
                       <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Monthly Income</span>
                       <span className={`text-xl font-bold text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyIncome, currencyStyle)}</span>
                     </div>

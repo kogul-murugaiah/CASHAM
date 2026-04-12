@@ -21,6 +21,12 @@ const AIAssistant: React.FC = () => {
     scrollToBottom();
   }, [messages, loading]);
 
+  useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener("open-ai-chat", handleOpenChat);
+    return () => window.removeEventListener("open-ai-chat", handleOpenChat);
+  }, []);
+
   const fetchContextData = async () => {
     try {
       const d = new Date();
@@ -168,7 +174,7 @@ const AIAssistant: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-6 right-6 z-50 hidden md:flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
         <div className="w-[90vw] sm:w-[400px] h-[600px] max-h-[80vh] mb-4 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] dark:shadow-2xl flex flex-col overflow-hidden animate-scale-up border border-slate-200/60 dark:border-emerald-500/20 bg-white dark:bg-slate-900/95 backdrop-blur-3xl rounded-3xl">
@@ -282,15 +288,11 @@ const AIAssistant: React.FC = () => {
          {isOpen ? (
            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
          ) : (
-           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="animate-pulse">
+           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3l1.9 5.8 1.9-5.8a2 2 0 0 1 1.3-1.3l5.8-1.9-5.8-1.9a2 2 0 0 1-1.3-1.3z" />
            </svg>
          )}
          
-         {/* Small Pulse Ring */}
-         {!isOpen && (
-            <div className="absolute inset-0 rounded-3xl border-2 border-emerald-400/50 animate-ping shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-         )}
       </button>
     </div>
   );
