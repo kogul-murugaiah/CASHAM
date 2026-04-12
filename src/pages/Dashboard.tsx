@@ -84,6 +84,18 @@ const Dashboard = () => {
   const todayISO = new Date().toISOString().slice(0, 10);
   const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
 
+  // Daily Average Limits Logic
+  const today = new Date();
+  const isCurrentMonth = today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear;
+  // Date(year, month, 0) gets the last day of the month because month is 1-indexed here, acting as next month's index
+  const totalDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const daysPassed = isCurrentMonth ? today.getDate() : totalDaysInMonth;
+  const daysRemaining = isCurrentMonth ? Math.max(1, totalDaysInMonth - daysPassed) : 1;
+  
+  const avgDailySpend = monthlyExpenses / (daysPassed || 1);
+  const remainingBalance = Math.max(0, monthlyIncome - monthlyExpenses);
+  const avgDailyLimitRemaining = remainingBalance / daysRemaining;
+
   const accountBalances = accountTypes.map((accountType) => {
     const accIncome = income.filter((inc) => inc.account_type === accountType).reduce((sum, inc) => sum + inc.amount, 0);
     const accExp = expenses.filter((exp) => exp.account_type === accountType).reduce((sum, exp) => sum + exp.amount, 0);
@@ -184,7 +196,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-8 pt-8 border-t border-white/5">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6 pt-8 border-t border-white/5">
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Monthly Income</p>
                   <p className="text-xl font-bold text-emerald-400 font-mono mt-1">{currencyFormatter.format(monthlyIncome)}</p>
@@ -194,25 +206,33 @@ const Dashboard = () => {
                   <p className="text-xl font-bold text-red-400 font-mono mt-1">{currencyFormatter.format(monthlyExpenses)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weekly Expense</p>
-                  <p className="text-xl font-bold text-orange-400 font-mono mt-1">
-                    {currencyFormatter.format(expenses.filter(e => {
-                        const d = new Date(e.date);
-                        const today = new Date();
-                        const monday = new Date(today);
-                        monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-                        monday.setHours(0,0,0,0);
-                        return d >= monday;
-                    }).reduce((s, e) => s + e.amount, 0))}
-                  </p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
+                  <p className="text-xl font-bold text-orange-400 font-mono mt-1">{currencyFormatter.format(avgDailySpend)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemaining} days remaining`}>Daily Limit Left</p>
+                  <p className="text-xl font-bold text-teal-400 font-mono mt-1">{currencyFormatter.format(avgDailyLimitRemaining)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
                   <p className="text-xl font-bold text-rose-400 font-mono mt-1">{currencyFormatter.format(todayExpenses)}</p>
                 </div>
                 <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weekly Expense</p>
+                  <p className="text-xl font-bold text-amber-500 font-mono mt-1">
+                    {currencyFormatter.format(expenses.filter(e => {
+                        const d = new Date(e.date);
+                        const t = new Date();
+                        const monday = new Date(t);
+                        monday.setDate(t.getDate() - ((t.getDay() + 6) % 7));
+                        monday.setHours(0,0,0,0);
+                        return d >= monday;
+                    }).reduce((s, e) => s + e.amount, 0))}
+                  </p>
+                </div>
+                <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Allocated Invest.</p>
-                  <p className="text-xl font-bold text-amber-400 font-mono mt-1">{currencyFormatter.format(totalInvested)}</p>
+                  <p className="text-xl font-bold text-blue-400 font-mono mt-1">{currencyFormatter.format(totalInvested)}</p>
                 </div>
               </div>
             </div>
