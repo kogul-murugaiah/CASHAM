@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { api } from "../lib/api";
 import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
 import type { CashFlow } from "../lib/xirr";
@@ -93,7 +94,7 @@ const PriceModal = ({ inv, onClose, onSave }: { inv: any; onClose: () => void; o
 };
 
 const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: any[]; onClose: () => void }) => {
-  const { currencyStyle, hideBalance } = useUserPreferences();
+  const { currencyStyle, hideBalance, toggleHideBalance } = useUserPreferences();
   const latestRow = history[0]; 
   const totalInvested = history.reduce((sum, h) => sum + (h.action === 'buy' ? h.amount : -h.amount), 0);
   const currentVal = latestRow.current_value ?? latestRow.amount;
@@ -123,7 +124,16 @@ const AssetHistoryModal = ({ asset, history, onClose }: { asset: any; history: a
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{isCategoryMode ? `Global ${asset.type} Ledger` : `${asset.type} History`}</span>
             <h2 className="text-3xl font-heading font-black text-white">{isCategoryMode ? `All ${asset.type}s` : asset.name}</h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">✕</button>
+          <div className="flex items-center gap-2">
+            <button 
+                onClick={toggleHideBalance}
+                className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all border border-white/5"
+                title={hideBalance ? "Reveal Balances" : "Privacy Mode"}
+            >
+              {hideBalance ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+            </button>
+            <button onClick={onClose} className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-all">✕</button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -208,7 +218,7 @@ const Portfolio = () => {
   const [priceModal, setPriceModal] = useState<any>(null);
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const { accountTypes } = useAccountTypes();
-  const { currencyStyle, hideBalance } = useUserPreferences();
+  const { currencyStyle, hideBalance, toggleHideBalance } = useUserPreferences();
   const [netWorthCash, setNetWorthCash] = useState(0);
 
   const fetchBankBalances = async () => {
@@ -313,15 +323,15 @@ const Portfolio = () => {
       <div className="space-y-6 animate-fade-in">
         <div className="grid grid-cols-2 gap-5 lg:grid-cols-5">
           {[
-            { label: 'Total Invested', value: currencyFormatter.format(total_invested || 0), color: 'text-white', glow: 'bg-slate-500' },
-            { label: 'Current Value', value: currencyFormatter.format(total_current_value || 0), color: 'text-amber-400', glow: 'bg-amber-500' },
-            { label: 'Total P&L', value: currencyFormatter.format(total_pnl || 0), color: pnlColor(total_pnl || 0), glow: total_pnl >= 0 ? 'bg-emerald-500' : 'bg-red-500' },
-            { label: 'Simple Return', value: pctFmt(total_return_pct || 0), color: pnlColor(total_return_pct || 0), glow: total_return_pct >= 0 ? 'bg-emerald-500' : 'bg-red-500' },
-          ].map(({ label, value, color, glow }) => (
+            { label: 'Total Invested', value: formatCurrency(total_invested || 0, currencyStyle), hide: hideBalance, color: 'text-white', glow: 'bg-slate-500' },
+            { label: 'Current Value', value: formatCurrency(total_current_value || 0, currencyStyle), hide: hideBalance, color: 'text-amber-400', glow: 'bg-amber-500' },
+            { label: 'Total P&L', value: formatCurrency(total_pnl || 0, currencyStyle), hide: hideBalance, color: pnlColor(total_pnl || 0), glow: total_pnl >= 0 ? 'bg-emerald-500' : 'bg-red-500' },
+            { label: 'Simple Return', value: pctFmt(total_return_pct || 0), hide: false, color: pnlColor(total_return_pct || 0), glow: total_return_pct >= 0 ? 'bg-emerald-500' : 'bg-red-500' },
+          ].map(({ label, value, hide, color, glow }) => (
             <div key={label} className="glass-card p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-10"><div className={`w-16 h-16 rounded-full ${glow} blur-2xl`} /></div>
               <p className="text-xs font-medium text-slate-400">{label}</p>
-              <div className={`mt-2 text-2xl font-bold font-heading font-mono ${color}`}>{value}</div>
+              <div className={`mt-2 text-2xl font-bold font-heading font-mono ${color} ${hide ? 'blur-sm select-none' : ''}`}>{value}</div>
             </div>
           ))}
           <div className="glass-card p-5 relative overflow-hidden">
@@ -339,7 +349,7 @@ const Portfolio = () => {
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
                     {pieData.map((entry: any) => <Cell key={entry.name} fill={TYPE_COLORS[entry.name] || "#64748b"} stroke="none" />)}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -356,7 +366,7 @@ const Portfolio = () => {
                     <p className="text-sm font-medium text-white">{t.type}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-white font-mono">{currencyFormatter.format(t.current_value)}</p>
+                    <p className={`text-sm font-bold text-white font-mono ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(t.current_value, currencyStyle)}</p>
                     <p className={`text-xs font-mono ${pnlColor(t.pnl)}`}>{pctFmt(t.return_pct)}</p>
                   </div>
                 </div>
@@ -428,7 +438,7 @@ const Portfolio = () => {
                   <Pie data={sectorData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={2} dataKey="value">
                     {sectorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />)}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -631,16 +641,25 @@ const Portfolio = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div><p className="text-slate-400 text-sm uppercase font-bold tracking-widest">Portfolio</p><h1 className="text-4xl font-bold font-heading text-white">Wealth Tracker</h1></div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
             <button 
-              onClick={handleRefreshPrices} 
-              disabled={refreshing}
-              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all border border-white/10 ${refreshing ? "bg-slate-700 text-slate-500 opacity-50 cursor-not-allowed" : "bg-slate-800 text-white hover:bg-slate-700"}`}
+                onClick={toggleHideBalance}
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all text-xs font-bold"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={refreshing ? "animate-spin" : ""}><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
-              {refreshing ? "Syncing..." : "Refresh Prices"}
+              {hideBalance ? <FiEyeOff size={14} /> : <FiEye size={14} />}
+              {hideBalance ? "Reveal" : "Privacy"}
             </button>
-            <a href="/add-investment" className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all">Log Investment</a>
+            <div className="flex gap-3">
+              <button 
+                onClick={handleRefreshPrices} 
+                disabled={refreshing}
+                className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all border border-white/10 ${refreshing ? "bg-slate-700 text-slate-500 opacity-50 cursor-not-allowed" : "bg-slate-800 text-white hover:bg-slate-700"}`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={refreshing ? "animate-spin" : ""}><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>
+                {refreshing ? "Syncing..." : "Refresh Prices"}
+              </button>
+              <a href="/add-investment" className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-all">Log Investment</a>
+            </div>
           </div>
         </header>
 

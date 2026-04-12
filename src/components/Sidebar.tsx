@@ -99,89 +99,91 @@ const Sidebar = () => {
                 )}
             </div>
 
-            {/* Nav Groups */}
-            <nav className="flex-1 overflow-y-auto py-4 space-y-6 px-2">
-                {NAV_GROUPS.map((group) => (
-                    <div key={group.label}>
-                        {!isCollapsed && (
-                            <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                                {group.label}
-                            </p>
-                        )}
-                        <ul className="space-y-1">
-                            {group.items.map(({ to, icon: Icon, label }) => (
-                                <li key={to}>
-                                    <NavLink
-                                        to={to}
-                                        className={({ isActive }) =>
-                                            `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${isActive
-                                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
-                                                : "text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent"
-                                            } ${isCollapsed ? "justify-center" : ""}`
-                                        }
-                                        title={isCollapsed ? label : undefined}
-                                    >
-                                        {({ isActive }) => (
-                                            <>
-                                                <Icon
-                                                    size={18}
-                                                    strokeWidth={isActive ? 2.5 : 1.8}
-                                                    className="flex-shrink-0"
-                                                />
-                                                {!isCollapsed && (
-                                                    <span className="text-sm font-medium font-heading">{label}</span>
-                                                )}
-                                            </>
-                                        )}
-                                    </NavLink>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                ))}
-            </nav>
-
-            {/* Theme toggle + User + Logout */}
-            <div className="border-t border-white/5 p-3 space-y-1">
-                {/* Theme toggle */}
-                <button
-                    onClick={toggleTheme}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-all border border-transparent hover:border-white/5 ${isCollapsed ? "justify-center" : ""}`}
-                    title={isCollapsed ? (theme === "dark" ? "Switch to Light" : "Switch to Dark") : undefined}
-                >
-                    {theme === "dark" ? (
-                        <FiSun size={16} strokeWidth={1.8} className="flex-shrink-0 text-amber-400" />
-                    ) : (
-                        <FiMoon size={16} strokeWidth={1.8} className="flex-shrink-0 text-teal-400" />
-                    )}
-                    {!isCollapsed && (
-                        <span className="text-sm font-medium font-heading">
-                            {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                        </span>
-                    )}
-                </button>
-
-                {user && (
-                    <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/3 ${isCollapsed ? "justify-center" : ""}`}>
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
-                            {getInitials(user)}
+            {/* Main Scrollable Area (Nav + Footer) */}
+            <div className="flex-1 overflow-y-auto no-scrollbar py-4 px-2 flex flex-col justify-between">
+                <nav className="space-y-6">
+                    {NAV_GROUPS.map((group) => (
+                        <div key={group.label}>
+                            {!isCollapsed && (
+                                <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                    {group.label}
+                                </p>
+                            )}
+                            <ul className="space-y-1">
+                                {group.items.map(({ to, icon: Icon, label }) => (
+                                    <li key={to}>
+                                        <NavLink
+                                            to={to}
+                                            className={({ isActive }) =>
+                                                `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${isActive
+                                                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                                                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent"
+                                                } ${isCollapsed ? "justify-center" : ""}`
+                                            }
+                                            title={isCollapsed ? label : undefined}
+                                        >
+                                            {({ isActive }) => (
+                                                <>
+                                                    <Icon
+                                                        size={18}
+                                                        strokeWidth={isActive ? 2.5 : 1.8}
+                                                        className="flex-shrink-0"
+                                                    />
+                                                    {!isCollapsed && (
+                                                        <span className="text-sm font-medium font-heading">{label}</span>
+                                                    )}
+                                                </>
+                                            )}
+                                        </NavLink>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        {!isCollapsed && (
-                            <div className="overflow-hidden">
-                                <p className="text-xs font-semibold text-white truncate font-heading tracking-wide">{user.display_name || user.email}</p>
-                                <p className="text-[10px] text-slate-500">Signed in</p>
-                            </div>
+                    ))}
+                </nav>
+
+                {/* Theme toggle + User + Logout (Inside Scrollable) */}
+                <div className="mt-8 border-t border-white/5 pt-4 space-y-1">
+                    {/* Theme toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-all border border-transparent hover:border-white/5 ${isCollapsed ? "justify-center" : ""}`}
+                        title={isCollapsed ? (theme === "dark" ? "Switch to Light" : "Switch to Dark") : undefined}
+                    >
+                        {theme === "dark" ? (
+                            <FiSun size={16} strokeWidth={1.8} className="flex-shrink-0 text-amber-400" />
+                        ) : (
+                            <FiMoon size={16} strokeWidth={1.8} className="flex-shrink-0 text-teal-400" />
                         )}
-                    </div>
-                )}
-                <button
-                    onClick={handleLogout}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent hover:border-red-500/20 ${isCollapsed ? "justify-center" : ""}`}
-                    title={isCollapsed ? "Logout" : undefined}
-                >
-                    <FiLogOut size={16} strokeWidth={1.8} className="flex-shrink-0" />
-                    {!isCollapsed && <span className="text-sm font-medium font-heading">Logout</span>}
-                </button>
+                        {!isCollapsed && (
+                            <span className="text-sm font-medium font-heading">
+                                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                            </span>
+                        )}
+                    </button>
+
+                    {user && (
+                        <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/3 ${isCollapsed ? "justify-center" : ""}`}>
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-lg">
+                                {getInitials(user)}
+                            </div>
+                            {!isCollapsed && (
+                                <div className="overflow-hidden">
+                                    <p className="text-xs font-semibold text-white truncate font-heading tracking-wide">{user.display_name || user.email}</p>
+                                    <p className="text-[10px] text-slate-500">Signed in</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <button
+                        onClick={handleLogout}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent hover:border-red-500/20 ${isCollapsed ? "justify-center" : ""}`}
+                        title={isCollapsed ? "Logout" : undefined}
+                    >
+                        <FiLogOut size={16} strokeWidth={1.8} className="flex-shrink-0" />
+                        {!isCollapsed && <span className="text-sm font-medium font-heading">Logout</span>}
+                    </button>
+                </div>
             </div>
         </div>
     );
