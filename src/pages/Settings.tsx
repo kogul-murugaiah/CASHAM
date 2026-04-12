@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiUser, FiList, FiCreditCard, FiSliders, FiCheck, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2 } from "react-icons/fi";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -205,11 +205,11 @@ const Settings = () => {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 pb-3 transition-all whitespace-nowrap border-b-2 relative top-[1px] group ${
                       isActive
-                        ? "text-emerald-400 border-emerald-500 shadow-[0_4px_12px_-4px_rgba(16,185,129,0.3)]"
-                        : "text-slate-500 border-transparent hover:text-slate-300 hover:border-slate-800"
+                        ? "text-emerald-500 border-emerald-500 shadow-[0_4px_12px_-4px_rgba(16,185,129,0.3)]"
+                        : "text-slate-500 border-transparent hover:text-slate-800"
                     }`}
                   >
-                    <Icon size={16} className={`${isActive ? "text-emerald-400" : "text-slate-600 group-hover:text-slate-400"} transition-colors`} />
+                    <Icon size={16} className={`${isActive ? "text-emerald-500" : "text-slate-400 group-hover:text-slate-600"} transition-colors`} />
                     <span className="font-bold text-sm tracking-tight">{tab.label}</span>
                   </button>
                 );
@@ -220,261 +220,249 @@ const Settings = () => {
           {/* Main Content Area */}
           <div className="flex-1 w-full min-h-[60vh]">
             {activeTab === "profile" && (
-              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-10">
                 <div>
-                  <h2 className="text-xl font-bold text-white font-heading">Profile & Identity</h2>
-                  <p className="text-sm text-slate-400 mt-1">Manage your account details and display name.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Profile Details</h2>
+                  <p className="text-sm text-slate-500 mt-1">Manage your identity within the CASHAM protocol.</p>
                 </div>
-                {/* Form placeholder */}
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Display Name</label>
+                <div className="space-y-6 max-w-md">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Display Name</label>
                     <input 
                       type="text" 
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       disabled={loading}
-                      placeholder="e.g. John Doe" 
-                      className="w-full bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all backdrop-blur-sm" 
+                      placeholder="e.g. Kogul Murugaiah" 
+                      className="w-full bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all" 
                     />
-                    <p className="text-[10px] text-slate-500 mt-2 font-medium">This will be used to greet you on the dashboard.</p>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Email Address</label>
-                    <input type="email" value={email} disabled placeholder="user@example.com" className="w-full bg-slate-950/20 border border-white/5 rounded-2xl px-5 py-3 text-slate-600 cursor-not-allowed italic" />
+                  <div className="space-y-2 opacity-60">
+                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Email Address</label>
+                    <input type="email" value={email} disabled className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-3 text-slate-500 italic cursor-not-allowed" />
                   </div>
                   <button 
                     onClick={handleSaveProfile}
                     disabled={saving || loading}
-                    className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:text-slate-500 text-white px-6 py-2.5 rounded-lg font-bold transition-all text-sm w-max min-w-[140px]"
+                    className="btn-primary w-full md:w-auto px-10"
                   >
-                    {saving ? "Saving..." : <><FiCheck /> Save Changes</>}
+                    {saving ? "Updating..." : "Save Identity"}
                   </button>
-                  {successMsg && <p className="text-emerald-400 text-sm font-medium animate-fade-in">{successMsg}</p>}
+                  {successMsg && <p className="text-emerald-500 dark:text-emerald-400 text-sm font-bold animate-fade-in text-center md:text-left">{successMsg}</p>}
                 </div>
               </div>
             )}
 
             {activeTab === "categories" && (
-              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl max-w-2xl">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-10 max-w-3xl">
                 <div>
-                  <h2 className="text-xl font-bold text-white font-heading">Custom Categories</h2>
-                  <p className="text-sm text-slate-400 mt-1">Add, edit, or remove your tracking categories. Default categories cannot be removed.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Custom Categories</h2>
+                  <p className="text-sm text-slate-500 mt-1">Personalize your expense categories to match your lifestyle.</p>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Add New Category */}
-                  <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Create New Template</label>
-                      <div className="flex gap-2">
+                  <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-500 uppercase tracking-widest">New Category Template</label>
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <input 
                             type="text" 
                             value={newCatName}
                             onChange={(e) => setNewCatName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
-                            placeholder="e.g. Subscriptions, Travel" 
-                            className="flex-1 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-3 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-600" 
+                            placeholder="e.g. Subscriptions, Gifts..." 
+                            className="flex-1 bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all" 
                         />
                         <button 
                             onClick={handleAddCategory}
                             disabled={addingCat || !newCatName.trim()}
-                            className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-white px-6 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                            className="btn-primary"
                         >
-                            {addingCat ? "..." : <FiPlus strokeWidth={3} />} Add
+                            <FiPlus className="mr-2 inline" /> Add Category
                         </button>
                       </div>
-                      {catError && <p className="text-rose-400 text-xs mt-2">{catError}</p>}
+                      {catError && <p className="text-rose-500 text-xs font-bold">{catError}</p>}
                   </div>
 
                   {/* List Categories */}
-                  <div className="mt-8">
-                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 font-heading">Your Categories</label>
-                     {categoriesLoading ? (
-                         <div className="text-slate-400 text-sm animate-pulse">Loading categories...</div>
-                     ) : (
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                             {categories.map((cat) => (
-                                <div key={cat.id} className="relative bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border border-emerald-200/50 dark:border-emerald-500/20 rounded-2xl p-5 flex items-center justify-between group hover:border-emerald-500/50 hover:bg-emerald-500/[0.05] dark:hover:bg-emerald-500/[0.1] transition-all duration-300">
-                                    {editingItem?.type === "category" && editingItem.id === cat.id ? (
-                                        <div className="flex-1 flex gap-2">
-                                            <input 
-                                                autoFocus
-                                                value={editValue}
-                                                onChange={(e) => setEditValue(e.target.value)}
-                                                onBlur={saveRename}
-                                                onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                                                className="bg-white dark:bg-slate-950 border-2 border-emerald-500 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none w-full shadow-lg"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <span className="text-slate-800 dark:text-emerald-50 font-bold text-sm tracking-tight">{cat.name}</span>
-                                            <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-all">
-                                                <button 
-                                                    onClick={() => startRename({ id: cat.id, name: cat.name, type: "category" })}
-                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-white/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white transition-all shadow-sm"
-                                                    title="Rename"
-                                                >
-                                                    <FiEdit2 size={16} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                                                    title="Delete Category"
-                                                >
-                                                    <FiTrash2 size={16} />
-                                                </button>
+                      <div>
+                         <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-4">Your Active Categories</label>
+                         {categoriesLoading ? (
+                             <div className="text-slate-400 text-sm animate-pulse">Consulting ledger...</div>
+                         ) : (
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 {categories.map((cat) => (
+                                    <div key={cat.id} className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex items-center justify-between group hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all">
+                                        {editingItem?.type === "category" && editingItem.id === cat.id ? (
+                                            <div className="flex-1 flex gap-2">
+                                                <input 
+                                                    autoFocus
+                                                    value={editValue}
+                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                    onBlur={saveRename}
+                                                    onKeyDown={(e) => e.key === "Enter" && saveRename()}
+                                                    className="bg-white dark:bg-slate-950 border-2 border-emerald-500 rounded-xl px-3 py-1 text-sm text-slate-900 dark:text-white focus:outline-none w-full shadow-lg"
+                                                />
                                             </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
-                            {categories.length === 0 && (
-                                <div className="col-span-2 text-center p-8 border border-dashed border-slate-700 rounded-xl text-slate-500">
-                                    No custom categories created yet.
-                                </div>
-                            )}
-                         </div>
-                     )}
-                  </div>
+                                        ) : (
+                                            <>
+                                                <span className="text-slate-900 dark:text-slate-100 font-bold tracking-tight">{cat.name}</span>
+                                                <div className="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-all">
+                                                    <button 
+                                                        onClick={() => startRename({ id: cat.id, name: cat.name, type: "category" })}
+                                                        className="p-2.5 rounded-xl bg-slate-200/50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                                                        title="Rename"
+                                                    >
+                                                        <FiEdit2 size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                                        className="p-2.5 rounded-xl bg-rose-100/50 dark:bg-rose-500/5 text-slate-600 dark:text-slate-400 hover:text-rose-500 transition-all"
+                                                        title="Delete Category"
+                                                    >
+                                                        <FiTrash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                             </div>
+                         )}
+                      </div>
                 </div>
               </div>
             )}
 
             {activeTab === "accounts" && (
-              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl max-w-2xl">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-10 max-w-3xl">
                 <div>
-                  <h2 className="text-xl font-bold text-white font-heading">Wallets & Accounts</h2>
-                  <p className="text-sm text-slate-400 mt-1">Manage physical bank accounts and virtual wallets. Renaming an account updates all historic records.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Wallets & Accounts</h2>
+                  <p className="text-sm text-slate-500 mt-1">Manage physical bank accounts and virtual payment methods.</p>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Add New Account */}
-                  <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 font-heading">Configure New Account</label>
-                      <div className="flex gap-2">
+                  <div className="space-y-2">
+                       <label className="text-xs font-black text-slate-500 uppercase tracking-widest">New Wallet Setup</label>
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <input 
                             type="text" 
                             value={newAccName}
                             onChange={(e) => setNewAccName(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleAddAccount()}
-                            placeholder="e.g. HDFC, Petrol Card" 
-                            className="flex-1 bg-slate-950/40 border border-white/5 rounded-2xl px-5 py-3 text-white focus:outline-none focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all placeholder:text-slate-600" 
+                            placeholder="e.g. ICICI, GPay, Cash..." 
+                            className="flex-1 bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all" 
                         />
                         <button 
                             onClick={handleAddAccount}
                             disabled={addingAcc || !newAccName.trim()}
-                            className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-white px-6 rounded-2xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                            className="btn-primary"
                         >
-                            {addingAcc ? "..." : <FiPlus strokeWidth={3} />} Add
+                            <FiPlus className="mr-2 inline" /> Add Account
                         </button>
                       </div>
-                      {accError && <p className="text-rose-400 text-xs mt-2">{accError}</p>}
+                      {accError && <p className="text-rose-400 text-xs font-bold">{accError}</p>}
                   </div>
 
                   {/* List Accounts */}
-                  <div className="mt-8">
-                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 font-heading">Your Tracked Wallets</label>
-                     {accountsLoading ? (
-                         <div className="text-slate-400 text-sm animate-pulse">Loading accounts...</div>
-                     ) : (
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                             {accountTypes.map((accName) => (
-                                <div key={accName} className="relative bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] border border-emerald-200/50 dark:border-emerald-500/20 rounded-2xl p-5 flex items-center justify-between group hover:border-emerald-500/50 hover:bg-emerald-500/[0.05] dark:hover:bg-emerald-500/[0.1] transition-all duration-300">
-                                    {editingItem?.type === "account" && editingItem.name === accName ? (
-                                        <div className="flex-1 flex gap-2">
-                                            <input 
-                                                autoFocus
-                                                value={editValue}
-                                                onChange={(e) => setEditValue(e.target.value)}
-                                                onBlur={saveRename}
-                                                onKeyDown={(e) => e.key === "Enter" && saveRename()}
-                                                className="bg-white dark:bg-slate-950 border-2 border-emerald-500 rounded-xl px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none w-full shadow-lg"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <span className="text-slate-800 dark:text-emerald-50 font-bold text-sm tracking-tight">{accName}</span>
-                                            <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-all">
-                                                <button 
-                                                    onClick={() => startRename({ name: accName, type: "account" })}
-                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-white/5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white transition-all shadow-sm"
-                                                    title="Rename Account"
-                                                >
-                                                    <FiEdit2 size={16} />
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDeleteAccount(accName)}
-                                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/5 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                                                    title="Delete Account"
-                                                >
-                                                    <FiTrash2 size={16} />
-                                                </button>
+                      <div>
+                         <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-4">Configured Wallets</label>
+                         {accountsLoading ? (
+                             <div className="text-slate-400 text-sm animate-pulse">Loading accounts...</div>
+                         ) : (
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 {accountTypes.map((accName) => (
+                                    <div key={accName} className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-5 flex items-center justify-between group hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all">
+                                        {editingItem?.type === "account" && editingItem.name === accName ? (
+                                            <div className="flex-1 flex gap-2">
+                                                <input 
+                                                    autoFocus
+                                                    value={editValue}
+                                                    onChange={(e) => setEditValue(e.target.value)}
+                                                    onBlur={saveRename}
+                                                    onKeyDown={(e) => e.key === "Enter" && saveRename()}
+                                                    className="bg-white dark:bg-slate-950 border-2 border-emerald-500 rounded-xl px-3 py-1 text-sm text-slate-900 dark:text-white focus:outline-none w-full shadow-lg"
+                                                />
                                             </div>
-                                        </>
-                                    )}
-                                </div>
-                            ))}
-                            {accountTypes.length === 0 && (
-                                <div className="col-span-2 text-center p-8 border border-dashed border-slate-700 rounded-xl text-slate-500">
-                                    No accounts configured yet.
-                                </div>
-                            )}
-                         </div>
-                     )}
-                  </div>
+                                        ) : (
+                                            <>
+                                                <span className="text-slate-900 dark:text-slate-100 font-bold tracking-tight">{accName}</span>
+                                                <div className="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-all">
+                                                    <button 
+                                                        onClick={() => startRename({ name: accName, type: "account" })}
+                                                        className="p-2.5 rounded-xl bg-slate-200/50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                                                        title="Rename Account"
+                                                    >
+                                                        <FiEdit2 size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteAccount(accName)}
+                                                        className="p-2.5 rounded-xl bg-rose-100/50 dark:bg-rose-500/5 text-slate-600 dark:text-slate-400 hover:text-rose-500 transition-all"
+                                                        title="Delete Account"
+                                                    >
+                                                        <FiTrash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                             </div>
+                         )}
+                      </div>
                 </div>
               </div>
             )}
 
             {activeTab === "system" && (
-              <div className="animate-fade-in space-y-8 glass-card p-6 md:p-8 rounded-2xl max-w-2xl text-left">
+              <div className="animate-fade-in space-y-8 glass-card p-6 md:p-10 max-w-2xl text-left">
                 <div>
-                  <h2 className="text-xl font-bold text-white font-heading">System Preferences</h2>
-                  <p className="text-sm text-slate-400 mt-1">Basic adjustments for a personalized Indian experience.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">System Controls</h2>
+                  <p className="text-sm text-slate-500 mt-1">Adjust core application behavior and localizations.</p>
                 </div>
 
                 <div className="space-y-6">
                   {/* Privacy Mode */}
-                   <div className="group flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-3xl hover:bg-slate-950/40 hover:border-emerald-500/20 transition-all">
+                   <div className="group flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl transition-all">
                     <div className="flex items-center gap-4">
-                      <div className={`p-3.5 rounded-2xl transition-all ${hideBalance ? 'bg-emerald-500/10 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'bg-slate-800 text-slate-500'}`}>
-                        {hideBalance ? <FiEyeOff size={22} /> : <FiEye size={22} />}
+                      <div className={`p-4 rounded-2xl transition-all ${hideBalance ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500'}`}>
+                        {hideBalance ? <FiEyeOff size={24} /> : <FiEye size={24} />}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white tracking-tight">Privacy Mode</p>
-                        <p className="text-[11px] text-slate-500 font-medium">Hide sensitive balances across the app</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Privacy Projection</p>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">Hide sensitive balances globally</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => updatePreference("hideBalance", !hideBalance)}
-                      className={`w-14 h-7 rounded-full transition-all relative p-1 ${hideBalance ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                      className={`w-14 h-7 rounded-full transition-all relative p-1 ${hideBalance ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
                     >
                       <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-md ${hideBalance ? 'translate-x-7' : 'translate-x-0'}`} />
                     </button>
                   </div>
 
                   {/* Currency Styling */}
-                   <div className="group flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-3xl hover:bg-slate-950/40 hover:border-emerald-500/20 transition-all">
+                   <div className="group flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl transition-all">
                     <div className="flex items-center gap-4">
-                      <div className="p-3.5 rounded-2xl bg-slate-800 text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        <FiCreditCard size={22} />
+                      <div className="p-4 rounded-2xl bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500">
+                        <FiCreditCard size={24} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white tracking-tight">Currency Display</p>
-                        <p className="text-[11px] text-slate-500 font-medium">Toggle between Symbol (₹) and Label (Rs.)</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Currency Format</p>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">Toggle between symbols (₹) and text (Rs.)</p>
                       </div>
                     </div>
-                    <div className="flex bg-slate-900/80 p-1 rounded-xl border border-white/5">
+                    <div className="flex bg-slate-200/50 dark:bg-slate-900/80 p-1.5 rounded-2xl border border-slate-200 dark:border-white/5">
                       <button 
                          onClick={() => updatePreference("currencyStyle", "symbol")}
-                         className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${currencyStyle === 'symbol' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                         className={`px-5 py-2 rounded-xl text-xs font-black transition-all ${currencyStyle === 'symbol' ? 'bg-white dark:bg-emerald-500 text-slate-900 dark:text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                       >
                         ₹
                       </button>
                       <button 
                          onClick={() => updatePreference("currencyStyle", "text")}
-                         className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${currencyStyle === 'text' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                         className={`px-5 py-2 rounded-xl text-[10px] font-black transition-all ${currencyStyle === 'text' ? 'bg-white dark:bg-emerald-500 text-slate-900 dark:text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
                       >
                         Rs.
                       </button>
@@ -482,46 +470,42 @@ const Settings = () => {
                   </div>
 
                   {/* Language */}
-                  <div className="group flex items-center justify-between p-5 bg-slate-950/30 border border-white/5 rounded-3xl hover:bg-slate-950/40 hover:border-emerald-500/20 transition-all">
+                  <div className="group flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl transition-all">
                     <div className="flex items-center gap-4">
-                      <div className="p-3.5 rounded-2xl bg-slate-800 text-slate-500 group-hover:text-emerald-400 transition-colors">
-                        <FiGlobe size={22} />
+                      <div className="p-4 rounded-2xl bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500">
+                        <FiGlobe size={24} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white tracking-tight">App Language</p>
-                        <p className="text-[11px] text-slate-500 font-medium">Localized interface for individual preference</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">App Dialect</p>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">Localized experience for your preference</p>
                       </div>
                     </div>
                     <select 
                       value={language}
                       onChange={(e) => updatePreference("language", e.target.value as any)}
-                      className="bg-slate-900 text-white text-[10px] font-black px-4 py-2 rounded-xl border border-white/5 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer outline-none appearance-none text-center min-w-[100px]"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-[10px] font-black px-6 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-emerald-500 cursor-pointer outline-none appearance-none text-center min-w-[120px] shadow-sm"
                     >
                       <option value="en">ENGLISH</option>
-                      <option value="hi">हिन्दी (Hindi)</option>
+                      <option value="hi">HINDI (हिन्दी)</option>
                     </select>
                   </div>
 
                   {/* Data Export */}
-                  <div className="pt-6 border-t border-white/5">
+                  <div className="pt-8 border-t border-slate-200 dark:border-white/5">
                     <button 
                         onClick={handleExportCSV}
                         disabled={exporting}
-                        className="w-full relative overflow-hidden flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-4.5 rounded-2xl font-black text-sm transition-all shadow-xl shadow-emerald-900/20 active:scale-[0.98]"
+                        className="btn-primary w-full py-5 rounded-3xl text-sm tracking-widest uppercase"
                     >
-                      <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
-                      {exporting ? (
-                          <span className="animate-pulse flex items-center gap-2">
-                             <FiDownload className="animate-bounce" /> Generating Report...
-                          </span>
-                      ) : (
-                          <>
-                            <FiDownload className="text-white" strokeWidth={3} /> 
-                            DOWNLOAD EXCEL REPORT
-                          </>
-                      )}
+                        {exporting ? (
+                            "Compiling Ledger..."
+                        ) : (
+                            <span className="flex items-center justify-center gap-3">
+                                <FiDownload strokeWidth={3} /> Download Financial Report
+                            </span>
+                        )}
                     </button>
-                    <p className="text-[10px] text-slate-500 mt-4 text-center leading-relaxed">Your secure transaction ledger will be prepared in <b>.csv format</b>, perfectly structured for analysis in Microsoft Excel or Google Sheets.</p>
+                    <p className="text-[10px] text-slate-500 mt-6 text-center leading-relaxed font-bold uppercase tracking-tighter">Your secure transaction history will be prepared in <b>.CSV format</b>, structured for high-performance analysis.</p>
                   </div>
                 </div>
               </div>
