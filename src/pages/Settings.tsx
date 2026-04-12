@@ -19,10 +19,10 @@ const Settings = () => {
           <h1 className="text-4xl font-bold font-heading text-white">Settings</h1>
         </header>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar Nav */}
-          <div className="w-full md:w-64 flex-shrink-0">
-            <nav className="flex md:flex-col gap-2 overflow-x-auto pb-4 md:pb-0 hide-scrollbar">
+        <div className="flex flex-col gap-8">
+          {/* Top Horizontal Nav */}
+          <div className="w-full border-b border-slate-800">
+            <nav className="flex overflow-x-auto hide-scrollbar gap-6">
               {TABS.map((tab) => {
                 const isActive = activeTab === tab.id;
                 const Icon = tab.icon;
@@ -30,13 +30,13 @@ const Settings = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all whitespace-nowrap text-left ${
+                    className={`flex items-center gap-2 pb-3 transition-all whitespace-nowrap border-b-2 relative top-[1px] ${
                       isActive
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "text-slate-400 hover:bg-white/5 hover:text-slate-200 border border-transparent"
+                        ? "text-emerald-400 border-emerald-400"
+                        : "text-slate-400 border-transparent hover:text-slate-200 hover:border-slate-700"
                     }`}
                   >
-                    <Icon size={18} className={isActive ? "text-emerald-400" : "text-slate-500"} />
+                    <Icon size={16} className={isActive ? "text-emerald-400" : "text-slate-500"} />
                     <span className="font-semibold text-sm">{tab.label}</span>
                   </button>
                 );
@@ -45,9 +45,9 @@ const Settings = () => {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 glass-card p-6 md:p-8 min-h-[60vh]">
+          <div className="flex-1 w-full min-h-[60vh]">
             {activeTab === "profile" && (
-              <div className="animate-fade-in space-y-6">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">Profile & Identity</h2>
                   <p className="text-sm text-slate-400 mt-1">Manage your account details and display name.</p>
@@ -71,7 +71,7 @@ const Settings = () => {
             )}
 
             {activeTab === "categories" && (
-              <div className="animate-fade-in space-y-6">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">Custom Categories</h2>
                   <p className="text-sm text-slate-400 mt-1">Add, edit, or remove your tracking categories.</p>
@@ -84,7 +84,7 @@ const Settings = () => {
             )}
 
             {activeTab === "accounts" && (
-              <div className="animate-fade-in space-y-6">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">Wallets & Accounts</h2>
                   <p className="text-sm text-slate-400 mt-1">Manage physical bank accounts and virtual wallets.</p>
@@ -97,7 +97,7 @@ const Settings = () => {
             )}
 
             {activeTab === "system" && (
-              <div className="animate-fade-in space-y-6">
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-8 rounded-2xl">
                 <div>
                   <h2 className="text-xl font-bold text-white font-heading">System Preferences</h2>
                   <p className="text-sm text-slate-400 mt-1">Control application behavior and data exports.</p>
