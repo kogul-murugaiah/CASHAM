@@ -46,6 +46,24 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
   const { theme } = useTheme();
+
+  // ─── Theme-aware chart styles ──────────────────────────────────
+  const isDark = theme === 'dark';
+  const tooltipStyle = {
+    contentStyle: {
+      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+      borderRadius: '14px',
+      boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.1)',
+      color: isDark ? '#f8fafc' : '#0f172a',
+    },
+    itemStyle: { fontWeight: 700 as const, color: isDark ? '#f8fafc' : '#1e293b' },
+    labelStyle: { color: isDark ? '#94a3b8' : '#64748b', fontSize: '11px' },
+  };
+  const axisColor = isDark ? '#94a3b8' : '#64748b';
+  const gridColor = isDark ? '#334155' : '#e2e8f0';
+  const cursorFill = isDark ? '#334155' : '#f1f5f9';
+
   const [activeWalletPopup, setActiveWalletPopup] = useState<string | null>(null);
   const walletPopupRef = useRef<HTMLDivElement>(null);
 
@@ -272,10 +290,10 @@ const Dashboard = () => {
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={[{ name: "Income", value: monthlyIncome, fill: "#10b981" }, { name: "Expense", value: monthlyExpenses, fill: "#ef4444" }]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} tickFormatter={(val) => `₹${val / 1000}k`} />
-                     <Tooltip cursor={{ fill: '#334155', opacity: 0.2 }} contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#f8fafc' }} labelStyle={{ color: '#94a3b8' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} tickFormatter={(val) => `₹${val / 1000}k`} />
+                     <Tooltip cursor={{ fill: cursorFill, opacity: 0.3 }} {...tooltipStyle} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                     <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={50}>
                       {[{ fill: "#10b981" }, { fill: "#ef4444" }].map((_, index) => <Cell key={index} fill={_.fill} />)}
                     </Bar>
@@ -293,7 +311,7 @@ const Dashboard = () => {
                       <Pie data={accountDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                         {accountDistributionData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />)}
                       </Pie>
-                       <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#f8fafc' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
+                       <Tooltip {...tooltipStyle} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                       <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(v) => <span className="text-slate-400 text-sm ml-1">{v}</span>} />
                     </PieChart>
                   </ResponsiveContainer>

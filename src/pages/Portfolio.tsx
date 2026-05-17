@@ -7,6 +7,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
+import { useTheme } from "../contexts/ThemeContext";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -220,6 +221,21 @@ const Portfolio = () => {
   const { accountTypes } = useAccountTypes();
   const { currencyStyle, hideBalance, toggleHideBalance } = useUserPreferences();
   const [netWorthCash, setNetWorthCash] = useState(0);
+  const { theme } = useTheme();
+
+  // ─── Theme-aware chart styles ──────────────────────────────────
+  const isDark = theme === 'dark';
+  const tooltipStyle = {
+    contentStyle: {
+      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+      border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+      borderRadius: '14px',
+      boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.1)',
+      color: isDark ? '#f8fafc' : '#0f172a',
+    },
+    itemStyle: { fontWeight: 700 as const, color: isDark ? '#f8fafc' : '#1e293b' },
+    labelStyle: { color: isDark ? '#94a3b8' : '#64748b', fontSize: '10px' },
+  };
 
   const fetchBankBalances = async () => {
     try {
@@ -349,7 +365,7 @@ const Portfolio = () => {
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
                     {pieData.map((entry: any) => <Cell key={entry.name} fill={TYPE_COLORS[entry.name] || "#64748b"} stroke="none" />)}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
+                  <Tooltip {...tooltipStyle} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -438,7 +454,7 @@ const Portfolio = () => {
                   <Pie data={sectorData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={2} dataKey="value">
                     {sectorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />)}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
+                  <Tooltip {...tooltipStyle} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
