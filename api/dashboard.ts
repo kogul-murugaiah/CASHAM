@@ -128,6 +128,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
     }
 
+    // ── GET ?debug=true: Show per-account breakdown for carryover diagnosis ──
+    if (req.method === 'GET' && req.query.debug === 'true') {
+        try {
+            const { year, month } = getYearMonth(req.query);
+            const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+            const source = await getCarryoverSource();
+
+            const [{ data: inc }, { data: exp }, { data: inv }, { data: trn }] = await Promise.all([
+                supabaseAdmin.from("income").select("amount, account_type, source_id").eq("user_id", user.id).lt("date", startDate),
+                supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", user.id).lt("date", startDate),
+                supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", user.id).lt("date", startDate),
+                supabaseAdmin.from("transfers").select("amount, from_account, to_account").eq("user_id", user.id).lt("date", startDate),
+            ]);
+
+            const filteredInc = (inc || []).filter(i => i.source_id !== source?.id);
+            const accounts = new Set<string>();
+            filteredInc.forEach(i => i.account_type && accounts.add(i.account_type));
+            (exp || []).forEach(e => e.account_type && accounts.add(e.account_type));
+            (inv || []).forEach(v => v.account_type && accounts.add(v.account_type));
+            (trn || []).forEach(t => { accounts.add(t.from_account); accounts.add(t.to_account); });
+
+            const breakdown = Array.from(accounts).map(acc => {
+                const incSum = filteredInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
+                const expSum = (exp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
+                const invBuy = (inv || []).filter(v => v.account_type === acc && v.action === 'buy').reduce((s, v) => s + v.amount, 0);
+                const invSell = (inv || []).filter(v => v.account_type === acc && v.action === 'sell').reduce((s, v) => s + v.amount, 0);
+                const transferIn = (trn || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
+                const transferOut = (trn || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
+                return { account: acc, incSum, expSum, invBuy, invSell, transferIn, transferOut, balance: incSum - expSum - invBuy + invSell + transferIn - transferOut };
+            });
+
+            return res.status(200).json({ asOf: startDate, breakdown });
+        } catch (error: any) {
+            return res.status(500).json({ error: error.message });
+        }
+    }
+
     // ── GET: Fetch dashboard data (auto-carryover on first access) ───────────
     if (req.method === 'GET') {
         try {
