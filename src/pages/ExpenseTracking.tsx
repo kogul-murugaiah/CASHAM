@@ -66,6 +66,22 @@ const MONTH_NAMES = [
 const ExpenseTracking = () => {
     const { accountTypes } = useAccountTypes();
     const { theme } = useTheme();
+
+    // ─── Theme-aware chart styles ──────────────────────────────────
+    const isDark = theme === 'dark';
+    const tooltipStyle = {
+        contentStyle: {
+            backgroundColor: isDark ? '#0f172a' : '#ffffff',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+            borderRadius: '14px',
+            boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.1)',
+            color: isDark ? '#f8fafc' : '#0f172a',
+        },
+        itemStyle: { fontWeight: 700 as const },
+        labelStyle: { color: isDark ? '#64748b' : '#94a3b8', fontSize: '10px', textTransform: 'uppercase' as const, marginBottom: '4px' },
+    };
+    const axisColor = isDark ? '#475569' : '#94a3b8';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
     const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -570,10 +586,10 @@ const ExpenseTracking = () => {
                                                             <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                                                         </linearGradient>
                                                     </defs>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
+                                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.2} vertical={false} />
                                                     <XAxis 
                                                         dataKey="period" 
-                                                        stroke="#475569" 
+                                                        stroke={axisColor} 
                                                         fontSize={10} 
                                                         tickLine={false} 
                                                         axisLine={false} 
@@ -582,9 +598,8 @@ const ExpenseTracking = () => {
                                                     />
                                                     <YAxis hide domain={['auto', 'auto']} />
                                                     <Tooltip 
-                                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }} 
+                                                        {...tooltipStyle}
                                                         itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
-                                                        labelStyle={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}
                                                         formatter={(val: any) => [currencyFormatter.format(val), 'Spent']}
                                                     />
                                                     <Line 
@@ -615,13 +630,12 @@ const ExpenseTracking = () => {
                                         <div className="h-[280px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <BarChart data={periodData.filter((_, i) => viewMode === 'monthly' ? i % 7 === 0 : true)}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} vertical={false} />
-                                                    <XAxis dataKey="period" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.2} vertical={false} />
+                                                    <XAxis dataKey="period" stroke={axisColor} fontSize={10} tickLine={false} axisLine={false} dy={10} />
                                                     <YAxis hide />
                                                     <Tooltip 
-                                                        contentStyle={{ backgroundColor: '#0f172a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', color: '#f8fafc' }}
+                                                        {...tooltipStyle}
                                                         itemStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
-                                                        labelStyle={{ color: '#64748b', fontSize: '10px', textTransform: 'uppercase' as const }}
                                                         formatter={(val: any) => [currencyFormatter.format(val), 'Total']}
                                                     />
                                                     <Bar dataKey="total" fill="url(#barGradient)" radius={[6, 6, 0, 0]} animationDuration={1500}>
@@ -659,19 +673,22 @@ const ExpenseTracking = () => {
                                                             <Cell key={`cell-${index}`} fill={['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'][index % 5]} stroke="none" />
                                                         ))}
                                                     </Pie>
-                                                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(v: any) => currencyFormatter.format(v)} />
+                                                    <Tooltip 
+                                                        {...tooltipStyle}
+                                                        formatter={(v: any) => currencyFormatter.format(v)} 
+                                                    />
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         </div>
                                         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
                                             {categoryTotals.slice(0, 6).map((c, i) => (
-                                                <div key={c.categoryId} className="p-4 rounded-3xl bg-slate-800/40 border border-white/5 group hover:border-emerald-500/30 transition-all">
+                                                <div key={c.categoryId} className={`p-4 rounded-3xl border group hover:border-emerald-500/30 transition-all ${isDark ? 'bg-slate-800/40 border-white/5' : 'bg-slate-50 border-slate-200'}`}>
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6'][i % 5] }} />
-                                                        <p className="text-[10px] font-bold text-slate-500 uppercase truncate">{c.categoryName}</p>
+                                                        <p className={`text-[10px] font-bold uppercase truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{c.categoryName}</p>
                                                     </div>
-                                                    <p className="text-sm font-bold text-white font-mono">{currencyFormatter.format(c.total)}</p>
-                                                    <p className="text-[9px] text-slate-600 mt-1">{((c.total / grandTotal) * 100).toFixed(1)}% of total</p>
+                                                    <p className={`text-sm font-bold font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>{currencyFormatter.format(c.total)}</p>
+                                                    <p className={`text-[9px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{((c.total / grandTotal) * 100).toFixed(1)}% of total</p>
                                                 </div>
                                             ))}
                                         </div>

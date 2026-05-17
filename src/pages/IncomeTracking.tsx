@@ -60,6 +60,22 @@ const MONTH_NAMES = [
 const IncomeTracking = () => {
     const { accountTypes } = useAccountTypes();
     const { theme } = useTheme();
+
+    // ─── Theme-aware chart styles ──────────────────────────────────
+    const isDark = theme === 'dark';
+    const tooltipStyle = {
+        contentStyle: {
+            backgroundColor: isDark ? '#0f172a' : '#ffffff',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+            borderRadius: '14px',
+            boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.1)',
+            color: isDark ? '#f8fafc' : '#0f172a',
+        },
+        itemStyle: { fontWeight: 700 as const },
+        labelStyle: { color: isDark ? '#64748b' : '#94a3b8', fontSize: '10px', textTransform: 'uppercase' as const, marginBottom: '4px' },
+    };
+    const axisColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
     const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
     const [records, setRecords] = useState<Income[]>([]);
     const [sources, setSources] = useState<IncomeSource[]>([]);
@@ -436,8 +452,8 @@ const IncomeTracking = () => {
                                                             return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />;
                                                         })}
                                                     </Pie>
-                                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(val: any) => currencyFormatter.format(val)} />
-                                                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
+                                                    <Tooltip {...tooltipStyle} formatter={(val: any) => currencyFormatter.format(val)} />
+                                                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', color: isDark ? '#94a3b8' : '#475569' }} />
                                                 </PieChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -449,18 +465,18 @@ const IncomeTracking = () => {
                                             <ResponsiveContainer width="100%" height="100%">
                                                 {viewMode === "monthly" ? (
                                                     <LineChart data={periodData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                                        <XAxis dataKey="period" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dy={10} />
-                                                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
-                                                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(val: any) => currencyFormatter.format(val)} />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.3} vertical={false} />
+                                                        <XAxis dataKey="period" stroke={axisColor} fontSize={11} tickLine={false} axisLine={false} dy={10} />
+                                                        <YAxis stroke={axisColor} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
+                                                        <Tooltip {...tooltipStyle} formatter={(val: any) => currencyFormatter.format(val)} />
                                                         <Line type="monotone" dataKey="total" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
                                                     </LineChart>
                                                 ) : (
                                                     <BarChart data={periodData}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} vertical={false} />
-                                                        <XAxis dataKey="period" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => val.slice(0, 3)} dy={10} />
-                                                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
-                                                        <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }} itemStyle={{ color: '#94a3b8' }} labelStyle={{ color: '#f8fafc' }} formatter={(val: any) => currencyFormatter.format(val)} />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.3} vertical={false} />
+                                                        <XAxis dataKey="period" stroke={axisColor} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => val.slice(0, 3)} dy={10} />
+                                                        <YAxis stroke={axisColor} fontSize={11} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
+                                                        <Tooltip {...tooltipStyle} formatter={(val: any) => currencyFormatter.format(val)} />
                                                         <Bar dataKey="total" fill="#10b981" radius={[6, 6, 0, 0]} />
                                                     </BarChart>
                                                 )}
