@@ -35,7 +35,10 @@ async function computeAndInsertCarryover(
     const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id, date").eq("user_id", userId).lt("date", startDate);
     const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).lt("date", startDate);
     const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).lt("date", startDate);
-    const { data: prevTransfers } = await supabaseAdmin.from("transfers").select("amount, from_account, to_account").eq("user_id", userId).lt("date", startDate);
+    // NOTE: Transfers are intentionally excluded from carryover.
+    // The live Dashboard balance already applies transferIn/transferOut per month
+    // from the transfers table. Including transfers in carryover would double-count
+    // them: once baked into the carryover row, and once again in the live month view.
 
     // Exclude all historical carryover rows from the sum to avoid compounding
     const filteredPrevInc = (prevInc || []).filter(i => i.source_id !== sourceId);
@@ -49,7 +52,6 @@ async function computeAndInsertCarryover(
     filteredPrevInc.forEach(i => i.account_type && allAccounts.add(i.account_type));
     (prevExp || []).forEach(e => e.account_type && allAccounts.add(e.account_type));
     (prevInv || []).forEach(v => v.account_type && allAccounts.add(v.account_type));
-    (prevTransfers || []).forEach(t => { allAccounts.add(t.from_account); allAccounts.add(t.to_account); });
 
     const carries: any[] = [];
     allAccounts.forEach(acc => {
@@ -58,9 +60,8 @@ async function computeAndInsertCarryover(
         // Count both buy AND sell for investments: buy reduces balance, sell restores it
         const invBuy = (prevInv || []).filter(v => v.account_type === acc && v.action === 'buy').reduce((s, v) => s + v.amount, 0);
         const invSell = (prevInv || []).filter(v => v.account_type === acc && v.action === 'sell').reduce((s, v) => s + v.amount, 0);
-        const transferIn = (prevTransfers || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
-        const transferOut = (prevTransfers || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
-        const bal = incSum - expSum - invBuy + invSell + transferIn - transferOut;
+        // Transfers excluded — they are applied per-month in the live Dashboard view
+        const bal = incSum - expSum - invBuy + invSell;
         if (bal !== 0) {
             // Find sources from the previous month for this account
             const prevMonthIncForAcc = filteredPrevInc.filter(i => 
