@@ -34,8 +34,9 @@ async function computeAndInsertCarryover(
     // fetching all history but ignoring all prior carryover rows.
     const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id, date").eq("user_id", userId).lt("date", startDate);
     const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).lt("date", startDate);
-    const { data: prevInv } = await supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", userId).lt("date", startDate);
     const { data: prevTransfers } = await supabaseAdmin.from("transfers").select("amount, from_account, to_account").eq("user_id", userId).lt("date", startDate);
+    // Investments are intentionally excluded: user logs investment outflows as manual expenses,
+    // so including invBuy here would double-deduct the same amount from the account balance.
 
     // Exclude all historical carryover rows from the sum to avoid compounding
     const filteredPrevInc = (prevInc || []).filter(i => i.source_id !== sourceId);
@@ -48,19 +49,15 @@ async function computeAndInsertCarryover(
     const allAccounts = new Set<string>();
     filteredPrevInc.forEach(i => i.account_type && allAccounts.add(i.account_type));
     (prevExp || []).forEach(e => e.account_type && allAccounts.add(e.account_type));
-    (prevInv || []).forEach(v => v.account_type && allAccounts.add(v.account_type));
     (prevTransfers || []).forEach(t => { allAccounts.add(t.from_account); allAccounts.add(t.to_account); });
 
     const carries: any[] = [];
     allAccounts.forEach(acc => {
         const incSum = filteredPrevInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
         const expSum = (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
-        // Count both buy AND sell for investments: buy reduces balance, sell restores it
-        const invBuy = (prevInv || []).filter(v => v.account_type === acc && v.action === 'buy').reduce((s, v) => s + v.amount, 0);
-        const invSell = (prevInv || []).filter(v => v.account_type === acc && v.action === 'sell').reduce((s, v) => s + v.amount, 0);
         const transferIn = (prevTransfers || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
         const transferOut = (prevTransfers || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
-        const bal = incSum - expSum - invBuy + invSell + transferIn - transferOut;
+        const bal = incSum - expSum + transferIn - transferOut;
         if (bal !== 0) {
             // Find sources from the previous month for this account
             const prevMonthIncForAcc = filteredPrevInc.filter(i => 
@@ -135,10 +132,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
             const source = await getCarryoverSource();
 
-            const [{ data: inc }, { data: exp }, { data: inv }, { data: trn }] = await Promise.all([
+            const [{ data: inc }, { data: exp }, { data: trn }] = await Promise.all([
                 supabaseAdmin.from("income").select("amount, account_type, source_id").eq("user_id", user.id).lt("date", startDate),
                 supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", user.id).lt("date", startDate),
-                supabaseAdmin.from("investments").select("amount, account_type, action").eq("user_id", user.id).lt("date", startDate),
                 supabaseAdmin.from("transfers").select("amount, from_account, to_account").eq("user_id", user.id).lt("date", startDate),
             ]);
 
@@ -146,17 +142,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const accounts = new Set<string>();
             filteredInc.forEach(i => i.account_type && accounts.add(i.account_type));
             (exp || []).forEach(e => e.account_type && accounts.add(e.account_type));
-            (inv || []).forEach(v => v.account_type && accounts.add(v.account_type));
             (trn || []).forEach(t => { accounts.add(t.from_account); accounts.add(t.to_account); });
 
             const breakdown = Array.from(accounts).map(acc => {
                 const incSum = filteredInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
                 const expSum = (exp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
-                const invBuy = (inv || []).filter(v => v.account_type === acc && v.action === 'buy').reduce((s, v) => s + v.amount, 0);
-                const invSell = (inv || []).filter(v => v.account_type === acc && v.action === 'sell').reduce((s, v) => s + v.amount, 0);
                 const transferIn = (trn || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
                 const transferOut = (trn || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
-                return { account: acc, incSum, expSum, invBuy, invSell, transferIn, transferOut, balance: incSum - expSum - invBuy + invSell + transferIn - transferOut };
+                return { account: acc, incSum, expSum, transferIn, transferOut, balance: incSum - expSum + transferIn - transferOut };
             });
 
             return res.status(200).json({ asOf: startDate, breakdown });
