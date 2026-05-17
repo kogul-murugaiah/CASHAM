@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
@@ -71,6 +72,11 @@ const ExpenseTracking = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [searchParams] = useSearchParams();
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterAccount, setFilterAccount] = useState(() => searchParams.get("account") || "All");
+    const [filterCategory, setFilterCategory] = useState("All");
+
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -234,8 +240,19 @@ const ExpenseTracking = () => {
         }
     };
 
+    const filteredExpenses = useMemo(() => {
+        return expenses.filter(exp => {
+            const matchSearch = searchTerm === "" || 
+                exp.item.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                (exp.description && exp.description.toLowerCase().includes(searchTerm.toLowerCase()));
+            const matchAccount = filterAccount === "All" || exp.account_type === filterAccount;
+            const matchCategory = filterCategory === "All" || (exp.categories?.id?.toString() === filterCategory) || (filterCategory === "Uncategorized" && !exp.categories);
+            return matchSearch && matchAccount && matchCategory;
+        });
+    }, [expenses, searchTerm, filterAccount, filterCategory]);
+
     // Calculations
-    const categoryTotals: CategoryTotal[] = expenses.reduce((acc, exp) => {
+    const categoryTotals: CategoryTotal[] = filteredExpenses.reduce((acc, exp) => {
         const categoryId = exp.category_id || 0;
         const categoryName = exp.categories?.name || "Uncategorized";
         const existing = acc.find((item) => item.categoryId === categoryId);
@@ -250,7 +267,7 @@ const ExpenseTracking = () => {
     categoryTotals.sort((a, b) => b.total - a.total);
 
     const accountTotals: AccountTotal[] = accountTypes.map((type) => {
-        const total = expenses
+        const total = filteredExpenses
             .filter((exp) => exp.account_type === type)
             .reduce((sum, exp) => sum + exp.amount, 0);
         return { accountType: type, total };
@@ -258,7 +275,7 @@ const ExpenseTracking = () => {
 
     accountTotals.sort((a, b) => b.total - a.total);
 
-    const grandTotal = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const grandTotal = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
     const periodData: PeriodTotal[] = (() => {
         if (viewMode === "daily") {
@@ -273,7 +290,7 @@ const ExpenseTracking = () => {
                 const d = new Date(selectedWeekStart);
                 d.setDate(d.getDate() + i);
                 const dateStr = d.toISOString().slice(0, 10);
-                const total = expenses
+                const total = filteredExpenses
                     .filter(e => e.date === dateStr)
                     .reduce((sum, e) => sum + e.amount, 0);
                 const shortDate = `${d.getDate()}/${d.getMonth() + 1}`;
@@ -285,7 +302,7 @@ const ExpenseTracking = () => {
             return Array.from({ length: daysInMonth }, (_, i) => {
                 const day = i + 1;
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const total = expenses
+                const total = filteredExpenses
                     .filter(e => e.date === dateStr)
                     .reduce((sum, e) => sum + e.amount, 0);
                 return { period: String(day), label: `${MONTH_NAMES[month - 1]} ${day}`, total };
@@ -293,7 +310,7 @@ const ExpenseTracking = () => {
         } else {
             return MONTH_NAMES.map((name, index) => {
                 const monthNum = index + 1;
-                const total = expenses
+                const total = filteredExpenses
                     .filter(e => new Date(e.date).getMonth() + 1 === monthNum)
                     .reduce((sum, e) => sum + e.amount, 0);
                 return { period: name, label: name, total };
@@ -304,17 +321,17 @@ const ExpenseTracking = () => {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 15;
-    const totalPages = Math.ceil(expenses.length / recordsPerPage);
+    const totalPages = Math.ceil(filteredExpenses.length / recordsPerPage);
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    const currentExpenses = expenses.slice(indexOfFirstRecord, indexOfLastRecord);
+    const currentExpenses = filteredExpenses.slice(indexOfFirstRecord, indexOfLastRecord);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart]);
+    }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart, searchTerm, filterAccount, filterCategory]);
 
     const handleExport = () => {
-        const exportData = expenses.map(exp => ({
+        const exportData = filteredExpenses.map(exp => ({
             Date: new Date(exp.date).toLocaleDateString('en-IN'),
             Item: exp.item,
             Category: exp.categories?.name || "Uncategorized",
@@ -446,6 +463,49 @@ const ExpenseTracking = () => {
                                 className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
                             />
                         )}
+                    </div>
+                </div>
+
+                {/* Filters Section */}
+                <div className="mb-6 glass-card p-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-slate-800/40 border-white/5 animate-fade-in z-20 relative">
+                    <div className="relative flex-1 min-w-[200px] w-full">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search item or description..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder-slate-500"
+                        />
+                    </div>
+                    <div className="flex gap-4 w-full sm:w-auto">
+                        <div className="flex-1 sm:flex-none">
+                            <select
+                                value={filterAccount}
+                                onChange={(e) => setFilterAccount(e.target.value)}
+                                className="w-full sm:w-40 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="All">All Accounts</option>
+                                {accountTypes.map(acc => (
+                                    <option key={acc} value={acc}>{acc}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex-1 sm:flex-none">
+                            <select
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                className="w-full sm:w-48 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="All">All Categories</option>
+                                {categories.map(c => (
+                                    <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                                ))}
+                                <option value="Uncategorized">Uncategorized</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -623,7 +683,7 @@ const ExpenseTracking = () => {
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-white font-heading">Expense History</h2>
                                             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                                                {expenses.length} Records
+                                                {filteredExpenses.length} Records
                                             </span>
                                         </div>
                                         <button onClick={handleExport} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5">

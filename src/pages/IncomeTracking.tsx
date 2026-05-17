@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
@@ -65,6 +66,11 @@ const IncomeTracking = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [searchParams] = useSearchParams();
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterAccount, setFilterAccount] = useState(() => searchParams.get("account") || "All");
+    const [filterSource, setFilterSource] = useState("All");
+
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -197,8 +203,19 @@ const IncomeTracking = () => {
         }
     };
 
+    const filteredRecords = useMemo(() => {
+        return records.filter(rec => {
+            const matchSearch = searchTerm === "" || 
+                (rec.source || rec.income_sources?.name || "Unknown").toLowerCase().includes(searchTerm.toLowerCase()) || 
+                (rec.description && rec.description.toLowerCase().includes(searchTerm.toLowerCase()));
+            const matchAccount = filterAccount === "All" || rec.account_type === filterAccount;
+            const matchSource = filterSource === "All" || (rec.source_id?.toString() === filterSource) || (filterSource === "Unknown" && !rec.source_id);
+            return matchSearch && matchAccount && matchSource;
+        });
+    }, [records, searchTerm, filterAccount, filterSource]);
+
     // Calculations
-    const sourceTotals: SourceTotal[] = records.reduce((acc, rec) => {
+    const sourceTotals: SourceTotal[] = filteredRecords.reduce((acc, rec) => {
         const sourceId = rec.source_id;
         const sourceName = rec.source || rec.income_sources?.name || "Unknown";
         const existing = acc.find((item) => item.sourceId === sourceId);
@@ -212,7 +229,7 @@ const IncomeTracking = () => {
 
     sourceTotals.sort((a, b) => b.total - a.total);
 
-    const grandTotal = records.reduce((sum, rec) => sum + rec.amount, 0);
+    const grandTotal = filteredRecords.reduce((sum, rec) => sum + rec.amount, 0);
 
     const periodData: PeriodTotal[] = (() => {
         if (viewMode === "monthly") {
@@ -221,7 +238,7 @@ const IncomeTracking = () => {
             return Array.from({ length: daysInMonth }, (_, i) => {
                 const day = i + 1;
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const total = records
+                const total = filteredRecords
                     .filter(e => e.date === dateStr)
                     .reduce((sum, e) => sum + e.amount, 0);
                 return { period: String(day), label: `${MONTH_NAMES[month - 1]} ${day}`, total };
@@ -229,7 +246,7 @@ const IncomeTracking = () => {
         } else {
             return MONTH_NAMES.map((name, index) => {
                 const monthNum = index + 1;
-                const total = records
+                const total = filteredRecords
                     .filter(e => new Date(e.date).getMonth() + 1 === monthNum)
                     .reduce((sum, e) => sum + e.amount, 0);
                 return { period: name, label: name, total };
@@ -240,17 +257,17 @@ const IncomeTracking = () => {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const recordsPerPage = 15;
-    const totalPages = Math.ceil(records.length / recordsPerPage);
+    const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-    const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
+    const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [viewMode, selectedMonth, selectedYear]);
+    }, [viewMode, selectedMonth, selectedYear, searchTerm, filterAccount, filterSource]);
 
     const handleExport = () => {
-        const exportData = records.map(rec => ({
+        const exportData = filteredRecords.map(rec => ({
             Date: new Date(rec.date).toLocaleDateString('en-IN'),
             Source: rec.source || rec.income_sources?.name || "Unknown",
             Account: rec.account_type,
@@ -318,6 +335,49 @@ const IncomeTracking = () => {
                                 className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
                             />
                         )}
+                    </div>
+                </div>
+
+                {/* Filters Section */}
+                <div className="mb-6 glass-card p-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-slate-800/40 border-white/5 animate-fade-in z-20 relative">
+                    <div className="relative flex-1 min-w-[200px] w-full">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search source or description..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder-slate-500"
+                        />
+                    </div>
+                    <div className="flex gap-4 w-full sm:w-auto">
+                        <div className="flex-1 sm:flex-none">
+                            <select
+                                value={filterAccount}
+                                onChange={(e) => setFilterAccount(e.target.value)}
+                                className="w-full sm:w-40 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="All">All Accounts</option>
+                                {accountTypes.map(acc => (
+                                    <option key={acc} value={acc}>{acc}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex-1 sm:flex-none">
+                            <select
+                                value={filterSource}
+                                onChange={(e) => setFilterSource(e.target.value)}
+                                className="w-full sm:w-48 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="All">All Sources</option>
+                                {sources.map(s => (
+                                    <option key={s.id} value={s.id.toString()}>{s.name}</option>
+                                ))}
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -414,7 +474,7 @@ const IncomeTracking = () => {
                                         <div className="flex items-center gap-3">
                                             <h2 className="text-lg font-bold text-white font-heading">Income History</h2>
                                             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                                                {records.length} Transactions
+                                                {filteredRecords.length} Transactions
                                             </span>
                                         </div>
                                         <button onClick={handleExport} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5">

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
@@ -41,6 +42,20 @@ const Dashboard = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string | null>(null);
   const { hideBalance, currencyStyle, toggleHideBalance } = useUserPreferences();
+
+  const navigate = useNavigate();
+  const [activeWalletPopup, setActiveWalletPopup] = useState<string | null>(null);
+  const walletPopupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (walletPopupRef.current && !walletPopupRef.current.contains(event.target as Node)) {
+        setActiveWalletPopup(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -289,15 +304,39 @@ const Dashboard = () => {
 
           <div className="glass-card p-6">
             <h3 className="text-lg font-bold text-white mb-6 font-heading">Account Wallets</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" ref={walletPopupRef}>
               {accountBalances.map((acc) => (
-                <div key={acc.accountType} className="rounded-2xl border border-white/5 bg-slate-700/50 p-4 hover:bg-slate-700/80 transition-colors">
+                <div 
+                  key={acc.accountType} 
+                  className="relative rounded-2xl border border-white/5 bg-slate-700/50 p-4 hover:bg-slate-700/80 transition-colors cursor-pointer"
+                  onClick={() => setActiveWalletPopup(activeWalletPopup === acc.accountType ? null : acc.accountType)}
+                >
                   <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">{acc.accountType}</span><div className={`h-2 w-2 rounded-full ${acc.balance >= 0 ? "bg-green-500" : "bg-red-500"}`} /></div>
                   <div className={`text-xl font-bold text-white mb-3 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(acc.balance, currencyStyle)}</div>
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px]"><span className="text-slate-500">Inbound</span><span className={`text-green-400 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>+{formatCurrency(acc.income, currencyStyle)}</span></div>
                     <div className="flex justify-between text-[10px]"><span className="text-slate-500">Outbound</span><span className={`text-red-400 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>-{formatCurrency(acc.expenses, currencyStyle)}</span></div>
                   </div>
+                  
+                  {activeWalletPopup === acc.accountType && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in py-1">
+                      <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5">{acc.accountType} Actions</div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/expenses?account=${encodeURIComponent(acc.accountType)}`); }}
+                        className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-2"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-red-500/80"></span>
+                        View Expenses
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); navigate(`/income?account=${encodeURIComponent(acc.accountType)}`); }}
+                        className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-2"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-500/80"></span>
+                        View Incomes
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
