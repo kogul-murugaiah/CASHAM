@@ -77,7 +77,7 @@ const ExpenseTracking = () => {
             boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.1)',
             color: isDark ? '#f8fafc' : '#0f172a',
         },
-        itemStyle: { fontWeight: 700 as const },
+        itemStyle: { fontWeight: 700 as const, color: isDark ? '#f8fafc' : '#0f172a' },
         labelStyle: { color: isDark ? '#64748b' : '#94a3b8', fontSize: '10px', textTransform: 'uppercase' as const, marginBottom: '4px' },
     };
     const axisColor = isDark ? '#475569' : '#94a3b8';
