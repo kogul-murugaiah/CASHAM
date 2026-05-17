@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
@@ -44,6 +45,7 @@ const Dashboard = () => {
   const { hideBalance, currencyStyle, toggleHideBalance } = useUserPreferences();
 
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [activeWalletPopup, setActiveWalletPopup] = useState<string | null>(null);
   const walletPopupRef = useRef<HTMLDivElement>(null);
 
@@ -319,18 +321,18 @@ const Dashboard = () => {
                   </div>
                   
                   {activeWalletPopup === acc.accountType && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in py-1">
-                      <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5">{acc.accountType} Actions</div>
+                    <div className={`absolute top-full left-0 mt-2 w-48 border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in py-1 ${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-white border-slate-200 shadow-slate-200/80'}`}>
+                      <div className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b ${theme === 'dark' ? 'text-slate-500 border-white/5' : 'text-slate-400 border-slate-100'}`}>{acc.accountType} Actions</div>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/expenses?account=${encodeURIComponent(acc.accountType)}`); }}
-                        className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-2"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/expense-tracking?account=${encodeURIComponent(acc.accountType)}`); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors flex items-center gap-2 ${theme === 'dark' ? 'text-slate-300 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                       >
                         <span className="w-2 h-2 rounded-full bg-red-500/80"></span>
                         View Expenses
                       </button>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); navigate(`/income?account=${encodeURIComponent(acc.accountType)}`); }}
-                        className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/5 hover:text-white transition-colors flex items-center gap-2"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/income-tracking?account=${encodeURIComponent(acc.accountType)}`); }}
+                        className={`w-full text-left px-4 py-2.5 text-xs font-bold transition-colors flex items-center gap-2 ${theme === 'dark' ? 'text-slate-300 hover:bg-white/5 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
                       >
                         <span className="w-2 h-2 rounded-full bg-emerald-500/80"></span>
                         View Incomes
