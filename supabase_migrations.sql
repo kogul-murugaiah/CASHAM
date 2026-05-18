@@ -10,7 +10,7 @@ CREATE TABLE expense_templates (
   amount NUMERIC NOT NULL,
   item TEXT NOT NULL,
   description TEXT,
-  category_id UUID REFERENCES categories(id),
+  category_id INTEGER REFERENCES categories(id),
   account_type TEXT NOT NULL,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
