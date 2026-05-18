@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2 } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2, FiRefreshCw } from "react-icons/fi";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -38,6 +39,8 @@ const Settings = () => {
 
   const { hideBalance, currencyStyle, language, updatePreference } = useUserPreferences();
   const [exporting, setExporting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -141,6 +144,15 @@ const Settings = () => {
     } catch (err: any) {
       alert(err.message || "Failed to rename");
     }
+  };
+
+  const handleSyncCarryover = async () => {
+    setSyncing(true);
+    try {
+      const now = new Date();
+      await api.post('/api/dashboard', { year: now.getFullYear(), month: now.getMonth() + 1 });
+      navigate('/dashboard');
+    } catch (e) { console.error(e); } finally { setSyncing(false); }
   };
 
   const handleExportCSV = async () => {
@@ -488,6 +500,27 @@ const Settings = () => {
                       <option value="en">ENGLISH</option>
                       <option value="hi">HINDI (हिन्दी)</option>
                     </select>
+                  </div>
+
+                  {/* Balance Carryover Sync */}
+                  <div className="group flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 rounded-2xl bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500">
+                        <FiRefreshCw size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Balance Carryover</p>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">Sync last month's closing balance forward</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleSyncCarryover}
+                      disabled={syncing}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 dark:text-emerald-400 text-xs font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all disabled:opacity-40"
+                    >
+                      <FiRefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+                      {syncing ? 'Syncing...' : 'Sync Now'}
+                    </button>
                   </div>
 
                   {/* Data Export */}

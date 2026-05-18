@@ -151,14 +151,7 @@ const Dashboard = () => {
     return "Good evening";
   };
 
-  const [syncing, setSyncing] = useState(false);
-  const handleSyncCarryover = async () => {
-    setSyncing(true);
-    try {
-      await api.post('/api/dashboard', { year: currentYear, month: currentMonth });
-      window.location.reload();
-    } catch (e) { console.error(e); } finally { setSyncing(false); }
-  };
+
 
   if (loading) return <div className="p-8"><div className="grid gap-6 md:grid-cols-3 mb-8">{[...Array(3)].map((_, i) => <div key={i} className="h-40 animate-pulse rounded-3xl bg-slate-700/50" />)}</div></div>;
 
@@ -175,10 +168,6 @@ const Dashboard = () => {
             <p className="text-slate-400 mt-1">
               Financial summary for <span className="text-white font-semibold">{MONTH_NAMES[currentMonth - 1]} {currentYear}</span>
             </p>
-            <button onClick={handleSyncCarryover} disabled={syncing} className="mt-2 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5 opacity-60 hover:opacity-100 disabled:opacity-30">
-              <svg className={`${syncing ? "animate-spin" : ""}`} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
-              {syncing ? "Syncing..." : "Sync Balance Carryover"}
-            </button>
           </div>
 
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -339,7 +328,7 @@ const Dashboard = () => {
                   </div>
                   
                   {activeWalletPopup === acc.accountType && (
-                    <div className={`absolute top-full left-0 mt-2 w-48 border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in py-1 ${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-white border-slate-200 shadow-slate-200/80'}`}>
+                    <div className={`absolute bottom-full left-0 mb-2 w-48 border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in py-1 ${theme === 'dark' ? 'bg-slate-800 border-white/10' : 'bg-white border-slate-200 shadow-slate-200/80'}`}>
                       <div className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b ${theme === 'dark' ? 'text-slate-500 border-white/5' : 'text-slate-400 border-slate-100'}`}>{acc.accountType} Actions</div>
                       <button 
                         onClick={(e) => { e.stopPropagation(); navigate(`/expense-tracking?account=${encodeURIComponent(acc.accountType)}`); }}

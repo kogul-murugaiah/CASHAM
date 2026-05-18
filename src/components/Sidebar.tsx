@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiZap
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -44,12 +44,6 @@ const NAV_GROUPS = [
         label: "Configuration",
         items: [
             { to: "/settings", icon: FiSettings, label: "Settings" },
-            { 
-               to: "#ai", 
-               icon: FiZap, 
-               label: "Ask AI Assistant",
-               isAction: true 
-            },
         ],
     },
 ];
