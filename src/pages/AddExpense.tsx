@@ -1,10 +1,21 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
+import { FiRepeat, FiTrash2, FiX } from "react-icons/fi";
+
+type ExpenseTemplate = {
+  id: string;
+  amount: number;
+  item: string;
+  description: string | null;
+  category_id: string | null;
+  account_type: string;
+  categories: { id: string; name: string } | null;
+};
 
 
 
@@ -36,24 +47,76 @@ const AddExpense = () => {
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState(0);
 
+  // Template state
+  const [templates, setTemplates] = useState<ExpenseTemplate[]>([]);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [manageMode, setManageMode] = useState(false);
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const templatePickerRef = useRef<HTMLDivElement>(null);
+
   // Fetch recent expenses
   const fetchRecentExpenses = async () => {
     try {
       const data = await api.get('/api/expenses');
-
       const todayStr = new Date().toISOString().slice(0, 10);
       const todayTotal = (data || []).filter((exp: any) => exp.date.startsWith(todayStr)).reduce((sum: number, exp: any) => sum + exp.amount, 0);
       setTodayExpenses(todayTotal);
-
       setRecentExpenses(data?.slice(0, 5) || []);
     } catch (err: any) {
       console.error("Error fetching recent expenses:", err);
     }
   };
 
+  const fetchTemplates = async () => {
+    try {
+      const data = await api.get('/api/expenses?templates=true');
+      setTemplates(data || []);
+    } catch (err: any) {
+      console.error("Error fetching templates:", err);
+    }
+  };
+
   useEffect(() => {
     fetchRecentExpenses();
+    fetchTemplates();
   }, []);
+
+  // Close template picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (templatePickerRef.current && !templatePickerRef.current.contains(e.target as Node)) {
+        setShowTemplatePicker(false);
+        setManageMode(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleFillFromTemplate = (t: ExpenseTemplate) => {
+    setForm({
+      amount: t.amount.toString(),
+      date: new Date().toISOString().slice(0, 10),
+      item: t.item,
+      description: t.description || "",
+      category_id: t.category_id || "",
+      accountType: t.account_type,
+    });
+    setShowTemplatePicker(false);
+    setManageMode(false);
+    setError("");
+    setSuccess("Template loaded — edit and submit!");
+    setTimeout(() => setSuccess(""), 2500);
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    try {
+      await api.delete(`/api/expenses?template=true&id=${id}`);
+      setTemplates(prev => prev.filter(t => t.id !== id));
+    } catch (err: any) {
+      setError(err.message || "Failed to delete template");
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -97,12 +160,27 @@ const AddExpense = () => {
         account_type: form.accountType,
       });
 
-      setSuccess("Expense added successfully");
+      // Save as template if checkbox is checked
+      if (saveAsTemplate) {
+        try {
+          await api.post('/api/expenses?template=true', {
+            amount: Number(form.amount),
+            item: form.item,
+            description: form.description || null,
+            category_id: form.category_id || null,
+            account_type: form.accountType,
+          });
+          fetchTemplates();
+        } catch { /* template save is best-effort */ }
+      }
+
+      setSuccess(saveAsTemplate ? "Expense added & saved as template!" : "Expense added successfully");
+      setSaveAsTemplate(false);
       setForm({
         ...initialForm,
-        date: new Date().toISOString().slice(0, 10), // Reset to today's date
+        date: new Date().toISOString().slice(0, 10),
       });
-      fetchRecentExpenses(); // Refresh recent list
+      fetchRecentExpenses();
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -124,11 +202,97 @@ const AddExpense = () => {
             Record a new spending to track your budget.
           </p>
 
-          <div className="mx-auto w-fit bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl backdrop-blur-sm shadow-xl shadow-red-500/5 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Today's Spend</p>
-            <p className="text-3xl font-bold text-red-400 font-heading">
-              {formatCurrency(todayExpenses, currencyStyle)}
-            </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <div className="bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl backdrop-blur-sm shadow-xl shadow-red-500/5 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Today's Spend</p>
+              <p className="text-3xl font-bold text-red-400 font-heading">
+                {formatCurrency(todayExpenses, currencyStyle)}
+              </p>
+            </div>
+
+            {/* Repeating Expense Button */}
+            <div className="relative" ref={templatePickerRef}>
+              <button
+                type="button"
+                onClick={() => { setShowTemplatePicker(!showTemplatePicker); setManageMode(false); }}
+                className={`flex items-center gap-2 px-5 py-3 rounded-2xl border text-sm font-bold transition-all ${
+                  showTemplatePicker
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                    : 'bg-slate-700/50 border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                <FiRepeat size={16} />
+                Repeating Expense
+                {templates.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 text-[10px] font-black bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/20">
+                    {templates.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Template Picker Dropdown */}
+              {showTemplatePicker && (
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-80 sm:w-96 glass-card border border-white/10 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-fade-in">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-slate-700/40">
+                    <h4 className="text-sm font-bold text-white">
+                      {manageMode ? 'Manage Templates' : 'Your Templates'}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {!manageMode && templates.length > 0 && (
+                        <button
+                          onClick={() => setManageMode(true)}
+                          className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider"
+                        >
+                          Manage
+                        </button>
+                      )}
+                      <button onClick={() => { setShowTemplatePicker(false); setManageMode(false); }} className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+                        <FiX size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto">
+                    {templates.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <p className="text-slate-500 text-sm mb-1">No templates yet</p>
+                        <p className="text-slate-600 text-xs">Add an expense and check "Save as template" to create one.</p>
+                      </div>
+                    ) : (
+                      templates.map((t) => (
+                        <div
+                          key={t.id}
+                          className={`flex items-center justify-between px-4 py-3 border-b border-white/5 last:border-0 transition-colors ${
+                            manageMode ? 'bg-transparent' : 'hover:bg-white/5 cursor-pointer'
+                          }`}
+                          onClick={() => !manageMode && handleFillFromTemplate(t)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{t.item}</p>
+                            <p className="text-[11px] text-slate-500">
+                              {t.categories?.name || 'Uncategorized'} · {t.account_type}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 ml-3">
+                            <span className="text-sm font-bold text-red-400 font-mono whitespace-nowrap">
+                              {formatCurrency(t.amount, currencyStyle)}
+                            </span>
+                            {manageMode && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(t.id); }}
+                                className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all"
+                              >
+                                <FiTrash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -252,25 +416,40 @@ const AddExpense = () => {
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end gap-3 relative z-10">
-            <button
-              type="button"
-              onClick={() => {
-                setForm(initialForm);
-                setError("");
-                setSuccess("");
-              }}
-              className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-            >
-              Clear
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary rounded-xl px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Adding..." : "Add Expense"}
-            </button>
+          <div className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+            <label className="flex items-center gap-2 cursor-pointer group select-none">
+              <input
+                type="checkbox"
+                checked={saveAsTemplate}
+                onChange={(e) => setSaveAsTemplate(e.target.checked)}
+                className="w-4 h-4 rounded border-white/20 bg-slate-700/50 text-emerald-500 focus:ring-emerald-500/30 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
+                <FiRepeat className="inline mr-1" size={12} />
+                Save as template
+              </span>
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(initialForm);
+                  setError("");
+                  setSuccess("");
+                  setSaveAsTemplate(false);
+                }}
+                className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+              >
+                Clear
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary rounded-xl px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Adding..." : "Add Expense"}
+              </button>
+            </div>
           </div>
         </form>
 

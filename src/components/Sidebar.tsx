@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -31,12 +31,14 @@ const NAV_GROUPS = [
             { to: "/expense-tracking", icon: FiList, label: "Expense Tracker" },
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
             { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
+            { to: "/investment-timeline", icon: FiTrendingUp, label: "Investment Timeline" },
         ],
     },
     {
         label: "Planning",
         items: [
             { to: "/budget-planner", icon: FiPieChart, label: "Budget Planner" },
+            { to: "/goals", icon: FiTarget, label: "Savings Goals" },
             { to: "/import", icon: FiUpload, label: "Bulk Import" },
         ],
     },

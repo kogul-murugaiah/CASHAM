@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -38,6 +38,7 @@ const Dashboard = () => {
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -99,6 +100,9 @@ const Dashboard = () => {
         setIncome(data.income || []);
         setExpenses(data.expenses || []);
         setTransfers(data.transfers || []);
+
+        const goalsData = await api.get('/api/goals');
+        setGoals(goalsData || []);
       } catch (err: any) {
         setError(err.message || "Failed to fetch data");
       } finally {
@@ -310,6 +314,36 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* Savings Goals Mini-Section */}
+          {goals.filter(g => !g.is_completed).length > 0 && (
+            <div className="glass-card p-6 mb-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-white font-heading">Active Savings Goals</h3>
+                <Link to="/goals" className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-wider">View All</Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {goals.filter(g => !g.is_completed).slice(0, 3).map(goal => {
+                  const pct = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
+                  return (
+                    <div key={goal.id} className="rounded-2xl border border-white/5 bg-slate-700/50 p-4 relative overflow-hidden group hover:bg-slate-700/80 transition-colors">
+                      <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-20" style={{ backgroundColor: goal.color }} />
+                      <div className="flex items-center gap-3 mb-3 relative z-10">
+                        <span className="text-2xl">{goal.icon}</span>
+                        <div>
+                          <p className="text-sm font-bold text-white">{goal.name}</p>
+                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{pct.toFixed(0)}% Saved</p>
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden relative z-10">
+                        <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: goal.color }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="glass-card p-6">
             <h3 className="text-lg font-bold text-white mb-6 font-heading">Account Wallets</h3>

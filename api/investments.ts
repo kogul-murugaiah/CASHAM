@@ -18,6 +18,76 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { method } = req;
 
     // ──────────────────────────────────────────────
+    // Snapshots — Investment Timeline
+    // ──────────────────────────────────────────────
+    if (req.query.snapshots === 'true' || req.query.snapshot === 'capture') {
+        if (method === 'GET' && req.query.snapshots === 'true') {
+            try {
+                const { data, error } = await supabaseAdmin
+                    .from('investment_snapshots')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('snapshot_date', { ascending: true });
+                if (error) throw error;
+                return res.status(200).json(data || []);
+            } catch (error: any) {
+                return res.status(500).json({ error: error.message });
+            }
+        }
+
+        if (method === 'POST' && req.query.snapshot === 'capture') {
+            try {
+                // Compute summary
+                const { data: all, error: summaryErr } = await supabaseAdmin
+                    .from('investments')
+                    .select('type, action, amount, current_value')
+                    .eq('user_id', user.id);
+                if (summaryErr) throw summaryErr;
+
+                const byType: Record<string, { invested: number; current: number }> = {};
+                for (const inv of all || []) {
+                    if (!byType[inv.type]) byType[inv.type] = { invested: 0, current: 0 };
+                    if (inv.action === 'buy') {
+                        byType[inv.type].invested += inv.amount;
+                        byType[inv.type].current += (inv.current_value ?? inv.amount);
+                    } else {
+                        byType[inv.type].invested -= inv.amount;
+                    }
+                }
+
+                let totalInvested = 0;
+                let totalCurrent = 0;
+                const breakdown: any = {};
+                for (const [t, v] of Object.entries(byType)) {
+                    totalInvested += v.invested;
+                    totalCurrent += v.current;
+                    breakdown[t] = { invested: v.invested, current: v.current, pnl: v.current - v.invested };
+                }
+                const totalPnl = totalCurrent - totalInvested;
+                const snapshotDate = new Date().toISOString().slice(0, 10); // Today's date YYYY-MM-DD
+
+                // Attempt to upsert
+                const { data, error } = await supabaseAdmin
+                    .from('investment_snapshots')
+                    .upsert([{
+                        user_id: user.id,
+                        snapshot_date: snapshotDate,
+                        total_invested: totalInvested,
+                        total_current_value: totalCurrent,
+                        total_pnl: totalPnl,
+                        breakdown
+                    }], { onConflict: 'user_id,snapshot_date' })
+                    .select()
+                    .single();
+                if (error) throw error;
+                return res.status(200).json(data);
+            } catch (error: any) {
+                return res.status(500).json({ error: error.message });
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────
     // GET — list investments (filtered by type or date range)
     // query: ?type=MutualFund | ?summary=true | ?startDate&endDate
     // ──────────────────────────────────────────────
