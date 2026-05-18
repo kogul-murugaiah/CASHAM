@@ -251,7 +251,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-8 border-t border-white/5">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 pt-8 border-t border-white/5">
                 <div className="flex flex-col relative justify-end">
                   <select 
                     value={dailyLimitAccount} 
@@ -269,7 +269,10 @@ const Dashboard = () => {
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
                   <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
-                  <p className="text-[9px] font-bold text-slate-500 mt-1 uppercase">Base: {formatCurrency(baseDailyLimit, currencyStyle)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base Limit</p>
+                  <p className={`text-xl font-bold text-slate-300 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(baseDailyLimit, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
