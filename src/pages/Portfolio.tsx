@@ -754,9 +754,9 @@ const Portfolio = () => {
         </header>
 
         {/* View Toggle */}
-        <div className="flex bg-slate-800/50 p-1 rounded-xl w-full sm:w-fit mb-8 border border-white/5 mx-auto">
-          <button onClick={() => setMainView('holdings')} className={`flex-1 px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${mainView === 'holdings' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-400 hover:text-white'}`}>Current Holdings</button>
-          <button onClick={() => setMainView('timeline')} className={`flex-1 px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${mainView === 'timeline' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-400 hover:text-white'}`}>Growth Timeline</button>
+        <div className="flex gap-1 p-1 bg-slate-700/40 rounded-2xl w-full sm:w-fit mb-8 border border-white/5 backdrop-blur-sm">
+          <button onClick={() => setMainView('holdings')} className={`flex-1 sm:flex-none px-8 py-2.5 text-sm font-bold rounded-xl transition-all ${mainView === 'holdings' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-400 hover:text-white'}`}>Current Holdings</button>
+          <button onClick={() => setMainView('timeline')} className={`flex-1 sm:flex-none px-8 py-2.5 text-sm font-bold rounded-xl transition-all ${mainView === 'timeline' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-400 hover:text-white'}`}>Growth Timeline</button>
         </div>
 
         {mainView === "holdings" ? (
