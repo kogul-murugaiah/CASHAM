@@ -107,7 +107,7 @@ const IncomeTracking = () => {
 
         try {
             // Fetch sources
-            const sourcesData = await api.get('/api/sources');
+            const sourcesData = await api.get('/api/lookups?type=sources');
             setSources(sourcesData || []);
 
             let startDate, endDate;

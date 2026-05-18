@@ -135,7 +135,7 @@ const ExpenseTracking = () => {
 
         try {
             // Fetch categories
-            const categoriesData = await api.get('/api/categories');
+            const categoriesData = await api.get('/api/lookups?type=categories');
             setCategories(categoriesData || []);
 
             let startDate, endDate;
