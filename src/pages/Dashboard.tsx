@@ -267,16 +267,16 @@ const Dashboard = () => {
                   <p className={`text-xl font-bold text-orange-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
-                  <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
-                </div>
-                <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base Limit</p>
                   <p className={`text-xl font-bold text-slate-300 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(baseDailyLimit, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
                   <p className={`text-xl font-bold text-rose-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(todayExpenses, currencyStyle)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
+                  <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weekly Expense</p>
