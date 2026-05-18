@@ -8,12 +8,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { method } = req;
+    const { method, query } = req;
+    const type = query.type as string; // 'categories' or 'sources'
+
+    if (!type || (type !== 'categories' && type !== 'sources')) {
+        return res.status(400).json({ error: 'Invalid or missing type parameter' });
+    }
+
+    const table = type === 'categories' ? 'categories' : 'income_sources';
 
     if (method === 'GET') {
         try {
             const { data, error } = await supabaseAdmin
-                .from('income_sources')
+                .from(table)
                 .select('*')
                 .eq('user_id', user.id)
                 .order('name');
@@ -31,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!name) return res.status(400).json({ error: 'Name is required' });
 
             const { data, error } = await supabaseAdmin
-                .from('income_sources')
+                .from(table)
                 .insert([{
                     user_id: user.id,
                     name
@@ -51,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!id || !name) return res.status(400).json({ error: 'ID and Name are required' });
 
             const { data, error } = await supabaseAdmin
-                .from('income_sources')
+                .from(table)
                 .update({ name })
                 .eq('id', id)
                 .eq('user_id', user.id)
@@ -68,12 +75,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
             const { id } = req.query;
 
-            if (!id) return res.status(400).json({ error: 'Missing source id' });
+            if (!id) return res.status(400).json({ error: 'Missing id' });
 
             const { error } = await supabaseAdmin
-                .from('income_sources')
+                .from(table)
                 .delete()
-                .eq('id', id)
+                .eq('id', id as string)
                 .eq('user_id', user.id);
 
             if (error) throw error;

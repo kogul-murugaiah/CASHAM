@@ -20,7 +20,7 @@ export const useExpenseCategories = () => {
       setLoading(true);
       setError(null);
 
-      const data = await api.get('/api/categories');
+      const data = await api.get('/api/lookups?type=categories');
 
       const types = data || [];
 
@@ -60,7 +60,7 @@ export const useExpenseCategories = () => {
     }
 
     try {
-      const data = await api.post('/api/categories', { name: trimmedName });
+      const data = await api.post('/api/lookups?type=categories', { name: trimmedName });
       setCategories(prev => [...prev, data]);
       return data;
     } catch (err: any) {
@@ -70,7 +70,7 @@ export const useExpenseCategories = () => {
 
   const deleteCategory = async (id: number) => {
     try {
-      await api.delete(`/api/categories?id=${id}`);
+      await api.delete(`/api/lookups?type=categories&id=${id}`);
       setCategories(prev => prev.filter(cat => cat.id !== id));
     } catch (err: any) {
       throw new Error(err.message || 'Failed to delete category');
@@ -82,7 +82,7 @@ export const useExpenseCategories = () => {
     if (!trimmedName) throw new Error('Name cannot be empty');
     
     try {
-      const data = await api.patch('/api/categories', { id, name: trimmedName });
+      const data = await api.patch('/api/lookups?type=categories', { id, name: trimmedName });
       setCategories(prev => prev.map(cat => cat.id === id ? data : cat));
       return data;
     } catch (err: any) {
