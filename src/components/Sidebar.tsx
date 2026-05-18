@@ -31,7 +31,6 @@ const NAV_GROUPS = [
             { to: "/expense-tracking", icon: FiList, label: "Expense Tracker" },
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
             { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
-            { to: "/investment-timeline", icon: FiTrendingUp, label: "Investment Timeline" },
         ],
     },
     {

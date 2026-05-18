@@ -32,7 +32,6 @@ const Portfolio = lazy(() => import('./pages/Portfolio'));
 const ImportCenter = lazy(() => import('./pages/ImportCenter'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
-const InvestmentTimeline = lazy(() => import('./pages/InvestmentTimeline'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -88,7 +87,6 @@ function App() {
                             <Route path="/import" element={<ImportCenter />} />
                             <Route path="/settings" element={<Settings />} />
                             <Route path="/goals" element={<SavingsGoals />} />
-                            <Route path="/investment-timeline" element={<InvestmentTimeline />} />
                           </Routes>
                         </Suspense>
                       </div>

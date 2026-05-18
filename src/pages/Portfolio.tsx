@@ -3,15 +3,25 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { api } from "../lib/api";
 import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
 import type { CashFlow } from "../lib/xirr";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency, formatDate } from "../lib/formatters";
+import { FiCamera, FiTrendingUp } from "react-icons/fi";
 import { useTheme } from "../contexts/ThemeContext";
 
 // ─── Types ──────────────────────────────────────────────────────
 
 type Tab = "overview" | "mf" | "stock" | "gold" | "fd" | "realestate" | "crypto" | "pf" | "analysis";
+
+type Snapshot = {
+    id: string;
+    snapshot_date: string;
+    total_invested: number;
+    total_current_value: number;
+    total_pnl: number;
+    breakdown: any;
+};
 
 const TABS: { key: Tab; label: string; emoji: string }[] = [
   { key: "overview", label: "Overview", emoji: "📊" },
@@ -223,6 +233,14 @@ const Portfolio = () => {
   const [netWorthCash, setNetWorthCash] = useState(0);
   const { theme } = useTheme();
 
+  // Timeline State
+  const [mainView, setMainView] = useState<"holdings" | "timeline">("holdings");
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [capturing, setCapturing] = useState(false);
+  const [timelineError, setTimelineError] = useState<string | null>(null);
+  const [timelineSuccess, setTimelineSuccess] = useState<string | null>(null);
+
   // ─── Theme-aware chart styles ──────────────────────────────────
   const isDark = theme === 'dark';
   const tooltipStyle = {
@@ -299,6 +317,39 @@ const Portfolio = () => {
       console.error("Refresh failed:", err);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const fetchSnapshots = async () => {
+    setTimelineLoading(true);
+    try {
+        const data = await api.get("/api/investments?snapshots=true");
+        setSnapshots(data || []);
+    } catch (err: any) {
+        setTimelineError(err.message || "Failed to load timeline");
+    } finally {
+        setTimelineLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mainView === "timeline") {
+        fetchSnapshots();
+    }
+  }, [mainView]);
+
+  const captureSnapshot = async () => {
+    setCapturing(true);
+    try {
+        setTimelineError(null);
+        await api.post("/api/investments?snapshot=capture");
+        setTimelineSuccess("Snapshot captured successfully!");
+        fetchSnapshots();
+        setTimeout(() => setTimelineSuccess(null), 3000);
+    } catch (err: any) {
+        setTimelineError(err.message || "Failed to capture snapshot");
+    } finally {
+        setCapturing(false);
     }
   };
 
@@ -652,6 +703,29 @@ const Portfolio = () => {
     pf: <PFTable />,
   };
 
+  const axisColor = isDark ? "#94a3b8" : "#64748b";
+  const gridColor = isDark ? "#334155" : "#e2e8f0";
+  const timelineTooltipBg = isDark ? "#0f172a" : "#ffffff";
+  const timelineTooltipBorder = isDark ? "rgba(255,255,255,0.1)" : "#e2e8f0";
+
+  // Timeline Derived Data
+  const chartData = snapshots.map(s => {
+      const d = new Date(s.snapshot_date);
+      return {
+          name: `${d.toLocaleString('default', { month: 'short' })} '${d.getFullYear().toString().slice(2)}`,
+          Invested: s.total_invested,
+          "Current Value": s.total_current_value,
+          fullDate: s.snapshot_date
+      };
+  });
+
+  const latest = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
+  const first = snapshots.length > 0 ? snapshots[0] : null;
+
+  const allTimeGrowth = (latest && first && first.total_current_value > 0)
+      ? ((latest.total_current_value - first.total_current_value) / first.total_current_value) * 100
+      : 0;
+
   return (
     <div className="pb-24 pt-8 md:pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -679,48 +753,169 @@ const Portfolio = () => {
           </div>
         </header>
 
-        {/* Premium Global Net Worth Header */}
-        <div className="mb-10 glass-card p-10 relative overflow-hidden group border-amber-500/10 bg-slate-800/20">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-64 h-64 rounded-full bg-amber-500 blur-3xl" /></div>
-            <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                    <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Global Net Worth</p>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter">Live Assets</span>
-                </div>
-                <div className={`text-6xl md:text-8xl font-black font-heading text-white tracking-tighter mb-10 drop-shadow-2xl transition-all ${hideBalance ? 'blur-md select-none' : ''}`}>
-                    {formatCurrency((summary?.total_current_value || 0) + netWorthCash, currencyStyle)}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-8 border-t border-white/5">
-                    <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Value</p>
-                        <p className={`text-xl font-bold text-amber-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(summary?.total_current_value || 0, currencyStyle)}</p>
+        {/* View Toggle */}
+        <div className="flex bg-slate-800/50 p-1 rounded-xl w-full sm:w-fit mb-8 border border-white/5 mx-auto">
+          <button onClick={() => setMainView('holdings')} className={`flex-1 px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${mainView === 'holdings' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-400 hover:text-white'}`}>Current Holdings</button>
+          <button onClick={() => setMainView('timeline')} className={`flex-1 px-8 py-2.5 text-sm font-bold rounded-lg transition-all ${mainView === 'timeline' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-400 hover:text-white'}`}>Growth Timeline</button>
+        </div>
+
+        {mainView === "holdings" ? (
+          <>
+            {/* Premium Global Net Worth Header */}
+            <div className="mb-10 glass-card p-10 relative overflow-hidden group border-amber-500/10 bg-slate-800/20">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-64 h-64 rounded-full bg-amber-500 blur-3xl" /></div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-4">
+                        <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Global Net Worth</p>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20 uppercase tracking-tighter">Live Assets</span>
                     </div>
-                    <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cash & Bank</p>
-                        <p className={`text-xl font-bold text-emerald-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(netWorthCash, currencyStyle)}</p>
+                    <div className={`text-6xl md:text-8xl font-black font-heading text-white tracking-tighter mb-10 drop-shadow-2xl transition-all ${hideBalance ? 'blur-md select-none' : ''}`}>
+                        {formatCurrency((summary?.total_current_value || 0) + netWorthCash, currencyStyle)}
                     </div>
-                    <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net Change (Abs)</p>
-                        <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {formatCurrency(summary?.total_pnl || 0, currencyStyle)}
-                        </p>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Return</p>
-                        <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_return_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                            {pctFmt(summary?.total_return_pct || 0)}
-                        </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-8 border-t border-white/5">
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Value</p>
+                            <p className={`text-xl font-bold text-amber-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(summary?.total_current_value || 0, currencyStyle)}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Cash & Bank</p>
+                            <p className={`text-xl font-bold text-emerald-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(netWorthCash, currencyStyle)}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net Change (Abs)</p>
+                            <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {formatCurrency(summary?.total_pnl || 0, currencyStyle)}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Portfolio Return</p>
+                            <p className={`text-xl font-bold font-mono mt-1 ${summary?.total_return_pct >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {pctFmt(summary?.total_return_pct || 0)}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div className="flex overflow-x-auto gap-1 p-1 bg-slate-700/40 rounded-2xl border border-white/5 mb-8 backdrop-blur-sm">
-          {TABS.map(({ key, label, emoji }) => (
-            <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${tab === key ? "bg-amber-500 text-white" : "text-slate-400 hover:text-white"}`}><span>{emoji}</span> {label}</button>
-          ))}
-        </div>
-        {loading ? <LoadingRows /> : tabContent[tab]}
+            <div className="flex overflow-x-auto gap-1 p-1 bg-slate-700/40 rounded-2xl border border-white/5 mb-8 backdrop-blur-sm">
+              {TABS.map(({ key, label, emoji }) => (
+                <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl transition-all whitespace-nowrap ${tab === key ? "bg-amber-500 text-white" : "text-slate-400 hover:text-white"}`}><span>{emoji}</span> {label}</button>
+              ))}
+            </div>
+            {loading ? <LoadingRows /> : tabContent[tab]}
+          </>
+        ) : (
+          <div className="space-y-8 animate-fade-in">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h2 className="text-2xl font-bold text-white font-heading">Growth Timeline</h2>
+                    <p className="text-sm text-slate-400 mt-1">Track your portfolio's growth over time via monthly snapshots.</p>
+                </div>
+                <button onClick={captureSnapshot} disabled={capturing || timelineLoading} className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50">
+                    <FiCamera size={16} /> {capturing ? "Capturing..." : "Capture Snapshot"}
+                </button>
+            </div>
+            
+            {timelineError && <div className="glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm text-center">{timelineError}</div>}
+            {timelineSuccess && <div className="glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300 text-sm text-center font-semibold">{timelineSuccess}</div>}
+
+            {timelineLoading ? (
+                <div className="h-96 animate-pulse rounded-3xl bg-slate-700/50 mb-8" />
+            ) : snapshots.length === 0 ? (
+                <div className="glass-card p-12 text-center border-blue-500/10 animate-fade-in">
+                    <div className="text-5xl mb-4 text-blue-500"><FiTrendingUp className="mx-auto" /></div>
+                    <h3 className="text-lg font-bold text-white mb-2">No Timeline Data</h3>
+                    <p className="text-slate-400 mb-6">Capture your first snapshot to start tracking your portfolio's history.</p>
+                    <button onClick={captureSnapshot} className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-blue-500 transition-all">
+                        Capture Initial Snapshot
+                    </button>
+                </div>
+            ) : (
+                <>
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="glass-card p-6 border-blue-500/10 bg-gradient-to-br from-slate-800/50 to-blue-900/10">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Current Portfolio Value</p>
+                            <p className="text-3xl font-bold text-white mt-2 font-mono">{formatCurrency(latest?.total_current_value || 0, currencyStyle)}</p>
+                        </div>
+                        <div className="glass-card p-6 border-slate-700/50">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Invested</p>
+                            <p className="text-2xl font-bold text-slate-300 mt-2 font-mono">{formatCurrency(latest?.total_invested || 0, currencyStyle)}</p>
+                        </div>
+                        <div className="glass-card p-6 border-emerald-500/10">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total P&L</p>
+                            <p className={`text-2xl font-bold mt-2 font-mono ${(latest?.total_pnl || 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {(latest?.total_pnl || 0) >= 0 ? '+' : ''}{formatCurrency(latest?.total_pnl || 0, currencyStyle)}
+                            </p>
+                        </div>
+                        <div className="glass-card p-6 border-purple-500/10">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Timeline Growth</p>
+                            <p className={`text-2xl font-bold mt-2 ${allTimeGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {allTimeGrowth >= 0 ? '+' : ''}{allTimeGrowth.toFixed(2)}%
+                            </p>
+                        </div>
+                    </div>
+
+                    {snapshots.length > 1 ? (
+                        <div className="glass-card p-6 h-[400px]">
+                            <h3 className="text-lg font-bold text-white mb-6 font-heading">Growth Chart</h3>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorInvested" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#94a3b8" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} opacity={0.5} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: axisColor, fontSize: 12 }} tickFormatter={(val) => `₹${val / 1000}k`} dx={-10} />
+                                    <Tooltip contentStyle={{ backgroundColor: timelineTooltipBg, borderColor: timelineTooltipBorder, borderRadius: '12px' }} itemStyle={{ fontWeight: 'bold' }} formatter={(value: any) => formatCurrency(value, currencyStyle)} />
+                                    <Area type="monotone" dataKey="Invested" stroke="#94a3b8" strokeWidth={2} fillOpacity={1} fill="url(#colorInvested)" />
+                                    <Area type="monotone" dataKey="Current Value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : (
+                        <div className="glass-card p-12 text-center text-slate-400">
+                            <p>You need at least 2 snapshots to view the growth chart.</p>
+                        </div>
+                    )}
+
+                    <div className="glass-card overflow-hidden">
+                        <div className="px-6 py-4 border-b border-white/5 bg-slate-700/40">
+                            <h3 className="text-lg font-bold text-white font-heading">History Log</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="border-b border-white/5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4 text-right">Invested</th>
+                                        <th className="px-6 py-4 text-right">Current Value</th>
+                                        <th className="px-6 py-4 text-right">P&L</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {[...snapshots].reverse().map((snap) => (
+                                        <tr key={snap.id} className="hover:bg-white/5 transition-colors">
+                                            <td className="px-6 py-4 text-sm font-medium text-white">{formatDate(snap.snapshot_date)}</td>
+                                            <td className="px-6 py-4 text-sm text-right text-slate-300 font-mono">{formatCurrency(snap.total_invested, currencyStyle)}</td>
+                                            <td className="px-6 py-4 text-sm text-right font-bold text-white font-mono">{formatCurrency(snap.total_current_value, currencyStyle)}</td>
+                                            <td className={`px-6 py-4 text-sm text-right font-bold font-mono ${snap.total_pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{snap.total_pnl >= 0 ? '+' : ''}{formatCurrency(snap.total_pnl, currencyStyle)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
+          </div>
+        )}
       </div>
       {priceModal && <PriceModal inv={priceModal} onClose={() => setPriceModal(null)} onSave={handlePriceUpdate} />}
       {selectedAsset && <AssetHistoryModal asset={selectedAsset} history={selectedAsset.history} onClose={() => setSelectedAsset(null)} />}
