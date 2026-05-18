@@ -127,24 +127,38 @@ const Dashboard = () => {
     return { accountType, balance: accIncome - accExp + accTransferIn - accTransferOut, income: accIncome, expenses: accExp, transferIn: accTransferIn, transferOut: accTransferOut };
   });
 
-  // Daily Average Limits Logic
+  // Daily Average Limits Logic (Envelope Method)
   const today = new Date();
   const isCurrentMonth = today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear;
-  // Date(year, month, 0) gets the last day of the month because month is 1-indexed here, acting as next month's index
   const totalDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
   const daysPassed = isCurrentMonth ? today.getDate() : totalDaysInMonth;
-  const daysRemaining = isCurrentMonth ? Math.max(1, totalDaysInMonth - daysPassed) : 1;
   
-  const targetExpenses = dailyLimitAccount === 'All' 
-    ? monthlyExpenses 
-    : expenses.filter(e => e.account_type === dailyLimitAccount).reduce((s, e) => s + e.amount, 0);
-    
-  const targetBalance = dailyLimitAccount === 'All'
-    ? Math.max(0, monthlyIncome - monthlyExpenses)
-    : Math.max(0, accountBalances.find(a => a.accountType === dailyLimitAccount)?.balance || 0);
+  // "Days Remaining Including Today"
+  const daysRemainingIncludingToday = isCurrentMonth ? Math.max(1, totalDaysInMonth - daysPassed + 1) : 1;
 
-  const avgDailySpend = targetExpenses / (daysPassed || 1);
-  const avgDailyLimitRemaining = targetBalance / daysRemaining;
+  // Split expenses into "past" (before today) and "today"
+  // Note: todayISO is already defined above, but we reuse it here
+  const filteredExpenses = dailyLimitAccount === 'All' ? expenses : expenses.filter(e => e.account_type === dailyLimitAccount);
+  const pastExpenses = filteredExpenses.filter(e => !e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
+  const todayFilteredExpenses = filteredExpenses.filter(e => e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
+  const totalFilteredExpenses = pastExpenses + todayFilteredExpenses;
+  
+  // The income available for this account filter (including transfers)
+  const effectiveTargetIncome = dailyLimitAccount === 'All'
+    ? monthlyIncome
+    : (() => {
+        const acc = accountBalances.find(a => a.accountType === dailyLimitAccount);
+        return acc ? acc.income + acc.transferIn - acc.transferOut : 0;
+      })();
+    
+  // Base Limit (How much we can spend per day starting today, ignoring what we already spent today)
+  const baseDailyLimit = Math.max(0, (effectiveTargetIncome - pastExpenses) / daysRemainingIncludingToday);
+  
+  // Actual Limit Left Today
+  const avgDailyLimitRemaining = Math.max(0, baseDailyLimit - todayFilteredExpenses);
+  
+  // Avg Daily Spend
+  const avgDailySpend = totalFilteredExpenses / (daysPassed || 1);
 
   const accountDistributionData = accountBalances.filter(a => a.balance > 0).map(a => ({ name: a.accountType, value: a.balance }));
 
@@ -253,8 +267,9 @@ const Dashboard = () => {
                   <p className={`text-xl font-bold text-orange-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemaining} days remaining`}>Daily Limit Left</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
                   <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
+                  <p className="text-[9px] font-bold text-slate-500 mt-1 uppercase">Base: {formatCurrency(baseDailyLimit, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
