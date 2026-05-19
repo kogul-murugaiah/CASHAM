@@ -8,8 +8,8 @@
 @tailwind utilities;
 
 @layer base {
-  html, body {
-    /* Native App Feel Resets */
+  /* Native App Feel Resets - Only apply if running in Capacitor Native */
+  body.is-native {
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -23,8 +23,8 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Allow text selection in inputs and textareas */
-  input, textarea {
+  /* Allow text selection in inputs and textareas for native app */
+  body.is-native input, body.is-native textarea {
     -webkit-user-select: text;
     user-select: text;
   }

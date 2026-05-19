@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+
 export class ApiError extends Error {
     status: number;
     constructor(message: string, status: number = 500) {
@@ -9,7 +11,8 @@ export class ApiError extends Error {
 
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const baseUrl = import.meta.env.VITE_API_URL || '';
-    const fullUrl = url.startsWith('/') && baseUrl ? `${baseUrl}${url}` : url;
+    const isNative = Capacitor.isNativePlatform();
+    const fullUrl = isNative && url.startsWith('/') && baseUrl ? `${baseUrl}${url}` : url;
 
     const response = await fetch(fullUrl, {
         ...options,
