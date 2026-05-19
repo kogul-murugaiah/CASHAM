@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FiPlus, FiArrowUpRight, FiArrowDownLeft, FiTrendingUp, FiX } from "react-icons/fi";
+import { useHaptics } from "../hooks/useHaptics";
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { triggerLightHaptic, triggerMediumHaptic } = useHaptics();
   const [hubOpen, setHubOpen] = useState(false);
   const hubRef = useRef<HTMLDivElement>(null);
 
@@ -24,6 +26,7 @@ const MobileBottomNav = () => {
   }, [hubOpen]);
 
   const handleNavigate = (to: string) => {
+    triggerLightHaptic();
     setHubOpen(false);
     navigate(to);
   };
@@ -95,7 +98,7 @@ const MobileBottomNav = () => {
       {/* FAB Button — Mobile only */}
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <button
-          onClick={() => setHubOpen(!hubOpen)}
+          onClick={() => { triggerMediumHaptic(); setHubOpen(!hubOpen); }}
           className={`relative flex items-center gap-2.5 px-6 py-3.5 rounded-full font-bold text-white text-sm font-heading transition-all duration-300 shadow-2xl ${hubOpen
               ? "bg-slate-700 shadow-slate-900/50 scale-95"
               : "bg-gradient-to-r from-emerald-500 via-indigo-500 to-emerald-600 shadow-emerald-500/40 hover:shadow-emerald-500/60 hover:scale-105 active:scale-95"
