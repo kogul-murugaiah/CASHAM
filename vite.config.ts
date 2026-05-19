@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['casham logo.png'],
+      includeAssets: ['casham-logo.png'],
       manifest: {
         name: 'CASHAM',
         short_name: 'CASHAM',
@@ -17,8 +17,14 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'casham logo.png',
-            sizes: '192x192 512x512',
+            src: 'casham-logo.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'casham-logo.png',
+            sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
           }
