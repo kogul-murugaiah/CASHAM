@@ -160,6 +160,9 @@ const Navbar = () => {
                       >
                         Logout
                       </button>
+                      <p className="mt-3 text-center text-[10px] font-mono text-slate-600 tracking-widest select-none">
+                        CASHAM v{APP_VERSION}
+                      </p>
                     </div>
                   </div>
                 )}

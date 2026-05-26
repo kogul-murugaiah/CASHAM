@@ -540,6 +540,25 @@ const Settings = () => {
                     </button>
                     <p className="text-[10px] text-slate-500 mt-6 text-center leading-relaxed font-bold uppercase tracking-tighter">Your secure transaction history will be prepared in <b>.CSV format</b>, structured for high-performance analysis.</p>
                   </div>
+
+                  {/* About */}
+                  <div className="pt-8 border-t border-slate-200 dark:border-white/5">
+                    <div className="rounded-3xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                        <span className="text-emerald-500 text-xl font-black font-mono">C</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">CASHAM</p>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight mt-0.5">Wealth Tracker · Budget Planner · Investment Suite</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-black font-mono tracking-widest">
+                          v{APP_VERSION}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono">Built {APP_BUILD_DATE}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
