@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -30,6 +30,7 @@ const NAV_GROUPS = [
         items: [
             { to: "/expense-tracking", icon: FiList, label: "Expense Tracker" },
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
+            { to: "/ledger", icon: FiUsers, label: "Ledger (IOU)" },
             { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
         ],
     },
