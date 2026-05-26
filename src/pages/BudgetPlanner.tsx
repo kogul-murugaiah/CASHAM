@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiTarget, FiCopy, FiArrowRight, FiAlertCircle } from "react-icons/fi";
+import { useAccountTypes } from "../hooks/useAccountTypes";
+import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiTarget, FiCopy, FiArrowRight, FiAlertCircle, FiCreditCard } from "react-icons/fi";
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -23,6 +24,7 @@ type BudgetCategory = {
     budget_id: string;
     name: string;
     allocated_amount: number;
+    account_name: string | null;
     items: BudgetItem[];
 };
 
@@ -34,6 +36,7 @@ type BudgetMonth = {
 
 export default function BudgetPlanner() {
     const { theme } = useTheme();
+    const { accountTypes } = useAccountTypes();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -54,6 +57,7 @@ export default function BudgetPlanner() {
 
     const [newCategoryName, setNewCategoryName] = useState("");
     const [newCategoryAmount, setNewCategoryAmount] = useState("");
+    const [newCategoryAccount, setNewCategoryAccount] = useState("");
     const [isAddingCategory, setIsAddingCategory] = useState(false);
 
     // Template copy state
@@ -126,7 +130,8 @@ export default function BudgetPlanner() {
             const cat = await api.post(`/api/budgets/categories`, {
                 budget_id: budgetData.id,
                 name: newCategoryName,
-                allocated_amount: Number(newCategoryAmount)
+                allocated_amount: Number(newCategoryAmount),
+                account_name: newCategoryAccount || null
             });
             setBudgetData(prev => ({
                 ...prev,
@@ -134,14 +139,27 @@ export default function BudgetPlanner() {
             }));
             setNewCategoryName("");
             setNewCategoryAmount("");
+            setNewCategoryAccount("");
             setIsAddingCategory(false);
             showSuccess("Category created");
-            
-            // Analytics
             trackBudgetEvent('category_created', { category: cat.name });
             trackBudgetEvent('budget_allocated', { amount: cat.allocated_amount });
         } catch (err: any) {
             setError(err.message || "Failed to create category");
+        }
+    };
+
+    const handleUpdateCategoryAccount = async (categoryId: string, accountName: string | null) => {
+        try {
+            await api.put(`/api/budgets/categories`, { id: categoryId, account_name: accountName });
+            setBudgetData(prev => ({
+                ...prev,
+                categories: prev.categories.map(c =>
+                    c.id === categoryId ? { ...c, account_name: accountName } : c
+                )
+            }));
+        } catch (err: any) {
+            setError(err.message || "Failed to update account");
         }
     };
 
@@ -179,6 +197,24 @@ export default function BudgetPlanner() {
             trackBudgetEvent('expense_added', { item: item.name });
         } catch (err: any) {
             setError(err.message || "Failed to add item");
+        }
+    };
+
+    const handleEditItem = async (itemId: string, categoryId: string, name: string, amount: number) => {
+        if (!name.trim() || amount <= 0) return;
+        try {
+            await api.put(`/api/budgets/items`, { id: itemId, name: name.trim(), amount });
+            setBudgetData(prev => ({
+                ...prev,
+                categories: prev.categories.map(c =>
+                    c.id === categoryId
+                        ? { ...c, items: c.items.map(i => i.id === itemId ? { ...i, name: name.trim(), amount } : i) }
+                        : c
+                )
+            }));
+            showSuccess("Item updated");
+        } catch (err: any) {
+            setError(err.message || "Failed to update item");
         }
     };
 
@@ -330,6 +366,7 @@ export default function BudgetPlanner() {
 
         return (
             <div className="glass-card mb-6 border-white/5 overflow-hidden">
+                {/* Category header */}
                 <div className="bg-slate-700/30 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5">
                     <div>
                         <h3 className="text-xl font-bold text-white font-heading">{category.name}</h3>
@@ -350,124 +387,41 @@ export default function BudgetPlanner() {
                         </button>
                     </div>
                 </div>
+
+                {/* Account assignment row */}
+                <div className="px-5 py-2.5 border-b border-white/5 flex items-center gap-3 bg-slate-800/20">
+                    <FiCreditCard size={13} className="text-slate-500 flex-shrink-0" />
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Account</span>
+                    <select
+                        value={category.account_name || ""}
+                        onChange={e => handleUpdateCategoryAccount(category.id, e.target.value || null)}
+                        className="ml-auto text-xs font-semibold bg-slate-800/60 border border-white/10 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer"
+                    >
+                        <option value="">— Unassigned —</option>
+                        {accountTypes.map(acc => (
+                            <option key={acc} value={acc}>{acc}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Items */}
                 <div className="p-5">
                     {category.items.length > 0 ? (
                         <div className="space-y-3 mb-4">
-                        {category.items.map(item => {
+                            {category.items.map(item => {
                                 const isConfirming = confirmPayItem?.id === item.id;
                                 const effectiveAmount = item.status === 'paid' && item.paid_amount != null
-                                    ? parseNum(item.paid_amount)
-                                    : parseNum(item.amount);
+                                    ? parseNum(item.paid_amount) : parseNum(item.amount);
                                 const amountDiffers = item.status === 'paid' && item.paid_amount != null && item.paid_amount !== item.amount;
                                 return (
-                                <div key={item.id} className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-                                    isConfirming
-                                        ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/10'
-                                        : item.status === 'paid'
-                                        ? 'border-emerald-500/15 bg-emerald-500/5'
-                                        : 'border-white/8 bg-slate-700/40 hover:bg-slate-700/60'
-                                } group`}>
-                                    {/* Item row */}
-                                    <div className="flex items-center justify-between px-4 py-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            {/* Check button — styled like a native checkbox */}
-                                            {item.status === 'planned' ? (
-                                                <button
-                                                    onClick={() => handleRequestMarkPaid(item)}
-                                                    className="flex-shrink-0 w-5 h-5 rounded border-2 border-slate-400 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all flex items-center justify-center text-transparent hover:text-emerald-500"
-                                                    title="Mark as Paid"
-                                                >
-                                                    <FiCheck size={12} strokeWidth={3} />
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleRevertPlanned(item)}
-                                                    className="flex-shrink-0 w-5 h-5 rounded border-2 border-emerald-500 bg-emerald-500 hover:bg-red-400 hover:border-red-400 transition-all flex items-center justify-center text-white"
-                                                    title="Undo — Revert to Planned"
-                                                >
-                                                    <FiCheck size={12} strokeWidth={3} />
-                                                </button>
-                                            )}
-                                            <span className={`text-sm font-medium truncate ${
-                                                item.status === 'paid'
-                                                    ? 'text-slate-400 line-through decoration-slate-400'
-                                                    : 'text-slate-100'
-                                            }`}>
-                                                {item.name}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 flex-shrink-0 ml-3">
-                                            {/* Amount — shows strikethrough original + actual if different */}
-                                            <div className="text-right">
-                                                {amountDiffers ? (
-                                                    <>
-                                                        <span className="text-[10px] text-slate-500 line-through font-mono block leading-none">{currencyFormatter.format(parseNum(item.amount))}</span>
-                                                        <span className="text-sm font-bold font-mono text-emerald-400">{currencyFormatter.format(parseNum(item.paid_amount!))}</span>
-                                                    </>
-                                                ) : (
-                                                    <span className={`text-sm font-bold font-mono ${
-                                                        item.status === 'paid' ? 'text-emerald-400' : 'text-slate-200'
-                                                    }`}>
-                                                        {currencyFormatter.format(effectiveAmount)}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Status pill */}
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
-                                                item.status === 'paid'
-                                                    ? 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'
-                                                    : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                            }`}>
-                                                {item.status}
-                                            </span>
-
-                                            <button
-                                                onClick={() => handleDeleteItem(category.id, item.id)}
-                                                className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 flex-shrink-0"
-                                            >
-                                                <FiTrash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Inline confirm-to-pay panel */}
-                                    {isConfirming && (
-                                        <div className="border-t border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                                                <div className="flex-1">
-                                                    <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">How much did you actually spend?</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-slate-400 font-bold text-sm">₹</span>
-                                                        <input
-                                                            type="number"
-                                                            value={confirmPayItem!.amount}
-                                                            onChange={e => setConfirmPayItem(prev => prev ? { ...prev, amount: e.target.value } : null)}
-                                                            className="bg-slate-700/50 border border-emerald-500/30 text-white font-mono font-bold rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                                                            autoFocus
-                                                        />
-                                                        <span className="text-[11px] text-slate-400">Planned: {currencyFormatter.format(item.amount)}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={handleConfirmPaid}
-                                                        className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors shadow-lg shadow-emerald-600/20"
-                                                    >
-                                                        <FiCheck size={13} /> Confirm Paid
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setConfirmPayItem(null)}
-                                                        className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium rounded-lg transition-colors border border-white/5"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    <ItemRow
+                                        key={item.id}
+                                        item={item}
+                                        isConfirming={isConfirming}
+                                        effectiveAmount={effectiveAmount}
+                                        amountDiffers={amountDiffers}
+                                        categoryId={category.id}
+                                    />
                                 );
                             })}
                         </div>
@@ -728,19 +682,29 @@ export default function BudgetPlanner() {
                                 ) : (
                                     <div className="glass-card p-6 border-emerald-500/30 bg-emerald-500/5">
                                         <h4 className="text-sm font-bold text-emerald-400 mb-4 uppercase tracking-widest">New Category</h4>
-                                        <div className="flex flex-col sm:flex-row gap-4">
-                                            <input 
-                                                type="text" placeholder="Category Name (e.g. Housing)"
-                                                value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)}
-                                                className="flex-1 bg-slate-900 border border-white/10 text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" autoFocus
-                                            />
-                                            <input 
-                                                type="number" placeholder="Allocated Amount"
-                                                value={newCategoryAmount} onChange={e => setNewCategoryAmount(e.target.value)}
-                                                className="sm:w-48 bg-slate-900 border border-white/10 text-white text-mono font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                            />
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <input
+                                                    type="text" placeholder="Category Name (e.g. Housing)"
+                                                    value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)}
+                                                    className="flex-1 bg-slate-900 border border-white/10 text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" autoFocus
+                                                />
+                                                <input
+                                                    type="number" placeholder="Allocated Amount"
+                                                    value={newCategoryAmount} onChange={e => setNewCategoryAmount(e.target.value)}
+                                                    className="sm:w-48 bg-slate-900 border border-white/10 text-white font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                                />
+                                                <select
+                                                    value={newCategoryAccount}
+                                                    onChange={e => setNewCategoryAccount(e.target.value)}
+                                                    className="sm:w-48 bg-slate-900 border border-white/10 text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                                >
+                                                    <option value="">Account (optional)</option>
+                                                    {accountTypes.map(acc => <option key={acc} value={acc}>{acc}</option>)}
+                                                </select>
+                                            </div>
                                             <div className="flex gap-2 sm:ml-auto">
-                                                <button onClick={() => setIsAddingCategory(false)} className="px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all">Cancel</button>
+                                                <button onClick={() => { setIsAddingCategory(false); setNewCategoryAccount(""); }} className="px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all">Cancel</button>
                                                 <button onClick={handleAddCategory} className="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 shadow-lg shadow-emerald-500/20 hover:bg-emerald-500 rounded-xl transition-all disabled:opacity-50" disabled={!newCategoryName || !newCategoryAmount}>Create</button>
                                             </div>
                                         </div>

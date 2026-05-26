@@ -39,13 +39,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     else if (method === 'PUT') {
         try {
-            const { id, name, allocated_amount } = req.body;
+            const { id, name, allocated_amount, account_name } = req.body;
             
             if (!id) return res.status(400).json({ error: 'id is required' });
 
             const updates: any = {};
             if (name !== undefined) updates.name = name;
             if (allocated_amount !== undefined) updates.allocated_amount = allocated_amount;
+            if (account_name !== undefined) updates.account_name = account_name;
 
             const { data, error } = await supabaseAdmin
                 .from('budget_categories')

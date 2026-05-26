@@ -129,7 +129,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     user_id: user.id,
                     budget_id: targetBudget.id,
                     name: cat.name,
-                    allocated_amount: cat.allocated_amount
+                    allocated_amount: cat.allocated_amount,
+                    account_name: cat.account_name ?? null
                 }])
                 .select()
                 .single();
