@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { useTheme } from "../contexts/ThemeContext";
-import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiTarget } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiEdit2, FiCheck, FiX, FiTarget, FiCopy, FiArrowRight, FiAlertCircle } from "react-icons/fi";
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -55,6 +55,15 @@ export default function BudgetPlanner() {
     const [newCategoryName, setNewCategoryName] = useState("");
     const [newCategoryAmount, setNewCategoryAmount] = useState("");
     const [isAddingCategory, setIsAddingCategory] = useState(false);
+
+    // Template copy state
+    const [showCopyModal, setShowCopyModal] = useState(false);
+    const [copyTargetMonth, setCopyTargetMonth] = useState(() => {
+        const next = new Date();
+        next.setMonth(next.getMonth() + 1);
+        return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+    });
+    const [isCopying, setIsCopying] = useState(false);
 
     // Helpers
     const [yearStr, monthStr] = selectedMonth.split("-");
@@ -235,6 +244,40 @@ export default function BudgetPlanner() {
             }));
         } catch (err: any) {
             setError(err.message || "Failed to delete item");
+        }
+    };
+
+    // Template copy handler
+    const handleCopyToMonth = async () => {
+        if (!budgetData.id) {
+            setError("This month has no budget data to copy.");
+            return;
+        }
+        if (!copyTargetMonth) return;
+
+        const [tgtYear, tgtMonth] = copyTargetMonth.split("-").map(Number);
+
+        // Prevent copying onto itself
+        if (tgtMonth === month && tgtYear === year) {
+            setError("Target month must be different from the current month.");
+            return;
+        }
+
+        setIsCopying(true);
+        setError(null);
+        try {
+            await api.post(`/api/budgets/copy`, {
+                source_month: month,
+                source_year: year,
+                target_month: tgtMonth,
+                target_year: tgtYear
+            });
+            setShowCopyModal(false);
+            showSuccess(`✅ Budget template copied to ${new Date(tgtYear, tgtMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}!`);
+        } catch (err: any) {
+            setError(err.message || "Failed to copy budget template");
+        } finally {
+            setIsCopying(false);
         }
     };
 
@@ -477,14 +520,119 @@ export default function BudgetPlanner() {
                         <p className="text-slate-400">Allocate income to categories and track projected logic.</p>
                     </div>
 
-                    <input
-                        type="month"
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        style={{ colorScheme: theme }}
-                        className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-lg"
-                    />
+                    <div className="flex flex-wrap gap-3 items-center">
+                        {/* Copy Template button — only shown when current month has budget data */}
+                        {budgetData.id && (
+                            <button
+                                onClick={() => setShowCopyModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 transition-all shadow-md shadow-emerald-900/20"
+                                title="Copy this budget as a template to another month"
+                            >
+                                <FiCopy size={15} />
+                                Use as Template
+                            </button>
+                        )}
+
+                        <input
+                            type="month"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            style={{ colorScheme: theme }}
+                            className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-lg"
+                        />
+                    </div>
                 </div>
+
+                {/* Copy Template Modal */}
+                {showCopyModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !isCopying && setShowCopyModal(false)}>
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" />
+
+                        {/* Modal Card */}
+                        <div
+                            className="relative z-10 w-full max-w-md animate-fade-in"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="glass-card p-8 border-emerald-500/20 bg-gradient-to-br from-slate-800/90 to-slate-900/90 shadow-2xl shadow-emerald-900/30">
+                                {/* Modal Header */}
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="p-2.5 bg-emerald-500/15 rounded-xl">
+                                        <FiCopy className="text-emerald-400" size={20} />
+                                    </span>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white font-heading">Copy Budget Template</h3>
+                                        <p className="text-xs text-slate-400 mt-0.5">Duplicate this month's plan to a new month</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowCopyModal(false)}
+                                        disabled={isCopying}
+                                        className="ml-auto p-1.5 text-slate-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all"
+                                    >
+                                        <FiX size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Info note */}
+                                <div className="mt-5 mb-6 flex gap-3 p-4 rounded-xl bg-amber-500/8 border border-amber-500/20">
+                                    <FiAlertCircle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-amber-200/80 leading-relaxed">
+                                        All categories and planned items will be copied. Any existing budget in the target month will be <strong className="text-amber-300">replaced</strong>. All items start as <strong className="text-amber-300">Planned</strong>.
+                                    </p>
+                                </div>
+
+                                {/* Source → Target */}
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="flex-1 bg-slate-700/50 rounded-xl p-3 text-center border border-white/5">
+                                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Source</p>
+                                        <p className="text-sm font-bold text-white">
+                                            {new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                        </p>
+                                    </div>
+                                    <FiArrowRight size={20} className="text-emerald-500 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <input
+                                            type="month"
+                                            value={copyTargetMonth}
+                                            onChange={e => setCopyTargetMonth(e.target.value)}
+                                            style={{ colorScheme: theme }}
+                                            className="w-full rounded-xl border border-emerald-500/40 bg-slate-700/50 backdrop-blur px-3 py-3 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                        />
+                                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1.5 text-center">Target</p>
+                                    </div>
+                                </div>
+
+                                {/* Action buttons */}
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowCopyModal(false)}
+                                        disabled={isCopying}
+                                        className="flex-1 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleCopyToMonth}
+                                        disabled={isCopying || !copyTargetMonth}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {isCopying ? (
+                                            <>
+                                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Copying…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FiCopy size={15} />
+                                                Copy Template
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {error && <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm font-medium">{error}</div>}
                 {success && <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300 text-sm font-bold animate-fade-in">{success}</div>}
