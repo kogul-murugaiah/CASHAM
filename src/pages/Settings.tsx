@@ -1,16 +1,32 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2, FiRefreshCw } from "react-icons/fi";
+import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2, FiRefreshCw, FiRepeat } from "react-icons/fi";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import { FiEdit2, FiAlertTriangle, FiDownload, FiGlobe, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEdit2, FiAlertTriangle, FiDownload, FiGlobe, FiEye, FiEyeOff, FiCheck, FiX, FiZap } from "react-icons/fi";
+import { CustomDropdown } from "../components/CustomDropdown";
+import { formatCurrency } from "../lib/formatters";
+
+const APP_VERSION = "2.0.0";
+const APP_BUILD_DATE = "2026";
+
+type ExpenseTemplate = {
+  id: string;
+  item: string;
+  amount: number;
+  description: string | null;
+  category_id: string | null;
+  account_type: string;
+  categories: { id: string; name: string } | null;
+};
 
 const TABS = [
   { id: "profile", label: "Profile & Identity", icon: FiUser },
   { id: "categories", label: "Custom Categories", icon: FiList },
   { id: "accounts", label: "Wallets & Accounts", icon: FiCreditCard },
+  { id: "templates", label: "Expense Templates", icon: FiRepeat },
   { id: "system", label: "System Preferences", icon: FiSliders },
 ];
 
@@ -42,6 +58,25 @@ const Settings = () => {
   const [syncing, setSyncing] = useState(false);
   const navigate = useNavigate();
 
+  // ── Expense Templates state ──────────────────────────────────────────
+  const [templates, setTemplates] = useState<ExpenseTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [templateError, setTemplateError] = useState("");
+  const [templateSuccess, setTemplateSuccess] = useState("");
+
+  // Add form
+  const [showAddTemplate, setShowAddTemplate] = useState(false);
+  const [tplForm, setTplForm] = useState({ item: "", amount: "", description: "", category_id: "", account_type: "" });
+  const [tplAdding, setTplAdding] = useState(false);
+
+  // Edit form
+  const [editingTemplate, setEditingTemplate] = useState<ExpenseTemplate | null>(null);
+  const [tplEditForm, setTplEditForm] = useState({ item: "", amount: "", description: "", category_id: "", account_type: "" });
+  const [tplEditing, setTplEditing] = useState(false);
+
+  // Quick-add flash
+  const [quickAddingId, setQuickAddingId] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -58,6 +93,118 @@ const Settings = () => {
     };
     fetchUser();
   }, []);
+
+  // Fetch templates when tab is activated
+  useEffect(() => {
+    if (activeTab === "templates") fetchTemplates();
+  }, [activeTab]);
+
+  const fetchTemplates = async () => {
+    setTemplatesLoading(true);
+    setTemplateError("");
+    try {
+      const data = await api.get('/api/expenses?templates=true');
+      setTemplates(data || []);
+    } catch (err: any) {
+      setTemplateError(err.message || "Failed to load templates");
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
+
+  const showTplSuccess = (msg: string) => {
+    setTemplateSuccess(msg);
+    setTimeout(() => setTemplateSuccess(""), 3000);
+  };
+
+  const handleAddTemplate = async () => {
+    if (!tplForm.item.trim() || !tplForm.amount || !tplForm.account_type) {
+      setTemplateError("Item name, amount and account are required");
+      return;
+    }
+    setTplAdding(true);
+    setTemplateError("");
+    try {
+      const created = await api.post('/api/expenses?template=true', {
+        item: tplForm.item.trim(),
+        amount: Number(tplForm.amount),
+        description: tplForm.description || null,
+        category_id: tplForm.category_id || null,
+        account_type: tplForm.account_type,
+      });
+      // Re-fetch to get joined categories
+      await fetchTemplates();
+      setTplForm({ item: "", amount: "", description: "", category_id: "", account_type: "" });
+      setShowAddTemplate(false);
+      showTplSuccess("Template created!");
+    } catch (err: any) {
+      setTemplateError(err.message || "Failed to create template");
+    } finally {
+      setTplAdding(false);
+    }
+  };
+
+  const openEditTemplate = (t: ExpenseTemplate) => {
+    setEditingTemplate(t);
+    setTplEditForm({
+      item: t.item,
+      amount: String(t.amount),
+      description: t.description || "",
+      category_id: t.category_id || "",
+      account_type: t.account_type,
+    });
+    setTemplateError("");
+  };
+
+  const handleEditTemplate = async () => {
+    if (!editingTemplate) return;
+    if (!tplEditForm.item.trim() || !tplEditForm.amount || !tplEditForm.account_type) {
+      setTemplateError("Item name, amount and account are required");
+      return;
+    }
+    setTplEditing(true);
+    setTemplateError("");
+    try {
+      await api.put('/api/expenses?template=true', {
+        id: editingTemplate.id,
+        item: tplEditForm.item.trim(),
+        amount: Number(tplEditForm.amount),
+        description: tplEditForm.description || null,
+        category_id: tplEditForm.category_id || null,
+        account_type: tplEditForm.account_type,
+      });
+      await fetchTemplates();
+      setEditingTemplate(null);
+      showTplSuccess("Template updated!");
+    } catch (err: any) {
+      setTemplateError(err.message || "Failed to update template");
+    } finally {
+      setTplEditing(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (id: string) => {
+    if (!confirm("Delete this template? This won't affect past expenses.")) return;
+    try {
+      await api.delete(`/api/expenses?template=true&id=${id}`);
+      setTemplates(prev => prev.filter(t => t.id !== id));
+      showTplSuccess("Template deleted.");
+    } catch (err: any) {
+      setTemplateError(err.message || "Failed to delete template");
+    }
+  };
+
+  const handleQuickAdd = async (id: string) => {
+    setQuickAddingId(id);
+    try {
+      await api.post(`/api/expenses?quickadd=true&id=${id}`, {});
+      showTplSuccess("Expense logged from template!");
+    } catch (err: any) {
+      setTemplateError(err.message || "Quick-add failed");
+    } finally {
+      setQuickAddingId(null);
+    }
+  };
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -424,6 +571,241 @@ const Settings = () => {
                          )}
                       </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === "templates" && (
+              <div className="animate-fade-in space-y-6 glass-card p-6 md:p-10 max-w-4xl">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Expense Templates</h2>
+                    <p className="text-sm text-slate-500 mt-1">Save reusable expense presets to log them with one tap.</p>
+                  </div>
+                  <button
+                    onClick={() => { setShowAddTemplate(true); setEditingTemplate(null); setTemplateError(""); }}
+                    className="btn-primary flex items-center gap-2 px-5 py-2.5"
+                  >
+                    <FiPlus size={16} /> New Template
+                  </button>
+                </div>
+
+                {templateError && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">{templateError}</div>
+                )}
+                {templateSuccess && (
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm font-medium animate-fade-in">{templateSuccess}</div>
+                )}
+
+                {/* Add Form */}
+                {showAddTemplate && !editingTemplate && (
+                  <div className="bg-slate-50 dark:bg-slate-900/60 border border-emerald-500/20 rounded-3xl p-6 space-y-4 animate-fade-in">
+                    <h3 className="text-xs font-black text-emerald-500 uppercase tracking-widest">New Template</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Item Name *</label>
+                        <input
+                          type="text"
+                          value={tplForm.item}
+                          onChange={e => setTplForm(p => ({ ...p, item: e.target.value }))}
+                          placeholder="e.g. Netflix, Gym membership"
+                          className="w-full bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount *</label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                          <input
+                            type="number"
+                            value={tplForm.amount}
+                            onChange={e => setTplForm(p => ({ ...p, amount: e.target.value }))}
+                            placeholder="0"
+                            className="w-full bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/10 rounded-2xl pl-8 pr-4 py-2.5 text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account *</label>
+                        <CustomDropdown
+                          value={tplForm.account_type}
+                          onChange={v => setTplForm(p => ({ ...p, account_type: v }))}
+                          options={accountTypes.map(t => ({ value: t, label: t }))}
+                          placeholder="Select account"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Category</label>
+                        <CustomDropdown
+                          value={tplForm.category_id}
+                          onChange={v => setTplForm(p => ({ ...p, category_id: v }))}
+                          options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
+                          placeholder="Select category"
+                        />
+                      </div>
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Description</label>
+                        <input
+                          type="text"
+                          value={tplForm.description}
+                          onChange={e => setTplForm(p => ({ ...p, description: e.target.value }))}
+                          placeholder="Optional notes"
+                          className="w-full bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button onClick={() => setShowAddTemplate(false)} className="px-5 py-2.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                        Cancel
+                      </button>
+                      <button onClick={handleAddTemplate} disabled={tplAdding} className="btn-primary flex items-center gap-2 px-6 py-2.5 disabled:opacity-60">
+                        {tplAdding ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FiCheck size={15} />}
+                        Create Template
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Template Grid */}
+                {templatesLoading ? (
+                  <div className="text-slate-400 text-sm animate-pulse py-4">Loading templates...</div>
+                ) : templates.length === 0 && !showAddTemplate ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-3 text-center border border-dashed border-white/10 rounded-3xl">
+                    <span className="p-4 bg-emerald-500/10 rounded-2xl text-emerald-500"><FiRepeat size={28} /></span>
+                    <p className="text-slate-400 font-medium">No templates yet</p>
+                    <p className="text-slate-600 text-xs max-w-xs">Create templates for recurring expenses like rent, subscriptions or utilities and log them in one tap.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {templates.map(t => (
+                      <div key={t.id} className="group relative bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-5 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all overflow-hidden">
+                        {/* Subtle glow */}
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+
+                        {editingTemplate?.id === t.id ? (
+                          /* Inline Edit Form */
+                          <div className="space-y-3 animate-fade-in">
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3">Editing</p>
+                            <div className="space-y-1.5">
+                              <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Item Name</label>
+                              <input
+                                autoFocus
+                                type="text"
+                                value={tplEditForm.item}
+                                onChange={e => setTplEditForm(p => ({ ...p, item: e.target.value }))}
+                                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Amount</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                <input
+                                  type="number"
+                                  value={tplEditForm.amount}
+                                  onChange={e => setTplEditForm(p => ({ ...p, amount: e.target.value }))}
+                                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl pl-7 pr-3 py-2 text-slate-900 dark:text-white font-mono font-bold text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Account</label>
+                              <CustomDropdown
+                                value={tplEditForm.account_type}
+                                onChange={v => setTplEditForm(p => ({ ...p, account_type: v }))}
+                                options={accountTypes.map(a => ({ value: a, label: a }))}
+                                placeholder="Select account"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Category</label>
+                              <CustomDropdown
+                                value={tplEditForm.category_id}
+                                onChange={v => setTplEditForm(p => ({ ...p, category_id: v }))}
+                                options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
+                                placeholder="Select category"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs text-slate-500 font-bold uppercase tracking-wider">Description</label>
+                              <input
+                                type="text"
+                                value={tplEditForm.description}
+                                onChange={e => setTplEditForm(p => ({ ...p, description: e.target.value }))}
+                                placeholder="Optional"
+                                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                              <button onClick={() => setEditingTemplate(null)} className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                                <FiX size={13} /> Cancel
+                              </button>
+                              <button onClick={handleEditTemplate} disabled={tplEditing} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 transition-all disabled:opacity-60">
+                                {tplEditing ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <FiCheck size={13} />}
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* Card View */
+                          <div className="flex flex-col h-full">
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-900 dark:text-white truncate">{t.item}</p>
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                  {t.categories && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-white/5">
+                                      {t.categories.name}
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                    {t.account_type}
+                                  </span>
+                                </div>
+                                {t.description && (
+                                  <p className="text-xs text-slate-500 mt-1.5 truncate">{t.description}</p>
+                                )}
+                              </div>
+                              <span className="text-lg font-black text-red-400 font-mono whitespace-nowrap flex-shrink-0">
+                                {formatCurrency(t.amount, currencyStyle)}
+                              </span>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 mt-auto pt-3 border-t border-slate-200 dark:border-white/5">
+                              <button
+                                onClick={() => handleQuickAdd(t.id)}
+                                disabled={quickAddingId === t.id}
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all disabled:opacity-60"
+                                title="Log as today's expense"
+                              >
+                                {quickAddingId === t.id ? (
+                                  <span className="w-3 h-3 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+                                ) : (
+                                  <FiZap size={12} />
+                                )}
+                                Quick Add
+                              </button>
+                              <button
+                                onClick={() => openEditTemplate(t)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 transition-all"
+                                title="Edit template"
+                              >
+                                <FiEdit2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTemplate(t.id)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                                title="Delete template"
+                              >
+                                <FiTrash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

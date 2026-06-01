@@ -163,6 +163,23 @@ export default function BudgetPlanner() {
         }
     };
 
+    const handleUpdateCategoryName = async (categoryId: string, newName: string) => {
+        const trimmed = newName.trim();
+        if (!trimmed) return;
+        try {
+            await api.put(`/api/budgets/categories`, { id: categoryId, name: trimmed });
+            setBudgetData(prev => ({
+                ...prev,
+                categories: prev.categories.map(c =>
+                    c.id === categoryId ? { ...c, name: trimmed } : c
+                )
+            }));
+            showSuccess("Category renamed");
+        } catch (err: any) {
+            setError(err.message || "Failed to rename category");
+        }
+    };
+
     const handleDeleteCategory = async (id: string) => {
         if (!confirm("Delete this category and all its items?")) return;
         try {
@@ -473,6 +490,8 @@ export default function BudgetPlanner() {
         const [newItemName, setNewItemName] = useState("");
         const [newItemAmount, setNewItemAmount] = useState("");
         const [isAdding, setIsAdding] = useState(false);
+        const [isEditingName, setIsEditingName] = useState(false);
+        const [editCategoryName, setEditCategoryName] = useState(category.name);
 
         const catAllocated = parseNum(category.allocated_amount);
         // Use actual paid_amount for paid items
@@ -489,12 +508,56 @@ export default function BudgetPlanner() {
             setIsAdding(false);
         };
 
+        const submitNameEdit = async () => {
+            await handleUpdateCategoryName(category.id, editCategoryName);
+            setIsEditingName(false);
+        };
+
+        const cancelNameEdit = () => {
+            setEditCategoryName(category.name);
+            setIsEditingName(false);
+        };
+
         return (
             <div className="glass-card mb-6 border-white/5 overflow-hidden">
                 {/* Category header */}
                 <div className="bg-slate-700/30 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5">
-                    <div>
-                        <h3 className="text-xl font-bold text-white font-heading">{category.name}</h3>
+                    <div className="group/name">
+                        {isEditingName ? (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    value={editCategoryName}
+                                    onChange={e => setEditCategoryName(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') submitNameEdit(); if (e.key === 'Escape') cancelNameEdit(); }}
+                                    className="text-xl font-bold bg-slate-800/80 border border-sky-500/40 text-white font-heading rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-sky-500/40 w-full max-w-xs"
+                                />
+                                <button onClick={submitNameEdit} className="p-1.5 bg-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-white rounded-md transition-colors flex-shrink-0" title="Save name">
+                                    <FiCheck size={15} />
+                                </button>
+                                <button onClick={cancelNameEdit} className="p-1.5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white rounded-md transition-colors flex-shrink-0" title="Cancel">
+                                    <FiX size={15} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <h3
+                                    className="text-xl font-bold text-white font-heading cursor-pointer hover:text-sky-300 transition-colors"
+                                    onDoubleClick={() => { setIsEditingName(true); setEditCategoryName(category.name); }}
+                                    title="Double-click to rename"
+                                >
+                                    {category.name}
+                                </h3>
+                                <button
+                                    onClick={() => { setIsEditingName(true); setEditCategoryName(category.name); }}
+                                    className="p-1 text-slate-600 hover:text-sky-400 opacity-0 group-hover/name:opacity-100 transition-all rounded"
+                                    title="Rename category"
+                                >
+                                    <FiEdit2 size={13} />
+                                </button>
+                            </div>
+                        )}
                         <p className="text-sm text-slate-400 mt-1">Budget: <strong className="text-emerald-400">{currencyFormatter.format(catAllocated)}</strong></p>
                     </div>
                     
