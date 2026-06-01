@@ -180,6 +180,22 @@ export default function BudgetPlanner() {
         }
     };
 
+    const handleUpdateCategoryAmount = async (categoryId: string, newAmount: number) => {
+        if (!newAmount || newAmount <= 0) return;
+        try {
+            await api.put(`/api/budgets/categories`, { id: categoryId, allocated_amount: newAmount });
+            setBudgetData(prev => ({
+                ...prev,
+                categories: prev.categories.map(c =>
+                    c.id === categoryId ? { ...c, allocated_amount: newAmount } : c
+                )
+            }));
+            showSuccess("Budget amount updated");
+        } catch (err: any) {
+            setError(err.message || "Failed to update budget amount");
+        }
+    };
+
     const handleDeleteCategory = async (id: string) => {
         if (!confirm("Delete this category and all its items?")) return;
         try {
@@ -492,6 +508,18 @@ export default function BudgetPlanner() {
         const [isAdding, setIsAdding] = useState(false);
         const [isEditingName, setIsEditingName] = useState(false);
         const [editCategoryName, setEditCategoryName] = useState(category.name);
+        const [isEditingAmount, setIsEditingAmount] = useState(false);
+        const [editCategoryAmount, setEditCategoryAmount] = useState(String(category.allocated_amount));
+
+        const submitAmountEdit = async () => {
+            const parsed = Number(editCategoryAmount);
+            if (parsed > 0) await handleUpdateCategoryAmount(category.id, parsed);
+            setIsEditingAmount(false);
+        };
+        const cancelAmountEdit = () => {
+            setEditCategoryAmount(String(category.allocated_amount));
+            setIsEditingAmount(false);
+        };
 
         const catAllocated = parseNum(category.allocated_amount);
         // Use actual paid_amount for paid items
@@ -558,7 +586,34 @@ export default function BudgetPlanner() {
                                 </button>
                             </div>
                         )}
-                        <p className="text-sm text-slate-400 mt-1">Budget: <strong className="text-emerald-400">{currencyFormatter.format(catAllocated)}</strong></p>
+                        <div className="flex items-center gap-2 mt-1 group/amount">
+                            {isEditingAmount ? (
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-slate-400 text-sm font-bold">₹</span>
+                                    <input
+                                        autoFocus
+                                        type="number"
+                                        value={editCategoryAmount}
+                                        onChange={e => setEditCategoryAmount(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter') submitAmountEdit(); if (e.key === 'Escape') cancelAmountEdit(); }}
+                                        className="w-28 bg-slate-800/80 border border-sky-500/40 text-white font-mono font-bold text-sm rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                                    />
+                                    <button onClick={submitAmountEdit} className="p-1 bg-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-white rounded transition-colors" title="Save"><FiCheck size={13} /></button>
+                                    <button onClick={cancelAmountEdit} className="p-1 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white rounded transition-colors" title="Cancel"><FiX size={13} /></button>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-sm text-slate-400">Budget: <strong className="text-emerald-400">{currencyFormatter.format(catAllocated)}</strong></p>
+                                    <button
+                                        onClick={() => { setIsEditingAmount(true); setEditCategoryAmount(String(category.allocated_amount)); }}
+                                        className="p-0.5 text-slate-500 hover:text-sky-400 opacity-0 group-hover/amount:opacity-100 transition-all rounded"
+                                        title="Edit budget amount"
+                                    >
+                                        <FiEdit2 size={12} />
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                     
                     <div className="flex flex-wrap gap-3 text-xs font-medium">

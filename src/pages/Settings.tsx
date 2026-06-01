@@ -598,7 +598,7 @@ const Settings = () => {
 
                 {/* Add Form */}
                 {showAddTemplate && !editingTemplate && (
-                  <div className="bg-slate-50 dark:bg-slate-900/60 border border-emerald-500/20 rounded-3xl p-6 space-y-4 animate-fade-in">
+                  <div className="bg-white dark:bg-slate-900/60 border border-emerald-500/20 rounded-3xl p-6 space-y-4 animate-fade-in shadow-sm">
                     <h3 className="text-xs font-black text-emerald-500 uppercase tracking-widest">New Template</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
@@ -654,7 +654,7 @@ const Settings = () => {
                       </div>
                     </div>
                     <div className="flex gap-3 pt-2">
-                      <button onClick={() => setShowAddTemplate(false)} className="px-5 py-2.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                      <button onClick={() => setShowAddTemplate(false)} className="px-5 py-2.5 rounded-2xl text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 dark:text-slate-400 dark:hover:text-white dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/5 transition-all">
                         Cancel
                       </button>
                       <button onClick={handleAddTemplate} disabled={tplAdding} className="btn-primary flex items-center gap-2 px-6 py-2.5 disabled:opacity-60">
@@ -677,7 +677,7 @@ const Settings = () => {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {templates.map(t => (
-                      <div key={t.id} className="group relative bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-5 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all overflow-hidden">
+                        <div key={t.id} className="group relative bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl p-5 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all overflow-hidden shadow-sm hover:shadow-md">
                         {/* Subtle glow */}
                         <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
 
@@ -736,7 +736,7 @@ const Settings = () => {
                               />
                             </div>
                             <div className="flex gap-2 pt-1">
-                              <button onClick={() => setEditingTemplate(null)} className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                              <button onClick={() => setEditingTemplate(null)} className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 dark:text-slate-400 dark:hover:text-white dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/5 transition-all">
                                 <FiX size={13} /> Cancel
                               </button>
                               <button onClick={handleEditTemplate} disabled={tplEditing} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 transition-all disabled:opacity-60">
@@ -757,7 +757,7 @@ const Settings = () => {
                                       {t.categories.name}
                                     </span>
                                   )}
-                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                                     {t.account_type}
                                   </span>
                                 </div>
@@ -765,7 +765,7 @@ const Settings = () => {
                                   <p className="text-xs text-slate-500 mt-1.5 truncate">{t.description}</p>
                                 )}
                               </div>
-                              <span className="text-lg font-black text-red-400 font-mono whitespace-nowrap flex-shrink-0">
+                              <span className="text-lg font-black text-red-500 dark:text-red-400 font-mono whitespace-nowrap flex-shrink-0">
                                 {formatCurrency(t.amount, currencyStyle)}
                               </span>
                             </div>
@@ -775,7 +775,7 @@ const Settings = () => {
                               <button
                                 onClick={() => handleQuickAdd(t.id)}
                                 disabled={quickAddingId === t.id}
-                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all disabled:opacity-60"
+                                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all disabled:opacity-60"
                                 title="Log as today's expense"
                               >
                                 {quickAddingId === t.id ? (
