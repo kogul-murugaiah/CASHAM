@@ -125,7 +125,7 @@ const Settings = () => {
     setTplAdding(true);
     setTemplateError("");
     try {
-      const created = await api.post('/api/expenses?template=true', {
+      await api.post('/api/expenses?template=true', {
         item: tplForm.item.trim(),
         amount: Number(tplForm.amount),
         description: tplForm.description || null,
