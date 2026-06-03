@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2, FiRefreshCw, FiRepeat } from "react-icons/fi";
+import { FiUser, FiList, FiCreditCard, FiSliders, FiPlus, FiTrash2, FiRefreshCw, FiRepeat, FiTarget } from "react-icons/fi";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -57,6 +57,15 @@ const Settings = () => {
   const [exporting, setExporting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const navigate = useNavigate();
+
+  // Daily Limit Account — synced with localStorage (same key Dashboard uses)
+  const [dailyLimitAccount, setDailyLimitAccount] = useState<string>(
+    () => localStorage.getItem("dashboard_daily_limit_account") || "All"
+  );
+  const handleDailyLimitAccountChange = (value: string) => {
+    setDailyLimitAccount(value);
+    localStorage.setItem("dashboard_daily_limit_account", value);
+  };
 
   // ── Expense Templates state ──────────────────────────────────────────
   const [templates, setTemplates] = useState<ExpenseTemplate[]>([]);
@@ -861,6 +870,29 @@ const Settings = () => {
                         Rs.
                       </button>
                     </div>
+                  </div>
+
+                  {/* Daily Limit Account */}
+                  <div className="group flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-3xl transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 rounded-2xl bg-teal-500/10 text-teal-500">
+                        <FiTarget size={24} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Daily Limit Account</p>
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-tight">Primary account used for daily budget calculations on the dashboard</p>
+                      </div>
+                    </div>
+                    <select
+                      value={dailyLimitAccount}
+                      onChange={(e) => handleDailyLimitAccountChange(e.target.value)}
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-[10px] font-black px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-white/10 focus:ring-2 focus:ring-teal-500 cursor-pointer outline-none appearance-none text-center min-w-[120px] shadow-sm"
+                    >
+                      <option value="All">All Accounts</option>
+                      {accountTypes.map(acc => (
+                        <option key={acc} value={acc}>{acc}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* Language */}

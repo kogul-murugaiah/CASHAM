@@ -5,7 +5,7 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiSettings } from "react-icons/fi";
 import {
   BarChart,
   Bar,
@@ -82,9 +82,12 @@ const Dashboard = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [dailyLimitAccount, setDailyLimitAccount] = useState<string>(() => localStorage.getItem("dashboard_daily_limit_account") || "All");
 
+  // Sync when localStorage changes from Settings (e.g. navigating back)
   useEffect(() => {
-    localStorage.setItem("dashboard_daily_limit_account", dailyLimitAccount);
-  }, [dailyLimitAccount]);
+    const onStorage = () => setDailyLimitAccount(localStorage.getItem("dashboard_daily_limit_account") || "All");
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,33 +135,36 @@ const Dashboard = () => {
   const isCurrentMonth = today.getMonth() + 1 === currentMonth && today.getFullYear() === currentYear;
   const totalDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
   const daysPassed = isCurrentMonth ? today.getDate() : totalDaysInMonth;
-  
+
   // "Days Remaining Including Today"
   const daysRemainingIncludingToday = isCurrentMonth ? Math.max(1, totalDaysInMonth - daysPassed + 1) : 1;
 
-  // Split expenses into "past" (before today) and "today"
-  // Note: todayISO is already defined above, but we reuse it here
-  const filteredExpenses = dailyLimitAccount === 'All' ? expenses : expenses.filter(e => e.account_type === dailyLimitAccount);
-  const pastExpenses = filteredExpenses.filter(e => !e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
-  const todayFilteredExpenses = filteredExpenses.filter(e => e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
-  const totalFilteredExpenses = pastExpenses + todayFilteredExpenses;
-  
-  // The income available for this account filter (including transfers)
+  // ── All-account aggregates (always across every account) ──────────
+  // Today's expense = ALL accounts regardless of selector
+  // (todayExpenses is already defined above on line 120)
+
+  // Avg Daily Spend = ALL accounts
+  const avgDailySpend = monthlyExpenses / (daysPassed || 1);
+
+  // ── Selected-account aggregates (for Base Limit & Daily Limit Left) ────────────
+  const selectedAccountExpenses = dailyLimitAccount === 'All' ? expenses : expenses.filter(e => e.account_type === dailyLimitAccount);
+  const selectedPastExpenses = selectedAccountExpenses.filter(e => !e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
+  // Today's spend from the selected account only
+  const todaySelectedExpenses = selectedAccountExpenses.filter(e => e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
+
+  // Income available for the selected account (including transfers)
   const effectiveTargetIncome = dailyLimitAccount === 'All'
     ? monthlyIncome
     : (() => {
         const acc = accountBalances.find(a => a.accountType === dailyLimitAccount);
         return acc ? acc.income + acc.transferIn - acc.transferOut : 0;
       })();
-    
-  // Base Limit (How much we can spend per day starting today, ignoring what we already spent today)
-  const baseDailyLimit = Math.max(0, (effectiveTargetIncome - pastExpenses) / daysRemainingIncludingToday);
-  
-  // Actual Limit Left Today
-  const avgDailyLimitRemaining = Math.max(0, baseDailyLimit - todayFilteredExpenses);
-  
-  // Avg Daily Spend
-  const avgDailySpend = totalFilteredExpenses / (daysPassed || 1);
+
+  // Base Limit = how much the selected account can spend per day from today
+  const baseDailyLimit = Math.max(0, (effectiveTargetIncome - selectedPastExpenses) / daysRemainingIncludingToday);
+
+  // Daily Limit Left = Base Limit (selected account) - Today's spend (selected account only)
+  const avgDailyLimitRemaining = Math.max(0, baseDailyLimit - todaySelectedExpenses);
 
   const accountDistributionData = accountBalances.filter(a => a.balance > 0).map(a => ({ name: a.accountType, value: a.balance }));
 
@@ -253,16 +259,17 @@ const Dashboard = () => {
 
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 pt-8 border-t border-white/5">
                 <div className="flex flex-col relative justify-end">
-                  <select 
-                    value={dailyLimitAccount} 
-                    onChange={(e) => setDailyLimitAccount(e.target.value)} 
-                    className="absolute -top-3 left-0 bg-transparent border-b border-emerald-500/30 pb-0.5 focus:outline-none text-[8px] font-bold uppercase tracking-widest text-emerald-400 hover:text-emerald-300 cursor-pointer transition-colors max-w-[120px]"
+                  {/* Static label — configure in Settings > System */}
+                  <Link
+                    to="/settings"
+                    className="absolute -top-3 left-0 flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-teal-400 hover:text-teal-300 transition-colors group"
+                    title="Change in Settings → System"
                   >
-                        <option value="All" className="bg-slate-900 text-slate-300">Target: All</option>
-                        {accountTypes.map(acc => (
-                           <option key={acc} value={acc} className="bg-slate-900 text-slate-300">Target: {acc}</option>
-                        ))}
-                  </select>
+                    <span className="border-b border-teal-500/40 group-hover:border-teal-400 pb-0.5">
+                      {dailyLimitAccount === 'All' ? 'All Accounts' : dailyLimitAccount}
+                    </span>
+                    <FiSettings size={8} className="opacity-60 group-hover:opacity-100 group-hover:rotate-45 transition-all" />
+                  </Link>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
                   <p className={`text-xl font-bold text-orange-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
                 </div>
