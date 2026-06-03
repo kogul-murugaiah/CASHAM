@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff, FiSettings } from "react-icons/fi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import {
   BarChart,
   Bar,
@@ -192,6 +192,9 @@ const Dashboard = () => {
             <p className="text-slate-400 mt-1">
               Financial summary for <span className="text-white font-semibold">{MONTH_NAMES[currentMonth - 1]} {currentYear}</span>
             </p>
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2">
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
           </div>
 
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -258,19 +261,8 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 pt-8 border-t border-white/5">
-                <div className="flex flex-col relative justify-end">
-                  {/* Static label — configure in Settings > System */}
-                  <Link
-                    to="/settings"
-                    className="absolute -top-3 left-0 flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-teal-400 hover:text-teal-300 transition-colors group"
-                    title="Change in Settings → System"
-                  >
-                    <span className="border-b border-teal-500/40 group-hover:border-teal-400 pb-0.5">
-                      {dailyLimitAccount === 'All' ? 'All Accounts' : dailyLimitAccount}
-                    </span>
-                    <FiSettings size={8} className="opacity-60 group-hover:opacity-100 group-hover:rotate-45 transition-all" />
-                  </Link>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-3" title={`${daysPassed} days passed`}>Avg Daily Spend</p>
+                <div className="flex flex-col justify-end">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Avg Daily Spend</p>
                   <p className={`text-xl font-bold text-orange-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
                 </div>
                 <div>
