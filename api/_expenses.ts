@@ -31,7 +31,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // POST ?template=true → Create a new template
         if (method === 'POST' && req.query.template === 'true') {
             try {
-                const { amount, item, description, category_id, account_type } = req.body;
+                const {
+                    amount,
+                    item,
+                    description,
+                    category_id,
+                    account_type,
+                    paid_via_credit_card,
+                    credit_card_id,
+                    credit_card_name
+                } = req.body;
                 if (!amount || !item || !account_type) {
                     return res.status(400).json({ error: 'amount, item, and account_type are required' });
                 }
@@ -44,6 +53,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         description: description || null,
                         category_id: category_id || null,
                         account_type,
+                        paid_via_credit_card: Boolean(paid_via_credit_card),
+                        credit_card_id: credit_card_id || null,
+                        credit_card_name: credit_card_name || null,
                     }])
                     .select()
                     .single();
@@ -114,6 +126,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         description: template.description,
                         category_id: template.category_id,
                         account_type: template.account_type,
+                        paid_via_credit_card: Boolean(template.paid_via_credit_card),
+                        credit_card_id: template.credit_card_id || null,
+                        credit_card_name: template.credit_card_name || null,
+                        cc_bill_settled: false,
                     }])
                     .select()
                     .single();
@@ -131,7 +147,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === 'GET') {
         try {
-            const { startDate, endDate } = req.query;
+            const { startDate, endDate, creditCardOnly, settled } = req.query;
             let query = supabaseAdmin
                 .from('expenses')
                 .select(`
@@ -142,6 +158,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           description,
           category_id,
           account_type,
+          paid_via_credit_card,
+          credit_card_id,
+          credit_card_name,
+          cc_bill_settled,
+          cc_settled_at,
+          cc_settlement_id,
           categories (
             id,
             name
@@ -156,6 +178,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
             if (endDate) {
                 query = query.lt('date', endDate);
+            }
+            if (creditCardOnly === 'true') {
+                query = query.eq('paid_via_credit_card', true);
+            }
+            if (settled === 'false') {
+                query = query.eq('cc_bill_settled', false);
+            } else if (settled === 'true') {
+                query = query.eq('cc_bill_settled', true);
             }
 
             const { data, error } = await query;
@@ -174,7 +204,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 ...item,
                 user_id: user.id,
                 description: item.description || null,
-                category_id: item.category_id || null
+                category_id: item.category_id || null,
+                paid_via_credit_card: Boolean(item.paid_via_credit_card),
+                credit_card_id: item.credit_card_id || null,
+                credit_card_name: item.credit_card_name || null,
+                cc_bill_settled: Boolean(item.cc_bill_settled) || false,
             }));
 
             const { data, error } = await supabaseAdmin
@@ -191,7 +225,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     else if (method === 'PUT') {
         try {
-            const { id, amount, date, item, description, category_id, account_type } = req.body;
+            const {
+                id,
+                amount,
+                date,
+                item,
+                description,
+                category_id,
+                account_type,
+                paid_via_credit_card,
+                credit_card_id,
+                credit_card_name,
+                cc_bill_settled,
+            } = req.body;
 
             if (!id) return res.status(400).json({ error: 'Missing expense id' });
 
@@ -203,7 +249,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     item,
                     description: description || null,
                     category_id: category_id || null,
-                    account_type
+                    account_type,
+                    paid_via_credit_card: Boolean(paid_via_credit_card),
+                    credit_card_id: credit_card_id || null,
+                    credit_card_name: credit_card_name || null,
+                    cc_bill_settled: Boolean(cc_bill_settled),
                 })
                 .eq('id', id)
                 .eq('user_id', user.id)

@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
+import { FiCreditCard } from "react-icons/fi";
 import * as XLSX from 'xlsx';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -22,6 +23,10 @@ type Expense = {
     description: string | null;
     category_id: number | null;
     account_type: string;
+    paid_via_credit_card?: boolean;
+    credit_card_id?: string | null;
+    credit_card_name?: string | null;
+    cc_bill_settled?: boolean;
     categories: Category | null;
 };
 
@@ -33,6 +38,8 @@ type EditingExpense = {
     category_id: string;
     account_type: string;
     amount: string;
+    paid_via_credit_card: boolean;
+    credit_card_name: string;
 };
 
 type CategoryTotal = {
@@ -92,6 +99,7 @@ const ExpenseTracking = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterAccount, setFilterAccount] = useState(() => searchParams.get("account") || "All");
     const [filterCategory, setFilterCategory] = useState("All");
+    const [filterPayment, setFilterPayment] = useState<"All" | "Direct" | "CC_All" | "CC_Unsettled" | "CC_Settled">("All");
 
     const [selectedMonth, setSelectedMonth] = useState(() => {
         const now = new Date();
@@ -196,6 +204,8 @@ const ExpenseTracking = () => {
             category_id: expense.category_id?.toString() || "",
             account_type: expense.account_type,
             amount: expense.amount.toString(),
+            paid_via_credit_card: Boolean(expense.paid_via_credit_card),
+            credit_card_name: expense.credit_card_name || "",
         });
         setSuccess(null);
         setError(null);
@@ -243,6 +253,8 @@ const ExpenseTracking = () => {
                 amount: Number(editingData.amount),
                 account_type: editingData.account_type,
                 category_id: editingData.category_id ? Number(editingData.category_id) : null,
+                paid_via_credit_card: editingData.paid_via_credit_card,
+                credit_card_name: editingData.paid_via_credit_card ? editingData.credit_card_name.trim() || null : null,
             });
 
             setSuccess("Expense updated successfully");
@@ -263,9 +275,17 @@ const ExpenseTracking = () => {
                 (exp.description && exp.description.toLowerCase().includes(searchTerm.toLowerCase()));
             const matchAccount = filterAccount === "All" || exp.account_type === filterAccount;
             const matchCategory = filterCategory === "All" || (exp.categories?.id?.toString() === filterCategory) || (filterCategory === "Uncategorized" && !exp.categories);
-            return matchSearch && matchAccount && matchCategory;
+            const matchPayment = (() => {
+                if (filterPayment === "All") return true;
+                if (filterPayment === "Direct") return !exp.paid_via_credit_card;
+                if (filterPayment === "CC_All") return Boolean(exp.paid_via_credit_card);
+                if (filterPayment === "CC_Unsettled") return Boolean(exp.paid_via_credit_card && !exp.cc_bill_settled);
+                if (filterPayment === "CC_Settled") return Boolean(exp.paid_via_credit_card && exp.cc_bill_settled);
+                return true;
+            })();
+            return matchSearch && matchAccount && matchCategory && matchPayment;
         });
-    }, [expenses, searchTerm, filterAccount, filterCategory]);
+    }, [expenses, searchTerm, filterAccount, filterCategory, filterPayment]);
 
     // Calculations
     const categoryTotals: CategoryTotal[] = filteredExpenses.reduce((acc, exp) => {
@@ -344,7 +364,7 @@ const ExpenseTracking = () => {
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart, searchTerm, filterAccount, filterCategory]);
+    }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart, searchTerm, filterAccount, filterCategory, filterPayment]);
 
     const handleExport = () => {
         const exportData = filteredExpenses.map(exp => ({
@@ -352,6 +372,8 @@ const ExpenseTracking = () => {
             Item: exp.item,
             Category: exp.categories?.name || "Uncategorized",
             Account: exp.account_type,
+            Payment_Method: exp.paid_via_credit_card ? (exp.credit_card_name || "Credit Card") : "Direct",
+            CC_Bill_Status: exp.paid_via_credit_card ? (exp.cc_bill_settled ? "Settled" : "Unsettled") : "N/A",
             Amount: exp.amount,
             Description: exp.description || ""
         }));
@@ -522,6 +544,26 @@ const ExpenseTracking = () => {
                                 <option value="Uncategorized">Uncategorized</option>
                             </select>
                         </div>
+                        <div className="flex-1 sm:flex-none">
+                            <select
+                                value={filterPayment}
+                                onChange={(e) => setFilterPayment(e.target.value as any)}
+                                className="w-full sm:w-48 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none cursor-pointer"
+                            >
+                                <option value="All">All Payments</option>
+                                <option value="Direct">Direct Account Only</option>
+                                <option value="CC_All">Credit Card (All)</option>
+                                <option value="CC_Unsettled">Credit Card (Unsettled)</option>
+                                <option value="CC_Settled">Credit Card (Settled)</option>
+                            </select>
+                        </div>
+                        <Link
+                            to="/credit-cards"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-xs font-bold text-purple-300 hover:bg-purple-500/25 transition-all whitespace-nowrap"
+                        >
+                            <FiCreditCard size={14} />
+                            Credit Cards Hub
+                        </Link>
                     </div>
                 </div>
 
@@ -732,7 +774,22 @@ const ExpenseTracking = () => {
                                                                 {exp.categories?.name || "Uncategorized"}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500 uppercase tracking-tighter">{exp.account_type}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-xs">
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-slate-300 font-semibold uppercase">{exp.account_type}</span>
+                                                                {exp.paid_via_credit_card && (
+                                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold w-fit ${
+                                                                        exp.cc_bill_settled
+                                                                            ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                                                                            : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                                                                    }`}>
+                                                                        <FiCreditCard size={10} />
+                                                                        {exp.credit_card_name || 'Credit Card'}
+                                                                        <span className="text-[9px] opacity-80">({exp.cc_bill_settled ? 'Settled' : 'Unsettled'})</span>
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
                                                         <td className="px-6 py-4 text-sm text-slate-400 max-w-[150px] truncate" title={exp.description || ""}>
                                                             {exp.description || "-"}
                                                         </td>
@@ -766,7 +823,16 @@ const ExpenseTracking = () => {
                                                     </div>
                                                     <div className="text-right">
                                                         <div className="text-sm font-bold text-white font-mono">{currencyFormatter.format(exp.amount)}</div>
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter block mt-0.5">{exp.account_type}</span>
+                                                        <div className="flex items-center justify-end gap-1 mt-0.5">
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{exp.account_type}</span>
+                                                            {exp.paid_via_credit_card && (
+                                                                <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                                                    exp.cc_bill_settled ? 'bg-emerald-500/10 text-emerald-300' : 'bg-purple-500/15 text-purple-300'
+                                                                }`}>
+                                                                    💳 {exp.credit_card_name || 'CC'}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 {/* Description if present */}
@@ -853,6 +919,35 @@ const ExpenseTracking = () => {
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
                                 <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none" />
+                            </div>
+
+                            {/* Credit Card Toggle in Edit */}
+                            <div className="rounded-xl border border-white/10 bg-slate-800/50 p-3.5 space-y-3">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                                        <FiCreditCard className="text-purple-400" />
+                                        Paid via Credit Card?
+                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        checked={editingData.paid_via_credit_card}
+                                        onChange={(e) => setEditingData({ ...editingData, paid_via_credit_card: e.target.checked })}
+                                        className="w-4 h-4 rounded border-white/20 bg-slate-700 text-purple-600 focus:ring-purple-500/30 cursor-pointer"
+                                    />
+                                </label>
+
+                                {editingData.paid_via_credit_card && (
+                                    <div>
+                                        <label className="block text-[10px] font-bold uppercase text-purple-300 mb-1">Card Name</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. HDFC Millennia, Slice Card"
+                                            value={editingData.credit_card_name}
+                                            onChange={(e) => setEditingData({ ...editingData, credit_card_name: e.target.value })}
+                                            className="w-full rounded-lg border border-white/10 bg-slate-700/50 px-3 py-2 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">

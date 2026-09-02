@@ -33,6 +33,7 @@ const ImportCenter = lazy(() => import('./pages/ImportCenter'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
 const Ledger = lazy(() => import('./pages/Ledger'));
+const CreditCards = lazy(() => import('./pages/CreditCards'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -81,6 +82,7 @@ function App() {
                             <Route path="/add-income" element={<AddIncome />} />
                             <Route path="/expense-tracking" element={<ExpenseTracking />} />
                             <Route path="/income-tracking" element={<IncomeTracking />} />
+                            <Route path="/credit-cards" element={<CreditCards />} />
                             <Route path="/ledger" element={<Ledger />} />
                             <Route path="/add-investment" element={<AddInvestment />} />
                             <Route path="/portfolio" element={<Portfolio />} />
