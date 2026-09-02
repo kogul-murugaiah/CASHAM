@@ -15,63 +15,114 @@ async function computeAndInsertCarryover(
     force: boolean = false
 ): Promise<void> {
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    const monthEndExclusive = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+
     const prevMonth = month === 1 ? 12 : month - 1;
     const prevYear = month === 1 ? year - 1 : year;
     const prevStart = `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`;
 
-    if (force) {
-        // Delete any existing carryover rows for this month so we can reinsert
-        await supabaseAdmin
-            .from("income")
-            .delete()
-            .eq("user_id", userId)
-            .eq("source_id", sourceId)
-            .gte("date", startDate)
-            .lt("date", `${year}-${String(month === 12 ? 1 : month + 1).padStart(2, "0")}-01`);
-    }
+    // Make carryover idempotent:
+    // - For force=true (manual sync), always replace this month's carryover rows.
+    // - For force=false (auto on first access), delete-then-insert is still safe and prevents duplicates.
+    const { error: deleteErr } = await supabaseAdmin
+        .from("income")
+        .delete()
+        .eq("user_id", userId)
+        .eq("source_id", sourceId)
+        .gte("date", startDate)
+        .lt("date", monthEndExclusive);
 
-    // Calculate true historical cumulative balance up to startDate, 
-    // fetching all history but ignoring all prior carryover rows.
-    const { data: prevInc } = await supabaseAdmin.from("income").select("amount, account_type, source_id, date").eq("user_id", userId).lt("date", startDate);
-    const { data: prevExp } = await supabaseAdmin.from("expenses").select("amount, account_type").eq("user_id", userId).lt("date", startDate);
-    const { data: prevTransfers } = await supabaseAdmin.from("transfers").select("amount, from_account, to_account").eq("user_id", userId).lt("date", startDate);
-    // Investments are intentionally excluded: user logs investment outflows as manual expenses,
-    // so including invBuy here would double-deduct the same amount from the account balance.
+    if (deleteErr) throw deleteErr;
 
-    // Exclude all historical carryover rows from the sum to avoid compounding
+    // Historical rows strictly before current month start
+    const [{ data: prevInc, error: incErr }, { data: prevExp, error: expErr }, { data: prevTransfers, error: trErr }] =
+        await Promise.all([
+            supabaseAdmin
+                .from("income")
+                .select("amount, account_type, source_id, date")
+                .eq("user_id", userId)
+                .lt("date", startDate),
+            supabaseAdmin
+                .from("expenses")
+                .select("amount, account_type")
+                .eq("user_id", userId)
+                .lt("date", startDate),
+            supabaseAdmin
+                .from("transfers")
+                .select("amount, from_account, to_account")
+                .eq("user_id", userId)
+                .lt("date", startDate),
+        ]);
+
+    if (incErr) throw incErr;
+    if (expErr) throw expErr;
+    if (trErr) throw trErr;
+
+    // Exclude ALL previous carryover income rows to avoid compounded carryovers.
     const filteredPrevInc = (prevInc || []).filter(i => i.source_id !== sourceId);
 
-    // Fetch sources to map source_id to source name
-    const { data: sources } = await supabaseAdmin.from("income_sources").select("id, name").eq("user_id", userId);
+    // Fetch sources to map source_id to source name (for description only)
+    const { data: sources, error: srcErr } = await supabaseAdmin
+        .from("income_sources")
+        .select("id, name")
+        .eq("user_id", userId);
+    if (srcErr) throw srcErr;
+
     const sourceMap = new Map((sources || []).map(s => [s.id, s.name]));
 
-    // Gather all distinct account types from all historical data (ignore null/empty)
+    // Gather all distinct account types from historical data (null/empty-safe)
     const allAccounts = new Set<string>();
-    filteredPrevInc.forEach(i => i.account_type && allAccounts.add(i.account_type));
-    (prevExp || []).forEach(e => e.account_type && allAccounts.add(e.account_type));
-    (prevTransfers || []).forEach(t => { allAccounts.add(t.from_account); allAccounts.add(t.to_account); });
+    filteredPrevInc.forEach(i => {
+        if (i.account_type && i.account_type.trim()) allAccounts.add(i.account_type);
+    });
+    (prevExp || []).forEach(e => {
+        if (e.account_type && e.account_type.trim()) allAccounts.add(e.account_type);
+    });
+    (prevTransfers || []).forEach(t => {
+        if (t.from_account && t.from_account.trim()) allAccounts.add(t.from_account);
+        if (t.to_account && t.to_account.trim()) allAccounts.add(t.to_account);
+    });
 
     const carries: any[] = [];
     allAccounts.forEach(acc => {
-        const incSum = filteredPrevInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
-        const expSum = (prevExp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
-        const transferIn = (prevTransfers || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
-        const transferOut = (prevTransfers || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
+        const incSum = filteredPrevInc
+            .filter(i => i.account_type === acc)
+            .reduce((s, i) => s + Number(i.amount || 0), 0);
+
+        const expSum = (prevExp || [])
+            .filter(e => e.account_type === acc)
+            .reduce((s, e) => s + Number(e.amount || 0), 0);
+
+        const transferIn = (prevTransfers || [])
+            .filter(t => t.to_account === acc)
+            .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+        const transferOut = (prevTransfers || [])
+            .filter(t => t.from_account === acc)
+            .reduce((s, t) => s + Number(t.amount || 0), 0);
+
+        // Correct net balance:
+        // inbound income - expenses + incoming transfers - outgoing transfers
         const bal = incSum - expSum + transferIn - transferOut;
+
+        // Keep exact previous behavior of including non-zero balances.
+        // If you only want positive carryovers, change to: if (bal > 0)
         if (bal !== 0) {
-            // Find sources from the previous month for this account
-            const prevMonthIncForAcc = filteredPrevInc.filter(i => 
-                i.account_type === acc && 
-                i.date >= prevStart && 
+            // Previous-month income source names for this account (for richer description)
+            const prevMonthIncForAcc = filteredPrevInc.filter(i =>
+                i.account_type === acc &&
+                i.date >= prevStart &&
                 i.date < startDate
             );
-            
+
             const prevMonthSourceIds = new Set(prevMonthIncForAcc.map(i => i.source_id));
             const prevMonthSourceNames = Array.from(prevMonthSourceIds)
                 .map(id => sourceMap.get(id))
                 .filter(Boolean)
                 .join(", ");
-                
+
             let description = `Auto-carryover up to ${MONTH_NAMES[prevMonth - 1]} ${prevYear}`;
             if (prevMonthSourceNames) {
                 description += ` (Previous month sources: ${prevMonthSourceNames})`;
@@ -79,7 +130,7 @@ async function computeAndInsertCarryover(
 
             carries.push({
                 user_id: userId,
-                amount: bal,
+                amount: Number(bal.toFixed(2)),
                 date: startDate,
                 account_type: acc,
                 source_id: sourceId,
@@ -89,7 +140,8 @@ async function computeAndInsertCarryover(
     });
 
     if (carries.length > 0) {
-        await supabaseAdmin.from("income").insert(carries);
+        const { error: insErr } = await supabaseAdmin.from("income").insert(carries);
+        if (insErr) throw insErr;
     }
 }
 
@@ -140,15 +192,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             const filteredInc = (inc || []).filter(i => i.source_id !== source?.id);
             const accounts = new Set<string>();
-            filteredInc.forEach(i => i.account_type && accounts.add(i.account_type));
-            (exp || []).forEach(e => e.account_type && accounts.add(e.account_type));
-            (trn || []).forEach(t => { accounts.add(t.from_account); accounts.add(t.to_account); });
+            filteredInc.forEach(i => {
+                if (i.account_type && i.account_type.trim()) accounts.add(i.account_type);
+            });
+            (exp || []).forEach(e => {
+                if (e.account_type && e.account_type.trim()) accounts.add(e.account_type);
+            });
+            (trn || []).forEach(t => {
+                if (t.from_account && t.from_account.trim()) accounts.add(t.from_account);
+                if (t.to_account && t.to_account.trim()) accounts.add(t.to_account);
+            });
 
             const breakdown = Array.from(accounts).map(acc => {
-                const incSum = filteredInc.filter(i => i.account_type === acc).reduce((s, i) => s + i.amount, 0);
-                const expSum = (exp || []).filter(e => e.account_type === acc).reduce((s, e) => s + e.amount, 0);
-                const transferIn = (trn || []).filter(t => t.to_account === acc).reduce((s, t) => s + t.amount, 0);
-                const transferOut = (trn || []).filter(t => t.from_account === acc).reduce((s, t) => s + t.amount, 0);
+                const incSum = filteredInc.filter(i => i.account_type === acc).reduce((s, i) => s + Number(i.amount || 0), 0);
+                const expSum = (exp || []).filter(e => e.account_type === acc).reduce((s, e) => s + Number(e.amount || 0), 0);
+                const transferIn = (trn || []).filter(t => t.to_account === acc).reduce((s, t) => s + Number(t.amount || 0), 0);
+                const transferOut = (trn || []).filter(t => t.from_account === acc).reduce((s, t) => s + Number(t.amount || 0), 0);
                 return { account: acc, incSum, expSum, transferIn, transferOut, balance: incSum - expSum + transferIn - transferOut };
             });
 
@@ -203,4 +262,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(405).json({ error: 'Method not allowed' });
 }
-
