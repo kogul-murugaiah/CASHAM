@@ -82,7 +82,6 @@ const CreditCards = () => {
   const [savingCard, setSavingCard] = useState(false);
 
   // Expanded settlement in history
-  const [expandedSettlementId, _setExpandedSettlementId] = useState<string | null>(null);
 
   // Fetch dues
   const loadDues = async () => {
