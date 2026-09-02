@@ -22,12 +22,6 @@ function prevMonthYear(year: number, month: number) {
   };
 }
 
-/**
- * Build month closing balances from transaction data for one month.
- * IMPORTANT:
- * - Excludes "Balance Carryover" income source from income sum
- * - Net balance per account = income - expenses + transferIn - transferOut
- */
 async function computeMonthClosingBalances(
   userId: string,
   year: number,
@@ -62,6 +56,7 @@ async function computeMonthClosingBalances(
   if (expErr) throw expErr;
   if (trnErr) throw trnErr;
 
+  // Exclude carryover source from income to avoid compounding
   const filteredInc = (inc || []).filter(i => i.source_id !== carryoverSourceId);
 
   const accounts = new Set<string>();
@@ -76,7 +71,7 @@ async function computeMonthClosingBalances(
     if (t.to_account && t.to_account.trim()) accounts.add(t.to_account);
   });
 
-  const balances = Array.from(accounts).map(acc => {
+  return Array.from(accounts).map(acc => {
     const incSum = filteredInc
       .filter(i => i.account_type === acc)
       .reduce((s, i) => s + Number(i.amount || 0), 0);
@@ -96,14 +91,8 @@ async function computeMonthClosingBalances(
     const closing = incSum - expSum + transferIn - transferOut;
     return { account_type: acc, closing_balance: Number(closing.toFixed(2)) };
   });
-
-  return balances;
 }
 
-/**
- * Save one month closing balances into snapshot table.
- * upsert key: (user_id, year, month, account_type)
- */
 async function saveMonthClosingSnapshot(
   userId: string,
   year: number,
@@ -128,21 +117,16 @@ async function saveMonthClosingSnapshot(
   if (error) throw error;
 }
 
-/**
- * Create carryover for target month using previous month snapshot.
- * Fallback: if snapshot missing, compute previous month once, save snapshot, then use it.
- */
 async function computeAndInsertCarryover(
   userId: string,
   year: number,
   month: number,
-  sourceId: string,
-  force: boolean = false
+  sourceId: string
 ): Promise<void> {
   const { startDate, endDate } = monthBounds(year, month);
   const { prevMonth, prevYear } = prevMonthYear(year, month);
 
-  // Idempotent: remove this month's existing carryover rows first
+  // Idempotent: clear this month carryover rows first
   const { error: delErr } = await supabaseAdmin
     .from("income")
     .delete()
@@ -162,7 +146,7 @@ async function computeAndInsertCarryover(
 
   if (snapErr) throw snapErr;
 
-  // Fallback path: snapshot not found -> build it from that month's transactions once
+  // Fallback once if snapshot missing
   if (!snapRows || snapRows.length === 0) {
     await saveMonthClosingSnapshot(userId, prevYear, prevMonth, sourceId);
 
@@ -179,11 +163,12 @@ async function computeAndInsertCarryover(
 
   if (!snapRows.length) return;
 
+  // Positive-only carryover
   const carries = snapRows
-    .filter(r => Number(r.closing_balance || 0) !== 0)
+    .filter(r => Number(r.closing_balance || 0) > 0)
     .map(r => ({
       user_id: userId,
-      amount: Number(Number(r.closing_balance).toFixed(2)),
+      amount: Number(Math.max(0, Number(r.closing_balance || 0)).toFixed(2)),
       date: startDate,
       account_type: r.account_type,
       source_id: sourceId,
@@ -205,7 +190,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     month: parseInt(q.month as string) || new Date().getMonth() + 1,
   });
 
-  // get or create carryover source
   const getCarryoverSource = async () => {
     let { data } = await supabaseAdmin
       .from("income_sources")
@@ -215,30 +199,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (!data) {
-      const { data: created, error: createErr } = await supabaseAdmin
+      const { data: created, error } = await supabaseAdmin
         .from("income_sources")
         .insert({ name: "Balance Carryover", user_id: user.id })
         .select()
         .single();
-      if (createErr) throw createErr;
+      if (error) throw error;
       data = created;
     }
     return data;
   };
 
-  // POST: Sync carryover for target month
+  const getAutoCarryoverEnabled = async () => {
+    const { data } = await supabaseAdmin
+      .from("profiles")
+      .select("auto_carryover_enabled")
+      .eq("id", user.id)
+      .single();
+
+    return data?.auto_carryover_enabled ?? true;
+  };
+
+  // POST: manual sync (always allowed)
   if (req.method === 'POST') {
     try {
       const { year, month } = getYearMonth(req.body || {});
       const source = await getCarryoverSource();
       if (!source) return res.status(500).json({ error: 'Could not find/create carryover source' });
 
-      // Ensure previous month snapshot exists/updated first
       const { prevMonth, prevYear } = prevMonthYear(year, month);
-      await saveMonthClosingSnapshot(user.id, prevYear, prevMonth, source.id);
 
-      // Insert target month carryover from previous month snapshot
-      await computeAndInsertCarryover(user.id, year, month, source.id, true);
+      // Save previous month snapshot first, then carry to current month
+      await saveMonthClosingSnapshot(user.id, prevYear, prevMonth, source.id);
+      await computeAndInsertCarryover(user.id, year, month, source.id);
 
       return res.status(200).json({ ok: true });
     } catch (error: any) {
@@ -246,7 +239,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  // GET ?debug=true: breakdown from previous month snapshot and fallback live calc
+  // GET debug
   if (req.method === 'GET' && req.query.debug === 'true') {
     try {
       const { year, month } = getYearMonth(req.query);
@@ -259,7 +252,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq("user_id", user.id)
         .eq("year", prevYear)
         .eq("month", prevMonth);
-
       if (snapErr) throw snapErr;
 
       const live = await computeMonthClosingBalances(user.id, prevYear, prevMonth, source?.id);
@@ -275,13 +267,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  // GET: dashboard data
+  // GET dashboard data
   if (req.method === 'GET') {
     try {
       const { year, month } = getYearMonth(req.query);
       const { startDate, endDate } = monthBounds(year, month);
 
       const source = await getCarryoverSource();
+      const autoCarryoverEnabled = await getAutoCarryoverEnabled();
 
       let { data: incomeData, error: incomeError } = await supabaseAdmin
         .from("income")
@@ -307,10 +300,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .lt("date", endDate);
       if (transferError) throw transferError;
 
-      // Auto-carryover if missing
       const hasCarryover = source && (incomeData || []).some(inc => inc.source_id === source.id);
-      if (!hasCarryover && source) {
-        await computeAndInsertCarryover(user.id, year, month, source.id, false);
+
+      // Auto-carryover only if user enabled it
+      if (autoCarryoverEnabled && !hasCarryover && source) {
+        await computeAndInsertCarryover(user.id, year, month, source.id);
 
         const { data: newIncome, error: newIncomeErr } = await supabaseAdmin
           .from("income")
@@ -318,15 +312,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .eq("user_id", user.id)
           .gte("date", startDate)
           .lt("date", endDate);
-
         if (newIncomeErr) throw newIncomeErr;
+
         incomeData = newIncome;
       }
 
       return res.status(200).json({
         income: incomeData || [],
         expenses: expenseData || [],
-        transfers: transferData || []
+        transfers: transferData || [],
+        settings: { autoCarryoverEnabled }
       });
     } catch (error: any) {
       console.error("Dashboard API Error:", error);
