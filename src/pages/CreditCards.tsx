@@ -7,7 +7,6 @@ import {
   FiPlus,
   FiCheckCircle,
   FiCalendar,
-  FiAlertTriangle,
   FiClock,
   FiRefreshCw,
   FiArrowRight,
@@ -38,8 +37,6 @@ type UnsettledExpense = {
 const CreditCards = () => {
   const {
     cards,
-    loading: cardsLoading,
-    fetchCards,
     addCard,
     updateCard,
     deleteCard,
@@ -85,7 +82,7 @@ const CreditCards = () => {
   const [savingCard, setSavingCard] = useState(false);
 
   // Expanded settlement in history
-  const [expandedSettlementId, setExpandedSettlementId] = useState<string | null>(null);
+  const [expandedSettlementId, _setExpandedSettlementId] = useState<string | null>(null);
 
   // Fetch dues
   const loadDues = async () => {
@@ -874,7 +871,7 @@ const CreditCards = () => {
               </div>
             ) : (
               settlements.map((settlement) => {
-                const isExpanded = expandedSettlementId === settlement.id;
+                const _isExpanded = expandedSettlementId === settlement.id;
                 const breakdown = settlement.breakdown || {};
 
                 return (

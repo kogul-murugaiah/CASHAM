@@ -639,7 +639,7 @@ const AddExpense = () => {
                         label: `${c.name} ${c.card_last4 ? `(••${c.card_last4})` : ''} ${c.credit_limit ? `· Limit ₹${c.credit_limit.toLocaleString('en-IN')}` : ''}`,
                       }))}
                       placeholder="Select a credit card"
-                      onAddNew={() => setShowNewCardModal(true)}
+                      onAddNew={async (_name: string) => { setShowNewCardModal(true); }}
                       addNewLabel="+ Add new credit card"
                     />
                   )}
