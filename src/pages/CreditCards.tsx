@@ -871,7 +871,6 @@ const CreditCards = () => {
               </div>
             ) : (
               settlements.map((settlement) => {
-                const _isExpanded = expandedSettlementId === settlement.id;
                 const breakdown = settlement.breakdown || {};
 
                 return (
