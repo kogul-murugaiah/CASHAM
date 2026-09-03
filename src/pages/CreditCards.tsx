@@ -710,8 +710,8 @@ const CreditCards = () => {
           >
             <FiUsers size={16} />
             CC Advances
-            {advances.filter(a => !a.cash_received).length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-blue-500/20 text-blue-500">{advances.filter(a => !a.cash_received).length}</span>
+            {pendingAdvances.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-blue-500/20 text-blue-500">{pendingAdvances.length}</span>
             )}
           </button>
           <button
