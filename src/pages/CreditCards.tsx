@@ -390,7 +390,7 @@ const CreditCards = () => {
   };
 
   // Advance selection handlers
-  const pendingAdvances = advances.filter(a => !a.cash_received && !(a as any).cc_bill_settled);
+  const pendingAdvances = advances.filter(a => !(a as any).cc_bill_settled);
 
   const handleToggleSelectAdvance = (id: string) => {
     setSelectedAdvanceIds(prev =>
