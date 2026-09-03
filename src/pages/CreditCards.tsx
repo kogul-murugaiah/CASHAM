@@ -49,6 +49,8 @@ const CreditCards = () => {
     settleBill,
     unsettleBill,
     toggleFundsSetAside,
+    settleAdvances,
+    unsettleAdvances,
   } = useCreditCards();
 
   const {
@@ -108,6 +110,13 @@ const CreditCards = () => {
     description: "",
   });
   const [savingAdvance, setSavingAdvance] = useState(false);
+
+  // CC Advances Settle State
+  const [selectedAdvanceIds, setSelectedAdvanceIds] = useState<string[]>([]);
+  const [showAdvanceSettleModal, setShowAdvanceSettleModal] = useState(false);
+  const [advanceSettleDate, setAdvanceSettleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [advanceSettleNotes, setAdvanceSettleNotes] = useState("");
+  const [settlingAdvances, setSettlingAdvances] = useState(false);
 
   // Fetch dues
   const loadDues = async () => {
@@ -395,6 +404,55 @@ const CreditCards = () => {
     }
   };
 
+  // Advance selection handlers
+  const pendingAdvances = advances.filter(a => !a.cash_received && !(a as any).cc_bill_settled);
+
+  const handleToggleSelectAdvance = (id: string) => {
+    setSelectedAdvanceIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAllAdvances = () => {
+    if (selectedAdvanceIds.length === pendingAdvances.length) {
+      setSelectedAdvanceIds([]);
+    } else {
+      setSelectedAdvanceIds(pendingAdvances.map(a => a.id));
+    }
+  };
+
+  const selectedAdvancesTotal = advances
+    .filter(a => selectedAdvanceIds.includes(a.id))
+    .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+
+  const handleConfirmSettleAdvances = async () => {
+    if (selectedAdvanceIds.length === 0) return;
+    setSettlingAdvances(true);
+    try {
+      const activeCard = cards.find(c => c.id === activeCardId);
+      const cardName = activeCard?.name || cards[0]?.name || "Credit Card";
+      const cardId = activeCard?.id || cards[0]?.id || null;
+      await settleAdvances({
+        credit_card_id: cardId,
+        credit_card_name: cardName,
+        advance_ids: selectedAdvanceIds,
+        settlement_date: advanceSettleDate,
+        notes: advanceSettleNotes,
+      });
+      setShowAdvanceSettleModal(false);
+      setSelectedAdvanceIds([]);
+      setAdvanceSettleNotes("");
+      setSuccess(`Advances settled! ₹${selectedAdvancesTotal.toFixed(0)} cleared.`);
+      setTimeout(() => setSuccess(""), 4000);
+      fetchAdvances();
+      loadSettlements();
+    } catch (err: any) {
+      setError(err.message || "Failed to settle advances");
+    } finally {
+      setSettlingAdvances(false);
+    }
+  };
+
   // Helper for due date calculation
   const getDueCountdown = (dueDay: number) => {
     const today = new Date();
@@ -414,22 +472,22 @@ const CreditCards = () => {
   const textMuted = isDark ? "text-slate-500" : "text-slate-400";
   const divider = isDark ? "border-white/10" : "border-slate-200";
   const rowHover = isDark ? "hover:bg-white/5" : "hover:bg-slate-50";
-  const rowSelected = isDark ? "bg-purple-500/10 hover:bg-purple-500/15" : "bg-purple-50 hover:bg-purple-100/60";
+  const rowSelected = isDark ? "bg-emerald-500/10 hover:bg-emerald-500/15" : "bg-emerald-50 hover:bg-emerald-100/60";
   const theadBg = isDark ? "bg-slate-700/40" : "bg-slate-50";
   const inputClass = isDark
-    ? "w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
-    : "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-purple-500/30 outline-none";
+    ? "w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none"
+    : "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500/30 outline-none";
   const modalBg = isDark ? "bg-slate-800/95 border border-white/10" : "bg-white border border-slate-200";
   const accountChip = isDark
-    ? "rounded-xl border border-white/10 bg-slate-700/30 p-4 space-y-2 hover:border-purple-500/30 transition-all"
-    : "rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 hover:border-purple-400/50 transition-all";
+    ? "rounded-xl border border-white/10 bg-slate-700/30 p-4 space-y-2 hover:border-emerald-500/30 transition-all"
+    : "rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 hover:border-emerald-400/50 transition-all";
   const tabBorder = isDark ? "border-white/10" : "border-slate-200";
   const cardSelectedBg = isDark
-    ? "bg-slate-800 border-purple-500/50 shadow-xl shadow-purple-500/10 ring-2 ring-purple-500/30"
-    : "bg-purple-50 border-purple-400/60 shadow-lg shadow-purple-200/50 ring-2 ring-purple-300/40";
+    ? "bg-slate-800 border-emerald-500/50 shadow-xl shadow-emerald-500/10 ring-2 ring-emerald-500/30"
+    : "bg-emerald-50 border-emerald-400/60 shadow-lg shadow-emerald-200/50 ring-2 ring-emerald-300/40";
   const cardUnselectedBg = isDark
     ? "glass-card hover:border-white/20 hover:bg-slate-800/60"
-    : "bg-white border border-slate-200 hover:border-purple-300 hover:shadow-md";
+    : "bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-md";
   const progressTrack = isDark ? "bg-slate-700/60" : "bg-slate-200";
   const dueBadge = isDark ? "bg-slate-700/60 text-slate-300" : "bg-slate-100 text-slate-600";
   const categoryChip = isDark ? "bg-slate-700/50 text-slate-300" : "bg-slate-100 text-slate-600";
@@ -442,7 +500,7 @@ const CreditCards = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
           <div>
-            <div className="flex items-center gap-2 text-purple-500 text-sm font-semibold uppercase tracking-wider mb-1">
+            <div className="flex items-center gap-2 text-emerald-500 text-sm font-semibold uppercase tracking-wider mb-1">
               <FiCreditCard size={18} />
               Credit Cards Hub
             </div>
@@ -464,7 +522,7 @@ const CreditCards = () => {
             </button>
             <button
               onClick={handleOpenAddCard}
-              className="btn-primary flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/20"
+              className="btn-primary flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20"
             >
               <FiPlus size={18} />
               Add Credit Card
@@ -487,13 +545,13 @@ const CreditCards = () => {
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
           <div className={`rounded-2xl border p-5 relative overflow-hidden ${cardBg}`}>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
             <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Total Outstanding Dues</p>
-            <p className="text-2xl sm:text-3xl font-bold font-heading text-purple-500">
+            <p className="text-2xl sm:text-3xl font-bold font-heading text-emerald-500">
               {formatCurrency(totalOutstandingDues, currencyStyle)}
             </p>
             <p className={`text-xs mt-2 flex items-center gap-1.5 ${textSecondary}`}>
-              <span className="inline-block w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Across {cards.length} registered cards
             </p>
           </div>
@@ -547,7 +605,7 @@ const CreditCards = () => {
 
           {cards.length === 0 ? (
             <div className={`rounded-2xl border p-8 text-center space-y-3 ${cardBg}`}>
-              <div className="inline-flex p-3 rounded-2xl bg-purple-500/10 text-purple-500">
+              <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 text-emerald-500">
                 <FiCreditCard size={28} />
               </div>
               <h4 className={`text-base font-bold ${textPrimary}`}>No Credit Cards Added</h4>
@@ -567,16 +625,16 @@ const CreditCards = () => {
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className={`text-xs font-bold uppercase tracking-wider ${textSecondary}`}>Combined</span>
-                  <span className="text-xs font-mono font-bold text-purple-500">{cards.length} Cards</span>
+                  <span className="text-xs font-mono font-bold text-emerald-500">{cards.length} Cards</span>
                 </div>
                 <h4 className={`text-lg font-bold ${textPrimary}`}>All Cards Overview</h4>
                 <p className={`text-xs mt-1 ${textSecondary}`}>Total pending across all cards</p>
                 <div className={`mt-4 pt-3 border-t flex items-end justify-between ${divider}`}>
                   <div>
                     <span className={`text-[10px] uppercase font-semibold ${textSecondary}`}>Total Dues</span>
-                    <p className="text-xl font-bold font-heading text-purple-500">{formatCurrency(totalOutstandingDues, currencyStyle)}</p>
+                    <p className="text-xl font-bold font-heading text-emerald-500">{formatCurrency(totalOutstandingDues, currencyStyle)}</p>
                   </div>
-                  <span className="text-xs text-purple-500 font-semibold flex items-center gap-1">View All <FiArrowRight size={12} /></span>
+                  <span className="text-xs text-emerald-500 font-semibold flex items-center gap-1">View All <FiArrowRight size={12} /></span>
                 </div>
               </div>
 
@@ -640,7 +698,7 @@ const CreditCards = () => {
 
                     <div className={`mt-3 pt-2.5 border-t flex items-baseline justify-between ${divider}`}>
                       <span className={`text-[10px] uppercase font-semibold ${textSecondary}`}>Outstanding</span>
-                      <span className="text-lg font-bold font-heading text-purple-500">{formatCurrency(cardDues, currencyStyle)}</span>
+                      <span className="text-lg font-bold font-heading text-emerald-500">{formatCurrency(cardDues, currencyStyle)}</span>
                     </div>
                   </div>
                 );
@@ -653,12 +711,12 @@ const CreditCards = () => {
         <div className={`flex border-b gap-6 ${tabBorder}`}>
           <button
             onClick={() => setActiveTab("dues")}
-            className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${activeTab === "dues" ? "border-purple-500 text-purple-500" : `border-transparent ${textSecondary} hover:${textPrimary}`}`}
+            className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${activeTab === "dues" ? "border-emerald-500 text-emerald-500" : `border-transparent ${textSecondary} hover:${textPrimary}`}`}
           >
             <FiLayers size={16} />
             Active Dues & Settlement
             {unsettledExpenses.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-purple-500/20 text-purple-500">{filteredExpenses.length}</span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-emerald-500/20 text-emerald-500">{filteredExpenses.length}</span>
             )}
           </button>
           <button
@@ -673,7 +731,7 @@ const CreditCards = () => {
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${activeTab === "history" ? "border-purple-500 text-purple-500" : `border-transparent ${textSecondary} hover:${textPrimary}`}`}
+            className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${activeTab === "history" ? "border-emerald-500 text-emerald-500" : `border-transparent ${textSecondary} hover:${textPrimary}`}`}
           >
             <FiArchive size={16} />
             Settlement History
@@ -687,11 +745,11 @@ const CreditCards = () => {
         {activeTab === "dues" && (
           <div className="space-y-8 animate-fade-in">
             {/* Account Collection Summary */}
-            <div className={`rounded-2xl border border-purple-500/20 p-6 relative overflow-hidden ${isDark ? "bg-purple-500/5" : "bg-purple-50"}`}>
+            <div className={`rounded-2xl border border-emerald-500/20 p-6 relative overflow-hidden ${isDark ? "bg-emerald-500/5" : "bg-emerald-50"}`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                 <div>
                   <h3 className={`text-lg font-bold font-heading flex items-center gap-2 ${textPrimary}`}>
-                    <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-500"><FiCheckCircle size={18} /></span>
+                    <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500"><FiCheckCircle size={18} /></span>
                     Money to Collect from Budget Accounts
                   </h3>
                   <p className={`text-xs mt-1 ${textSecondary}`}>
@@ -701,7 +759,7 @@ const CreditCards = () => {
                 {Object.keys(accountBreakdown).length > 0 && (
                   <div className="text-right">
                     <span className={`text-[11px] uppercase font-semibold ${textSecondary}`}>Total to Pay</span>
-                    <p className="text-xl font-bold font-heading text-purple-500">
+                    <p className="text-xl font-bold font-heading text-emerald-500">
                       {formatCurrency(Object.values(accountBreakdown).reduce((sum, a) => sum + a.total, 0), currencyStyle)}
                     </p>
                   </div>
@@ -721,7 +779,7 @@ const CreditCards = () => {
                         </span>
                       </div>
                       <p className={`text-2xl font-bold font-heading ${textPrimary}`}>{formatCurrency(data.total, currencyStyle)}</p>
-                      <p className="text-[11px] text-purple-500 flex items-center gap-1"><FiArrowRight size={10} /> Collect for credit card bill</p>
+                      <p className="text-[11px] text-emerald-500 flex items-center gap-1"><FiArrowRight size={10} /> Collect for credit card bill</p>
                     </div>
                   ))}
                 </div>
@@ -750,7 +808,7 @@ const CreditCards = () => {
                     type="button"
                     disabled={selectedExpenseIds.length === 0}
                     onClick={() => setShowSettleModal(true)}
-                    className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <FiCheck size={14} /> Settle Bill ({formatCurrency(selectedTotal, currencyStyle)})
                   </button>
@@ -769,7 +827,7 @@ const CreditCards = () => {
                             type="checkbox"
                             checked={filteredExpenses.length > 0 && selectedExpenseIds.length === filteredExpenses.length}
                             onChange={handleToggleSelectAll}
-                            className="w-4 h-4 rounded cursor-pointer accent-purple-500"
+                            className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
                           />
                         </th>
                         <th className="px-6 py-4">Date</th>
@@ -795,7 +853,7 @@ const CreditCards = () => {
                                 type="checkbox"
                                 checked={isSelected}
                                 onChange={() => handleToggleSelectExpense(expense.id)}
-                                className="w-4 h-4 rounded cursor-pointer accent-purple-500"
+                                className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
                               />
                             </td>
                             <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(expense.date)}</td>
@@ -809,7 +867,7 @@ const CreditCards = () => {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-600">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
                                 <FiCreditCard size={12} /> {expense.credit_card_name || "Credit Card"}
                               </span>
                             </td>
@@ -850,19 +908,19 @@ const CreditCards = () => {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className={`rounded-2xl border p-5 ${cardBg}`}>
-                <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Total Advances</p>
-                <p className={`text-2xl font-bold font-heading text-blue-500`}>{formatCurrency(advanceSummary.total, currencyStyle)}</p>
-                <p className={`text-xs mt-1 ${textSecondary}`}>{filteredAdvances.length} transactions</p>
+                <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Pending Collection</p>
+                <p className={`text-2xl font-bold font-heading text-amber-500`}>{formatCurrency(advances.filter(a => !a.cash_received && !(a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
+                <p className={`text-xs mt-1 ${textSecondary}`}>{advances.filter(a => !a.cash_received && !(a as any).cc_bill_settled).length} awaiting cash</p>
               </div>
               <div className={`rounded-2xl border p-5 ${cardBg}`}>
                 <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Cash Collected</p>
-                <p className="text-2xl font-bold font-heading text-emerald-500">{formatCurrency(advanceSummary.collected, currencyStyle)}</p>
-                <p className={`text-xs mt-1 ${textSecondary}`}>{filteredAdvances.filter(a => a.cash_received).length} received</p>
+                <p className="text-2xl font-bold font-heading text-emerald-500">{formatCurrency(advances.filter(a => a.cash_received && !(a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
+                <p className={`text-xs mt-1 ${textSecondary}`}>{advances.filter(a => a.cash_received && !(a as any).cc_bill_settled).length} received — ready to settle</p>
               </div>
               <div className={`rounded-2xl border p-5 ${cardBg}`}>
-                <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Still Pending</p>
-                <p className={`text-2xl font-bold font-heading ${advanceSummary.pending > 0 ? "text-amber-500" : "text-emerald-500"}`}>{formatCurrency(advanceSummary.pending, currencyStyle)}</p>
-                <p className={`text-xs mt-1 ${textSecondary}`}>{filteredAdvances.filter(a => !a.cash_received).length} pending collection</p>
+                <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Bill Settled</p>
+                <p className="text-2xl font-bold font-heading text-slate-400">{formatCurrency(advances.filter(a => (a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
+                <p className={`text-xs mt-1 ${textSecondary}`}>{advances.filter(a => (a as any).cc_bill_settled).length} settled with bill</p>
               </div>
             </div>
 
@@ -872,8 +930,8 @@ const CreditCards = () => {
               <div>
                 <p className={`text-sm font-semibold ${isDark ? "text-blue-300" : "text-blue-700"}`}>How CC Advances Work</p>
                 <p className={`text-xs mt-0.5 ${isDark ? "text-blue-300/70" : "text-blue-600/80"}`}>
-                  When you pay for someone using your credit card, log it here. The amount is included in your CC bill but NOT counted as your personal expense.
-                  When they pay you back (cash/UPI), mark it as received. During CC bill settlement, you'll see exactly how much to pull from your own accounts vs. how much you already collected.
+                  When you pay for someone using your credit card, log it here. Once they pay you back, mark "Cash Received". 
+                  After you pay your CC bill, select the advances and click "Settle Advances" — they'll be archived in Settlement History.
                 </p>
               </div>
             </div>
@@ -882,29 +940,50 @@ const CreditCards = () => {
             <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
               <div className={`p-4 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${divider}`}>
                 <div>
-                  <h3 className={`text-base font-bold ${textPrimary}`}>Credit Card Advances for Others</h3>
-                  <p className={`text-xs mt-0.5 ${textSecondary}`}>Payments made on behalf of friends & family using your credit card.</p>
+                  <h3 className={`text-base font-bold flex items-center gap-2 ${textPrimary}`}>
+                    Unsettled Advances
+                    <span className={`text-xs font-mono font-normal ${textSecondary}`}>({selectedAdvanceIds.length} of {pendingAdvances.length} selected)</span>
+                  </h3>
+                  <p className={`text-xs mt-0.5 ${textSecondary}`}>Select advances included in your paid bill and mark them as settled.</p>
                 </div>
-                <button
-                  onClick={handleOpenAdvanceModal}
-                  disabled={cards.length === 0}
-                  className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <FiPlus size={14} /> Log Advance
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleOpenAdvanceModal}
+                    disabled={cards.length === 0}
+                    className={`px-4 py-2.5 rounded-xl border text-xs font-semibold transition-colors flex items-center gap-2 ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"} disabled:opacity-40 disabled:cursor-not-allowed`}
+                  >
+                    <FiPlus size={14} /> Log Advance
+                  </button>
+                  <button
+                    type="button"
+                    disabled={selectedAdvanceIds.length === 0}
+                    onClick={() => setShowAdvanceSettleModal(true)}
+                    className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <FiCheck size={14} /> Settle Advances ({formatCurrency(selectedAdvancesTotal, currencyStyle)})
+                  </button>
+                </div>
               </div>
 
-              {filteredAdvances.length === 0 ? (
+              {pendingAdvances.length === 0 ? (
                 <div className={`p-12 text-center space-y-2 ${textSecondary}`}>
                   <FiUsers size={32} className="mx-auto opacity-30" />
-                  <p className="text-sm">No advances logged yet.</p>
-                  <p className="text-xs opacity-70">When you pay for someone using your credit card, log it here to track the amount.</p>
+                  <p className="text-sm">No unsettled advances. All cleared!</p>
+                  <p className="text-xs opacity-70">Settled advances are archived in Settlement History.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className={`border-b text-left text-xs font-semibold uppercase tracking-wider ${textSecondary} ${theadBg} ${divider}`}>
+                        <th className="px-6 py-4 w-12 text-center">
+                          <input
+                            type="checkbox"
+                            checked={pendingAdvances.length > 0 && selectedAdvanceIds.length === pendingAdvances.length}
+                            onChange={handleToggleSelectAllAdvances}
+                            className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
+                          />
+                        </th>
                         <th className="px-6 py-4">Person</th>
                         <th className="px-6 py-4">Description</th>
                         <th className="px-6 py-4">Card Used</th>
@@ -915,53 +994,63 @@ const CreditCards = () => {
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${divider}`}>
-                      {filteredAdvances.map((advance) => (
-                        <tr key={advance.id} className={`transition-colors ${rowHover}`}>
-                          <td className={`px-6 py-4 text-sm font-semibold ${textPrimary}`}>
-                            <div className="flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold">
-                                {advance.person_name[0].toUpperCase()}
+                      {pendingAdvances.map((advance) => {
+                        const isSelected = selectedAdvanceIds.includes(advance.id);
+                        return (
+                          <tr key={advance.id} onClick={() => handleToggleSelectAdvance(advance.id)} className={`cursor-pointer transition-colors ${isSelected ? rowSelected : rowHover}`}>
+                            <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleSelectAdvance(advance.id)}
+                                className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
+                              />
+                            </td>
+                            <td className={`px-6 py-4 text-sm font-semibold ${textPrimary}`}>
+                              <div className="flex items-center gap-2">
+                                <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold">
+                                  {advance.person_name[0].toUpperCase()}
+                                </span>
+                                {advance.person_name}
+                              </div>
+                            </td>
+                            <td className={`px-6 py-4 text-sm ${textSecondary}`}>{advance.description || "—"}</td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
+                                <FiCreditCard size={12} /> {advance.credit_card_name}
                               </span>
-                              {advance.person_name}
-                            </div>
-                          </td>
-                          <td className={`px-6 py-4 text-sm ${textSecondary}`}>{advance.description || "—"}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-500/10 border border-purple-500/20 text-purple-600">
-                              <FiCreditCard size={12} /> {advance.credit_card_name}
-                            </span>
-                          </td>
-                          <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(advance.date)}</td>
-                          <td className="px-6 py-4 text-sm font-bold text-blue-500 font-mono">{formatCurrency(advance.amount, currencyStyle)}</td>
-                          <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => handleToggleReceived(advance)}
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                advance.cash_received
-                                  ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
-                                  : `${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-300 hover:bg-amber-100"}`
-                              }`}
-                            >
-                              {advance.cash_received ? <><FiCheckCircle size={12} /> Received</> : "⏳ Pending"}
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => handleDeleteAdvance(advance.id, advance.person_name)}
-                              className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
-                            >
-                              <FiTrash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(advance.date)}</td>
+                            <td className="px-6 py-4 text-sm font-bold text-blue-500 font-mono">{formatCurrency(advance.amount, currencyStyle)}</td>
+                            <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleToggleReceived(advance)}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                  advance.cash_received
+                                    ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
+                                    : `${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-300 hover:bg-amber-100"}`
+                                }`}
+                              >
+                                {advance.cash_received ? <><FiCheckCircle size={12} /> Received</> : "⏳ Pending"}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleDeleteAdvance(advance.id, advance.person_name)}
+                                className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
+                              >
+                                <FiTrash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               )}
             </div>
           </div>
-        )}
 
         {/* ── SETTLEMENT HISTORY TAB ── */}
         {activeTab === "history" && (
@@ -973,29 +1062,36 @@ const CreditCards = () => {
             ) : (
               settlements.map((settlement) => {
                 const breakdown = settlement.breakdown || {};
+                const isAdvanceSettlement = settlement.notes?.startsWith('[ADVANCES]');
+                const displayNotes = isAdvanceSettlement
+                  ? (settlement.notes?.replace('[ADVANCES]', '').trim() || null)
+                  : settlement.notes;
                 return (
                   <div key={settlement.id} className={settlementCard}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500"><FiCheckCircle size={16} /></span>
+                          <span className={`p-1.5 rounded-lg ${isAdvanceSettlement ? "bg-blue-500/20 text-blue-500" : "bg-emerald-500/20 text-emerald-500"}`}><FiCheckCircle size={16} /></span>
                           <h4 className={`text-base font-bold ${textPrimary}`}>{settlement.credit_card_name}</h4>
+                          {isAdvanceSettlement && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-500 border border-blue-500/20">CC ADVANCES</span>
+                          )}
                           <span className={`text-xs px-2 py-0.5 rounded font-mono ${isDark ? "bg-slate-700/60 text-slate-300" : "bg-slate-100 text-slate-600"}`}>
                             {formatDate(settlement.settlement_date)}
                           </span>
                         </div>
-                        {settlement.notes && <p className={`text-xs mt-1 pl-8 ${textSecondary}`}>Note: {settlement.notes}</p>}
+                        {displayNotes && <p className={`text-xs mt-1 pl-8 ${textSecondary}`}>Note: {displayNotes}</p>}
                       </div>
 
                       <div className="flex items-center gap-4 pl-8 sm:pl-0">
                         <div className="text-right">
-                          <span className={`text-[10px] uppercase font-semibold ${textSecondary}`}>Bill Amount</span>
+                          <span className={`text-[10px] uppercase font-semibold ${textSecondary}`}>Amount</span>
                           <p className="text-xl font-bold font-heading text-emerald-500 font-mono">{formatCurrency(settlement.total_amount, currencyStyle)}</p>
                         </div>
                         <button
-                          onClick={() => handleUnsettle(settlement.id)}
+                          onClick={() => isAdvanceSettlement ? unsettleAdvances(settlement.id) : handleUnsettle(settlement.id)}
                           className={`px-3 py-1.5 rounded-lg text-xs transition-all ${isDark ? "text-slate-400 hover:text-red-400 hover:bg-red-500/10" : "text-slate-500 hover:text-red-500 hover:bg-red-50"}`}
-                          title="Reopen Statement"
+                          title="Reopen"
                         >
                           Reopen
                         </button>
@@ -1003,10 +1099,10 @@ const CreditCards = () => {
                     </div>
 
                     <div className={`pt-3 border-t flex flex-wrap items-center gap-2 pl-8 ${divider}`}>
-                      <span className={`text-xs font-medium ${textSecondary}`}>Collected From:</span>
+                      <span className={`text-xs font-medium ${textSecondary}`}>{isAdvanceSettlement ? "Persons:" : "Collected From:"}</span>
                       {Object.entries(breakdown).map(([acc, amt]) => (
                         <span key={acc} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ${breakdownChip}`}>
-                          <span className="text-purple-500">{acc}:</span>
+                          <span className="text-emerald-500">{acc}:</span>
                           <span className={`font-mono ${textPrimary}`}>{formatCurrency(Number(amt), currencyStyle)}</span>
                         </span>
                       ))}
@@ -1031,12 +1127,12 @@ const CreditCards = () => {
                 </button>
               </div>
 
-              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-1">
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-purple-500 font-semibold uppercase">Total Statement Bill</span>
+                  <span className="text-xs text-emerald-500 font-semibold uppercase">Total Statement Bill</span>
                   <span className={`text-2xl font-bold font-heading ${textPrimary}`}>{formatCurrency(selectedTotal, currencyStyle)}</span>
                 </div>
-                <p className={`text-xs ${isDark ? "text-purple-300/80" : "text-purple-600/80"}`}>
+                <p className={`text-xs ${isDark ? "text-emerald-300/80" : "text-emerald-600/80"}`}>
                   {selectedExpenseIds.length} transactions included for {currentCard ? currentCard.name : "All Cards"}.
                 </p>
               </div>
@@ -1073,6 +1169,55 @@ const CreditCards = () => {
                 <button type="button" onClick={() => setShowSettleModal(false)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>Cancel</button>
                 <button type="button" disabled={settling} onClick={handleConfirmSettle} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50">
                   {settling ? "Settling..." : "Confirm & Settle"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Settle Advances Modal ── */}
+        {showAdvanceSettleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className={`max-w-lg w-full p-6 space-y-5 rounded-2xl shadow-2xl ${modalBg}`}>
+              <div className={`flex items-center justify-between border-b pb-3 ${divider}`}>
+                <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}>
+                  <FiCheckCircle className="text-emerald-500" /> Settle CC Advances
+                </h3>
+                <button type="button" onClick={() => setShowAdvanceSettleModal(false)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"}`}>
+                  <FiX size={16} />
+                </button>
+              </div>
+
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs text-emerald-600 font-semibold uppercase">Total Advances Being Settled</span>
+                  <span className={`text-2xl font-bold font-heading ${textPrimary}`}>{formatCurrency(selectedAdvancesTotal, currencyStyle)}</span>
+                </div>
+                <p className={`text-xs ${isDark ? "text-emerald-300/80" : "text-emerald-600/80"}`}>
+                  {selectedAdvanceIds.length} advance{selectedAdvanceIds.length !== 1 ? "s" : ""} — these will be archived in Settlement History.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Bill Payment Date</label>
+                  <input type="date" value={advanceSettleDate} onChange={(e) => setAdvanceSettleDate(e.target.value)} className={inputClass} />
+                </div>
+                <div>
+                  <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Notes (Optional)</label>
+                  <input type="text" placeholder="e.g. Paid via Netbanking" value={advanceSettleNotes} onChange={(e) => setAdvanceSettleNotes(e.target.value)} className={inputClass} />
+                </div>
+              </div>
+
+              <div className={`p-3 rounded-xl text-xs flex items-start gap-2 ${isDark ? "bg-slate-700/40 border border-white/5 text-slate-400" : "bg-slate-50 border border-slate-200 text-slate-500"}`}>
+                <FiInfo className="text-emerald-500 flex-shrink-0 mt-0.5" size={14} />
+                <span>These advances will move to <strong>Settlement History</strong> and will no longer count towards your outstanding dues.</span>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button type="button" onClick={() => setShowAdvanceSettleModal(false)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>Cancel</button>
+                <button type="button" disabled={settlingAdvances} onClick={handleConfirmSettleAdvances} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50">
+                  {settlingAdvances ? "Settling..." : "Confirm & Settle"}
                 </button>
               </div>
             </div>
@@ -1152,7 +1297,7 @@ const CreditCards = () => {
             <div className={`max-w-md w-full p-6 space-y-5 rounded-2xl shadow-2xl ${modalBg}`}>
               <div className={`flex items-center justify-between border-b pb-3 ${divider}`}>
                 <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}>
-                  <FiCreditCard className="text-purple-500" /> {editingCard ? "Edit Credit Card" : "Add Credit Card"}
+                  <FiCreditCard className="text-emerald-500" /> {editingCard ? "Edit Credit Card" : "Add Credit Card"}
                 </h3>
                 <button type="button" onClick={() => setShowCardModal(false)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"}`}>
                   <FiX size={16} />
@@ -1194,7 +1339,7 @@ const CreditCards = () => {
 
                 <div className="flex gap-2 pt-2">
                   <button type="button" onClick={() => setShowCardModal(false)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>Cancel</button>
-                  <button type="submit" disabled={savingCard || !cardForm.name.trim()} className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold shadow-lg shadow-purple-500/20 disabled:opacity-50">
+                  <button type="submit" disabled={savingCard || !cardForm.name.trim()} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50">
                     {savingCard ? "Saving..." : editingCard ? "Update Card" : "Add Card"}
                   </button>
                 </div>
@@ -1208,3 +1353,4 @@ const CreditCards = () => {
 };
 
 export default CreditCards;
+

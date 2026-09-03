@@ -241,6 +241,111 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         }
 
+        // Action: Settle CC Advances (after paying the bill)
+        if (action === 'settle-advances') {
+            try {
+                const {
+                    credit_card_id,
+                    credit_card_name,
+                    advance_ids,
+                    settlement_date,
+                    notes,
+                } = req.body;
+
+                if (!Array.isArray(advance_ids) || advance_ids.length === 0) {
+                    return res.status(400).json({ error: 'advance_ids must be a non-empty array' });
+                }
+                if (!credit_card_name) {
+                    return res.status(400).json({ error: 'credit_card_name is required' });
+                }
+
+                // Fetch the advances to calculate total and breakdown by person
+                const { data: advancesToSettle, error: fetchErr } = await supabaseAdmin
+                    .from('cc_advances')
+                    .select('id, amount, person_name')
+                    .eq('user_id', user.id)
+                    .in('id', advance_ids);
+
+                if (fetchErr) throw fetchErr;
+                if (!advancesToSettle || advancesToSettle.length === 0) {
+                    return res.status(404).json({ error: 'No matching advances found to settle' });
+                }
+
+                // Compute total and breakdown by person_name
+                const breakdown: Record<string, number> = {};
+                let totalAmount = 0;
+                for (const adv of advancesToSettle) {
+                    const amt = Number(adv.amount || 0);
+                    totalAmount += amt;
+                    const person = adv.person_name || 'Unknown';
+                    breakdown[person] = (breakdown[person] || 0) + amt;
+                }
+
+                const settleDate = settlement_date || new Date().toISOString().slice(0, 10);
+
+                // 1. Insert settlement record (with settlement_type = 'advances')
+                const { data: settlement, error: settleErr } = await supabaseAdmin
+                    .from('credit_card_settlements')
+                    .insert([{
+                        user_id: user.id,
+                        credit_card_id: credit_card_id || null,
+                        credit_card_name,
+                        total_amount: Number(totalAmount.toFixed(2)),
+                        settlement_date: settleDate,
+                        breakdown,
+                        expense_ids: [], // empty for advance settlements
+                        notes: notes ? `[ADVANCES] ${notes}` : '[ADVANCES]',
+                    }])
+                    .select()
+                    .single();
+
+                if (settleErr) throw settleErr;
+
+                // 2. Mark advances as settled
+                const { error: updateErr } = await supabaseAdmin
+                    .from('cc_advances')
+                    .update({
+                        cc_bill_settled: true,
+                        cc_settled_at: new Date().toISOString(),
+                        cc_settlement_id: settlement.id,
+                    })
+                    .eq('user_id', user.id)
+                    .in('id', advance_ids);
+
+                if (updateErr) throw updateErr;
+
+                return res.status(201).json({ success: true, settlement });
+            } catch (error: any) {
+                return res.status(500).json({ error: error.message });
+            }
+        }
+
+        // Action: Unsettle advances
+        if (action === 'unsettle-advances') {
+            try {
+                const { settlement_id } = req.body;
+                if (!settlement_id) return res.status(400).json({ error: 'settlement_id is required' });
+
+                const { error: advErr } = await supabaseAdmin
+                    .from('cc_advances')
+                    .update({ cc_bill_settled: false, cc_settled_at: null, cc_settlement_id: null })
+                    .eq('user_id', user.id)
+                    .eq('cc_settlement_id', settlement_id);
+                if (advErr) throw advErr;
+
+                const { error: delErr } = await supabaseAdmin
+                    .from('credit_card_settlements')
+                    .delete()
+                    .eq('id', settlement_id)
+                    .eq('user_id', user.id);
+                if (delErr) throw delErr;
+
+                return res.status(200).json({ success: true });
+            } catch (error: any) {
+                return res.status(500).json({ error: error.message });
+            }
+        }
+
         // Action: Unsettle a previously settled statement
         if (action === 'unsettle') {
             try {

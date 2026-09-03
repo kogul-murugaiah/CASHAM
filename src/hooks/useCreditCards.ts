@@ -156,6 +156,32 @@ export const useCreditCards = () => {
     }
   };
 
+  const settleAdvances = async (payload: {
+    credit_card_id?: string | null;
+    credit_card_name: string;
+    advance_ids: string[];
+    settlement_date: string;
+    notes?: string;
+  }) => {
+    try {
+      const res = await api.post('/api/credit-cards?action=settle-advances', payload);
+      await fetchCards();
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to settle advances');
+    }
+  };
+
+  const unsettleAdvances = async (settlement_id: string) => {
+    try {
+      const res = await api.post('/api/credit-cards?action=unsettle-advances', { settlement_id });
+      await fetchCards();
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to reopen advance settlement');
+    }
+  };
+
   return {
     cards,
     loading,
@@ -169,5 +195,7 @@ export const useCreditCards = () => {
     settleBill,
     unsettleBill,
     toggleFundsSetAside,
+    settleAdvances,
+    unsettleAdvances,
   };
 };
