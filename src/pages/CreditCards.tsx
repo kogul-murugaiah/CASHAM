@@ -1051,6 +1051,7 @@ const CreditCards = () => {
               )}
             </div>
           </div>
+        )}
 
         {/* ── SETTLEMENT HISTORY TAB ── */}
         {activeTab === "history" && (
