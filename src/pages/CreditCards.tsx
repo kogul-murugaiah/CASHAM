@@ -160,14 +160,6 @@ const CreditCards = () => {
     );
   }, [unsettledExpenses, activeCardId, currentCard]);
 
-  // Filtered advances based on activeCardId
-  const filteredAdvances = useMemo(() => {
-    if (activeCardId === "all") return advances;
-    return advances.filter(
-      (a) => a.credit_card_id === activeCardId || a.credit_card_name === currentCard?.name
-    );
-  }, [advances, activeCardId, currentCard]);
-
 
   // Sync selected checkboxes when filtered expenses change
   useEffect(() => {
