@@ -34,6 +34,7 @@ type UnsettledExpense = {
   credit_card_id: string | null;
   credit_card_name: string | null;
   cc_bill_settled: boolean;
+  cc_funds_set_aside?: boolean;
   categories: { id: number; name: string } | null;
 };
 
@@ -47,6 +48,7 @@ const CreditCards = () => {
     fetchSettlements,
     settleBill,
     unsettleBill,
+    toggleFundsSetAside,
   } = useCreditCards();
 
   const {
@@ -319,6 +321,19 @@ const CreditCards = () => {
       loadSettlements();
     } catch (err: any) {
       setError(err.message || "Failed to reopen statement");
+    }
+  };
+
+  const handleToggleExpenseFundsSetAside = async (expense: UnsettledExpense) => {
+    try {
+      const newValue = !expense.cc_funds_set_aside;
+      await toggleFundsSetAside(expense.id, newValue);
+      // Update local state for immediate UI response
+      setUnsettledExpenses(prev => 
+        prev.map(e => e.id === expense.id ? { ...e, cc_funds_set_aside: newValue } : e)
+      );
+    } catch (err: any) {
+      setError(err.message || "Failed to update funds status");
     }
   };
 
@@ -762,6 +777,7 @@ const CreditCards = () => {
                         <th className="px-6 py-4">Budget Account</th>
                         <th className="px-6 py-4">Card Used</th>
                         <th className="px-6 py-4">Category</th>
+                        <th className="px-6 py-4 text-center">Funds Moved?</th>
                         <th className="px-6 py-4 text-right">Amount</th>
                       </tr>
                     </thead>
@@ -801,6 +817,18 @@ const CreditCards = () => {
                               {expense.categories ? (
                                 <span className={`text-xs px-2 py-0.5 rounded ${categoryChip}`}>{expense.categories.name}</span>
                               ) : "-"}
+                            </td>
+                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={() => handleToggleExpenseFundsSetAside(expense)}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                  expense.cc_funds_set_aside
+                                    ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
+                                    : `${isDark ? "bg-slate-700/60 text-slate-400 border border-white/10 hover:bg-slate-700" : "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"}`
+                                }`}
+                              >
+                                {expense.cc_funds_set_aside ? <><FiCheckCircle size={12} /> Moved</> : "⏳ Pending"}
+                              </button>
                             </td>
                             <td className="px-6 py-4 text-sm font-bold text-right text-red-500 font-mono whitespace-nowrap">
                               {formatCurrency(expense.amount, currencyStyle)}

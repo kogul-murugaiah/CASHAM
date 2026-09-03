@@ -237,24 +237,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 credit_card_id,
                 credit_card_name,
                 cc_bill_settled,
+                cc_funds_set_aside,
             } = req.body;
 
             if (!id) return res.status(400).json({ error: 'Missing expense id' });
 
+            const updates: any = {};
+            if (amount !== undefined) updates.amount = amount;
+            if (date !== undefined) updates.date = date;
+            if (item !== undefined) updates.item = item;
+            if (description !== undefined) updates.description = description || null;
+            if (category_id !== undefined) updates.category_id = category_id || null;
+            if (account_type !== undefined) updates.account_type = account_type;
+            if (paid_via_credit_card !== undefined) updates.paid_via_credit_card = Boolean(paid_via_credit_card);
+            if (credit_card_id !== undefined) updates.credit_card_id = credit_card_id || null;
+            if (credit_card_name !== undefined) updates.credit_card_name = credit_card_name || null;
+            if (cc_bill_settled !== undefined) updates.cc_bill_settled = Boolean(cc_bill_settled);
+            if (cc_funds_set_aside !== undefined) updates.cc_funds_set_aside = Boolean(cc_funds_set_aside);
+
             const { data, error } = await supabaseAdmin
                 .from('expenses')
-                .update({
-                    amount,
-                    date,
-                    item,
-                    description: description || null,
-                    category_id: category_id || null,
-                    account_type,
-                    paid_via_credit_card: Boolean(paid_via_credit_card),
-                    credit_card_id: credit_card_id || null,
-                    credit_card_name: credit_card_name || null,
-                    cc_bill_settled: Boolean(cc_bill_settled),
-                })
+                .update(updates)
                 .eq('id', id)
                 .eq('user_id', user.id)
                 .select();

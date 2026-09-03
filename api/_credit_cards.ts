@@ -38,6 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             credit_card_name,
                             cc_bill_settled,
                             cc_settled_at,
+                            cc_funds_set_aside,
                             categories (
                                 id,
                                 name

@@ -145,6 +145,17 @@ export const useCreditCards = () => {
     }
   };
 
+  const toggleFundsSetAside = async (expense_id: string, isSetAside: boolean) => {
+    try {
+      await api.put('/api/expenses', {
+        id: expense_id,
+        cc_funds_set_aside: isSetAside
+      });
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to update funds status');
+    }
+  };
+
   return {
     cards,
     loading,
@@ -157,5 +168,6 @@ export const useCreditCards = () => {
     fetchSettlements,
     settleBill,
     unsettleBill,
+    toggleFundsSetAside,
   };
 };
