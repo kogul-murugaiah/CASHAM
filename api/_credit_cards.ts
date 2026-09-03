@@ -97,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Default: List All Cards with live unsettled dues calculated
         try {
-            const [cardsRes, expensesRes] = await Promise.all([
+            const [cardsRes, expensesRes, advancesRes] = await Promise.all([
                 supabaseAdmin
                     .from('credit_cards')
                     .select('*')
@@ -108,21 +108,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .select('amount, credit_card_id, credit_card_name')
                     .eq('user_id', user.id)
                     .eq('paid_via_credit_card', true)
+                    .eq('cc_bill_settled', false),
+                supabaseAdmin
+                    .from('cc_advances')
+                    .select('amount, credit_card_id, credit_card_name')
+                    .eq('user_id', user.id)
                     .eq('cc_bill_settled', false)
             ]);
 
             if (cardsRes.error) throw cardsRes.error;
             if (expensesRes.error) throw expensesRes.error;
+            if (advancesRes.error) throw advancesRes.error;
 
             const cards = cardsRes.data || [];
             const expenses = expensesRes.data || [];
+            const advances = advancesRes.data || [];
 
             // Compute dues per card
             const cardsWithDues = cards.map((card) => {
                 const cardExpenses = expenses.filter(
                     (e) => e.credit_card_id === card.id || e.credit_card_name === card.name
                 );
-                const totalDues = cardExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+                const cardAdvances = advances.filter(
+                    (a) => a.credit_card_id === card.id || a.credit_card_name === card.name
+                );
+                
+                const totalExpenses = cardExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+                const totalAdvances = cardAdvances.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+                const totalDues = totalExpenses + totalAdvances;
+                
                 const limit = Number(card.credit_limit || 0);
                 const utilization = limit > 0 ? (totalDues / limit) * 100 : 0;
 
