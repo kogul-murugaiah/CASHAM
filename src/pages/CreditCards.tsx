@@ -168,13 +168,6 @@ const CreditCards = () => {
     );
   }, [advances, activeCardId, currentCard]);
 
-  // Advance summary
-  const advanceSummary = useMemo(() => {
-    const total = filteredAdvances.reduce((s, a) => s + Number(a.amount), 0);
-    const collected = filteredAdvances.filter(a => a.cash_received).reduce((s, a) => s + Number(a.amount), 0);
-    const pending = total - collected;
-    return { total, collected, pending };
-  }, [filteredAdvances]);
 
   // Sync selected checkboxes when filtered expenses change
   useEffect(() => {
