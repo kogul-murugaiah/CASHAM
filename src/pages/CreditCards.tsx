@@ -172,10 +172,8 @@ const CreditCards = () => {
 
   // Aggregate stats across all cards
   const totalOutstandingDues = useMemo(() => {
-    const expensesTotal = unsettledExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    const advancesTotal = advances.filter(a => !(a as any).cc_bill_settled).reduce((sum, a) => sum + Number(a.amount || 0), 0);
-    return expensesTotal + advancesTotal;
-  }, [unsettledExpenses, advances]);
+    return cards.reduce((sum, c) => sum + Number(c.total_dues || 0), 0);
+  }, [cards]);
 
   const totalCreditLimit = useMemo(() => {
     return cards.reduce((sum, c) => sum + Number(c.credit_limit || 0), 0);
