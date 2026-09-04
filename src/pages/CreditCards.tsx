@@ -160,6 +160,14 @@ const CreditCards = () => {
     );
   }, [unsettledExpenses, activeCardId, currentCard]);
 
+  // Filtered advances based on activeCardId
+  const filteredAdvances = useMemo(() => {
+    if (activeCardId === "all") return advances;
+    return advances.filter(
+      (a) => a.credit_card_id === activeCardId || a.credit_card_name === currentCard?.name
+    );
+  }, [advances, activeCardId, currentCard]);
+
 
   // Sync selected checkboxes when filtered expenses change
   useEffect(() => {
@@ -390,7 +398,7 @@ const CreditCards = () => {
   };
 
   // Advance selection handlers
-  const pendingAdvances = advances.filter(a => !(a as any).cc_bill_settled);
+  const pendingAdvances = filteredAdvances.filter(a => !(a as any).cc_bill_settled);
 
   const handleToggleSelectAdvance = (id: string) => {
     setSelectedAdvanceIds(prev =>
@@ -894,18 +902,18 @@ const CreditCards = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className={`rounded-2xl border p-5 ${cardBg}`}>
                 <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Pending Collection</p>
-                <p className={`text-2xl font-bold font-heading text-amber-500`}>{formatCurrency(advances.filter(a => !a.cash_received && !(a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
-                <p className={`text-xs mt-1 ${textSecondary}`}>{advances.filter(a => !a.cash_received && !(a as any).cc_bill_settled).length} awaiting cash</p>
+                <p className={`text-2xl font-bold font-heading text-amber-500`}>{formatCurrency(filteredAdvances.filter(a => !a.cash_received && !(a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
+                <p className={`text-xs mt-1 ${textSecondary}`}>{filteredAdvances.filter(a => !a.cash_received && !(a as any).cc_bill_settled).length} awaiting cash</p>
               </div>
               <div className={`rounded-2xl border p-5 ${cardBg}`}>
                 <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Cash Collected</p>
-                <p className="text-2xl font-bold font-heading text-emerald-500">{formatCurrency(advances.filter(a => a.cash_received && !(a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
-                <p className={`text-xs mt-1 ${textSecondary}`}>{advances.filter(a => a.cash_received && !(a as any).cc_bill_settled).length} received — ready to settle</p>
+                <p className="text-2xl font-bold font-heading text-emerald-500">{formatCurrency(filteredAdvances.filter(a => a.cash_received && !(a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
+                <p className={`text-xs mt-1 ${textSecondary}`}>{filteredAdvances.filter(a => a.cash_received && !(a as any).cc_bill_settled).length} received — ready to settle</p>
               </div>
               <div className={`rounded-2xl border p-5 ${cardBg}`}>
                 <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Bill Settled</p>
-                <p className="text-2xl font-bold font-heading text-slate-400">{formatCurrency(advances.filter(a => (a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
-                <p className={`text-xs mt-1 ${textSecondary}`}>{advances.filter(a => (a as any).cc_bill_settled).length} settled with bill</p>
+                <p className="text-2xl font-bold font-heading text-slate-400">{formatCurrency(filteredAdvances.filter(a => (a as any).cc_bill_settled).reduce((s,a) => s + Number(a.amount), 0), currencyStyle)}</p>
+                <p className={`text-xs mt-1 ${textSecondary}`}>{filteredAdvances.filter(a => (a as any).cc_bill_settled).length} settled with bill</p>
               </div>
             </div>
 
