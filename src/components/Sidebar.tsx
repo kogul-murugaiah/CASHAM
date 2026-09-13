@@ -32,6 +32,7 @@ const NAV_GROUPS = [
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
             { to: "/credit-cards", icon: FiCreditCard, label: "Credit Cards" },
             { to: "/ledger", icon: FiUsers, label: "Ledger (IOU)" },
+            { to: "/rent-tracker", icon: FiHome, label: "Rent Tracker" },
             { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
         ],
     },

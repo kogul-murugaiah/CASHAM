@@ -11,6 +11,7 @@ import accountsHandler from './_accounts.js';
 import dashboardHandler from './_dashboard.js';
 import creditCardsHandler from './_credit_cards.js';
 import ccAdvancesHandler from './_cc_advances.js';
+import rentHandler from './_rent.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { resource } = req.query;
@@ -27,6 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         case 'dashboard': return dashboardHandler(req, res);
         case 'credit-cards': return creditCardsHandler(req, res);
         case 'cc-advances': return ccAdvancesHandler(req, res);
+        case 'rent': return rentHandler(req, res);
         default:
             return res.status(404).json({ error: `Route /api/${resource} not found in resource router.` });
     }
