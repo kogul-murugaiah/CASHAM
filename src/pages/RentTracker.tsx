@@ -340,6 +340,7 @@ const RentTracker = () => {
               <button onClick={() => handleMarkPending(prop)} className={`px-4 py-2 rounded-xl border text-xs font-semibold transition-colors ${isDark ? "border-white/10 text-slate-400 hover:bg-white/5" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>Mark as Pending</button>
             ) : (
               <button onClick={() => handleOpenCollect(prop)} className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg flex items-center gap-2"><FiDollarSign size={14} /> Collect Rent</button>
+              <button onClick={() => handleOpenCollect(prop)} className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg flex items-center gap-2">Collect Rent</button>
             )}
           </div>
         </div>
@@ -489,6 +490,7 @@ const RentTracker = () => {
                           <button onClick={() => handleMarkPending(prop)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"><FiCheckCircle size={12} /> Paid</button>
                         ) : (
                           <button onClick={() => handleOpenCollect(prop)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition-all"><FiDollarSign size={12} /> Collect</button>
+                          <button onClick={() => handleOpenCollect(prop)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition-all">Collect</button>
                         )}
                       </td>
                       <td className="px-5 py-4 text-center" onClick={e => e.stopPropagation()}>
@@ -512,6 +514,7 @@ const RentTracker = () => {
           <div className={`max-w-md w-full p-6 space-y-5 rounded-2xl shadow-2xl border ${modalBg}`}>
             <div className={`flex items-center justify-between border-b pb-3 ${divider}`}>
               <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}><FiDollarSign className="text-emerald-500" /> Collect Rent</h3>
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}><FiCheckCircle className="text-emerald-500" /> Collect Rent</h3>
               <button onClick={() => { setShowCollectModal(false); setCollectingProp(null); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-slate-400" : "hover:bg-slate-100 text-slate-400"}`}><FiX size={16} /></button>
             </div>
             <div className={`p-3 rounded-xl ${detailChip} border`}>
