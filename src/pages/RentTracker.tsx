@@ -19,7 +19,6 @@ import {
   FiCalendar,
   FiShield,
   FiFileText,
-  FiDollarSign,
   FiArrowRight,
   FiUser
 } from "react-icons/fi";
