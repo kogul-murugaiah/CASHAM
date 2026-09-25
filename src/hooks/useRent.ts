@@ -7,6 +7,8 @@ export interface RentCollection {
   month_year: string;
   amount_paid?: number;
   paid_on?: string;
+  payment_mode?: string;
+  payment_notes?: string;
   status: 'pending' | 'paid';
 }
 
@@ -15,9 +17,17 @@ export interface RentProperty {
   name: string;
   type: string;
   tenant_name?: string;
+  tenant_phone?: string;
+  tenant_id_proof?: string;
+  tenant_move_in?: string;
+  tenant_move_out?: string;
   rent_amount: number;
   due_day: number;
-  collection: RentCollection; // Appended from backend for current month
+  security_deposit?: number;
+  advance_rent?: number;
+  notes?: string;
+  created_at?: string;
+  collection: RentCollection;
 }
 
 export const useRent = () => {
@@ -44,15 +54,42 @@ export const useRent = () => {
     name: string;
     type: string;
     tenant_name?: string;
+    tenant_phone?: string;
+    tenant_id_proof?: string;
+    tenant_move_in?: string;
+    tenant_move_out?: string;
     rent_amount: number;
     due_day: number;
+    security_deposit?: number;
+    advance_rent?: number;
+    notes?: string;
   }) => {
     try {
       await api.post('/api/rent?action=add_property', data);
-      // We don't push to state directly since we need the collection wrapper, 
-      // best to let the caller re-fetch collections.
     } catch (err: any) {
       throw new Error(err.message || 'Failed to add property');
+    }
+  };
+
+  const updateProperty = async (id: string, data: {
+    name?: string;
+    type?: string;
+    tenant_name?: string;
+    tenant_phone?: string;
+    tenant_id_proof?: string;
+    tenant_move_in?: string;
+    tenant_move_out?: string;
+    rent_amount?: number;
+    due_day?: number;
+    security_deposit?: number;
+    advance_rent?: number;
+    notes?: string;
+  }) => {
+    try {
+      const updated = await api.post('/api/rent?action=update_property', { id, ...data });
+      setProperties(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to update property');
     }
   };
 
@@ -65,16 +102,24 @@ export const useRent = () => {
     }
   };
 
-  const markCollected = async (property_id: string, month_year: string, amount_paid: number, paid_on: string) => {
+  const markCollected = async (
+    property_id: string,
+    month_year: string,
+    amount_paid: number,
+    paid_on: string,
+    payment_mode?: string,
+    payment_notes?: string
+  ) => {
     try {
       const updatedCollection = await api.post('/api/rent?action=mark_collected', {
         property_id,
         month_year,
         amount_paid,
-        paid_on
+        paid_on,
+        payment_mode,
+        payment_notes
       });
       
-      // Update local state
       setProperties(prev => prev.map(p => {
         if (p.id === property_id) {
           return { ...p, collection: updatedCollection };
@@ -93,7 +138,6 @@ export const useRent = () => {
         month_year
       });
       
-      // Update local state
       setProperties(prev => prev.map(p => {
         if (p.id === property_id) {
           return { ...p, collection: updatedCollection };
@@ -105,14 +149,25 @@ export const useRent = () => {
     }
   };
 
+  const fetchCollectionHistory = async (propertyId: string): Promise<RentCollection[]> => {
+    try {
+      const data = await api.get(`/api/rent?action=collection_history&property_id=${propertyId}`);
+      return data || [];
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to fetch collection history');
+    }
+  };
+
   return {
     properties,
     loading,
     error,
     fetchCollections,
     addProperty,
+    updateProperty,
     deleteProperty,
     markCollected,
-    markPending
+    markPending,
+    fetchCollectionHistory
   };
 };
