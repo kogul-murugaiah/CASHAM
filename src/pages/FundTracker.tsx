@@ -9,8 +9,6 @@ import {
     FiArrowLeft,
     FiTrash2,
     FiX,
-    FiCheck,
-    FiDollarSign,
     FiTrendingDown,
     FiTrendingUp,
     FiClock,

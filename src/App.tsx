@@ -33,6 +33,7 @@ const ImportCenter = lazy(() => import('./pages/ImportCenter'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
 const Portfolio = lazy(() => import('./pages/Portfolio'));
+const Ledger = lazy(() => import('./pages/Ledger'));
 const RentTracker = lazy(() => import('./pages/RentTracker'));
 const FundTracker = lazy(() => import('./pages/FundTracker'));
 
