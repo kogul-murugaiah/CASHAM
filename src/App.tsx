@@ -2,7 +2,7 @@
  * Expense Tracker Application
  * Copyright (c) 2026 kogulmurugaiah
  * All rights reserved.
- * 
+ *
  * Developer: kogulmurugaiah
  * Description: A comprehensive expense tracking application with dark theme UI
  */
@@ -33,8 +33,8 @@ const ImportCenter = lazy(() => import('./pages/ImportCenter'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
 const Portfolio = lazy(() => import('./pages/Portfolio'));
-const Ledger = lazy(() => import('./pages/Ledger'));
 const RentTracker = lazy(() => import('./pages/RentTracker'));
+const FundTracker = lazy(() => import('./pages/FundTracker'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -86,6 +86,7 @@ function App() {
                             <Route path="/credit-cards" element={<CreditCards />} />
                             <Route path="/ledger" element={<Ledger />} />
                             <Route path="/rent-tracker" element={<RentTracker />} />
+                            <Route path="/fund-tracker" element={<FundTracker />} />
                             <Route path="/add-investment" element={<AddInvestment />} />
                             <Route path="/portfolio" element={<Portfolio />} />
                             <Route path="/budget-planner" element={<BudgetPlanner />} />

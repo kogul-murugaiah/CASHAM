@@ -6,7 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard, FiBriefcase
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -32,6 +32,7 @@ const NAV_GROUPS = [
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
             { to: "/credit-cards", icon: FiCreditCard, label: "Credit Cards" },
             { to: "/ledger", icon: FiUsers, label: "Ledger (IOU)" },
+            { to: "/fund-tracker", icon: FiBriefcase, label: "Independent Funds" },
             { to: "/rent-tracker", icon: FiHome, label: "Rent Tracker" },
             { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
         ],
@@ -223,7 +224,7 @@ const Sidebar = () => {
                 >
                     <FiMenu size={20} />
                 </button>
-                
+
                 <div className="flex items-center gap-2.5 absolute left-1/2 -translate-x-1/2">
                     <Logo size="sm" className="flex-shrink-0" />
                     <span className="text-lg font-bold font-heading text-white tracking-widest uppercase">CASHAM</span>
@@ -232,7 +233,7 @@ const Sidebar = () => {
                 {/* Profile RIGHT */}
                 <div className="flex items-center justify-end w-10">
                     {user ? (
-                        <button 
+                        <button
                             onClick={() => setMobileOpen(true)}
                             className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-indigo-700 flex items-center justify-center text-[10px] font-bold text-white shadow-lg border border-white/10"
                         >
