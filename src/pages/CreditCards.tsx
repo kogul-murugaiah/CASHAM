@@ -76,15 +76,6 @@ const CreditCards = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Checkbox selection for partial bill settlement
-  const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
-
-  // Settle Modal State
-  const [showSettleModal, setShowSettleModal] = useState(false);
-  const [settleDate, setSettleDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [settleNotes, setSettleNotes] = useState("");
-  const [settling, setSettling] = useState(false);
-
   // Add / Edit Card Modal State
   const [showCardModal, setShowCardModal] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
@@ -301,10 +292,6 @@ const CreditCards = () => {
     }
   };
 
-  useEffect(() => {
-    setSelectedExpenseIds(filteredExpenses.map((e) => e.id));
-  }, [filteredExpenses]);
-
   // Aggregate stats across all cards
   const totalOutstandingDues = useMemo(() => {
     return cards.reduce((sum, c) => sum + Number(c.total_dues || 0), 0);
@@ -330,30 +317,6 @@ const CreditCards = () => {
     }
     return map;
   }, [filteredExpenses]);
-
-  // Selected expenses total & breakdown
-  const selectedExpenses = useMemo(() => {
-    return filteredExpenses.filter((e) => selectedExpenseIds.includes(e.id));
-  }, [filteredExpenses, selectedExpenseIds]);
-
-  const selectedTotal = useMemo(() => {
-    return selectedExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  }, [selectedExpenses]);
-
-  const selectedBreakdown = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const exp of selectedExpenses) {
-      const acc = exp.account_type || "Unspecified";
-      map[acc] = (map[acc] || 0) + Number(exp.amount || 0);
-    }
-    return map;
-  }, [selectedExpenses]);
-
-  const handleToggleSelectExpense = (id: string) => {
-    setSelectedExpenseIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
 
   // Card Modal Handlers
   const handleOpenAddCard = () => {
@@ -413,27 +376,6 @@ const CreditCards = () => {
     }
   };
 
-  // Settle Bill Handler
-  const handleConfirmSettle = async () => {
-    if (selectedExpenseIds.length === 0) return;
-    const cardName = currentCard ? currentCard.name : "All Cards Combined";
-    setSettling(true);
-    setError("");
-    try {
-      await settleBill({ credit_card_id: currentCard ? currentCard.id : null, credit_card_name: cardName, expense_ids: selectedExpenseIds, settlement_date: settleDate, notes: settleNotes.trim() || undefined });
-      setShowSettleModal(false);
-      setSettleNotes("");
-      setSuccess(`Statement settled! ${formatCurrency(selectedTotal, currencyStyle)} cleared across ${Object.keys(selectedBreakdown).length} budget accounts.`);
-      setTimeout(() => setSuccess(""), 4000);
-      loadDues();
-      loadSettlements();
-    } catch (err: any) {
-      setError(err.message || "Failed to settle bill");
-    } finally {
-      setSettling(false);
-    }
-  };
-
   // Unsettle Bill Handler
   const handleUnsettle = async (settlementId: string) => {
     if (!window.confirm("Reopen this settled statement? The transactions will become unsettled again.")) return;
@@ -453,7 +395,7 @@ const CreditCards = () => {
       const newValue = !expense.cc_funds_set_aside;
       await toggleFundsSetAside(expense.id, newValue);
       // Update local state for immediate UI response
-      setUnsettledExpenses(prev => 
+      setUnsettledExpenses(prev =>
         prev.map(e => e.id === expense.id ? { ...e, cc_funds_set_aside: newValue } : e)
       );
     } catch (err: any) {
@@ -1034,7 +976,7 @@ const CreditCards = () => {
               <div>
                 <p className={`text-sm font-semibold ${isDark ? "text-blue-300" : "text-blue-700"}`}>How CC Advances Work</p>
                 <p className={`text-xs mt-0.5 ${isDark ? "text-blue-300/70" : "text-blue-600/80"}`}>
-                  When you pay for someone using your credit card, log it here. Once they pay you back, mark "Cash Received". 
+                  When you pay for someone using your credit card, log it here. Once they pay you back, mark "Cash Received".
                   After you pay your CC bill, select the advances and click "Settle Advances" — they'll be archived in Settlement History.
                 </p>
               </div>
@@ -1250,67 +1192,6 @@ const CreditCards = () => {
                 );
               })
             )}
-          </div>
-        )}
-
-        {/* ── Settle Bill Modal ── */}
-        {showSettleModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className={`max-w-lg w-full p-6 space-y-5 rounded-2xl shadow-2xl ${modalBg}`}>
-              <div className={`flex items-center justify-between border-b pb-3 ${divider}`}>
-                <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}>
-                  <FiCheckCircle className="text-emerald-500" /> Settle Credit Card Statement
-                </h3>
-                <button type="button" onClick={() => setShowSettleModal(false)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"}`}>
-                  <FiX size={16} />
-                </button>
-              </div>
-
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-emerald-500 font-semibold uppercase">Total Statement Bill</span>
-                  <span className={`text-2xl font-bold font-heading ${textPrimary}`}>{formatCurrency(selectedTotal, currencyStyle)}</span>
-                </div>
-                <p className={`text-xs ${isDark ? "text-emerald-300/80" : "text-emerald-600/80"}`}>
-                  {selectedExpenseIds.length} transactions included for {currentCard ? currentCard.name : "All Cards"}.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <p className={`text-xs font-semibold uppercase tracking-wider ${textSecondary}`}>Amounts Collected from Budget Accounts:</p>
-                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                  {Object.entries(selectedBreakdown).map(([acc, amt]) => (
-                    <div key={acc} className={`flex items-center justify-between p-2.5 rounded-lg text-xs ${isDark ? "bg-slate-700/40 border border-white/5" : "bg-slate-50 border border-slate-200"}`}>
-                      <span className={`font-medium truncate ${textSecondary}`}>{acc}</span>
-                      <span className={`font-bold font-mono ${textPrimary}`}>{formatCurrency(amt, currencyStyle)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Bill Payment Date</label>
-                  <input type="date" value={settleDate} onChange={(e) => setSettleDate(e.target.value)} className={inputClass} />
-                </div>
-                <div>
-                  <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Notes / Payment Reference (Optional)</label>
-                  <input type="text" placeholder="e.g. Paid in full via Netbanking ref #1234" value={settleNotes} onChange={(e) => setSettleNotes(e.target.value)} className={inputClass} />
-                </div>
-              </div>
-
-              <div className={`p-3 rounded-xl text-xs flex items-start gap-2 ${isDark ? "bg-slate-700/40 border border-white/5 text-slate-400" : "bg-slate-50 border border-slate-200 text-slate-500"}`}>
-                <FiInfo className="text-emerald-500 flex-shrink-0 mt-0.5" size={14} />
-                <span><strong>No double deduction:</strong> Because these expenses were already deducted from your account balances when created, settling simply clears the credit card bill and archives the statement.</span>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowSettleModal(false)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>Cancel</button>
-                <button type="button" disabled={settling} onClick={handleConfirmSettle} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50">
-                  {settling ? "Settling..." : "Confirm & Settle"}
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
