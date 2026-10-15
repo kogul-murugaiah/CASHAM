@@ -129,6 +129,9 @@ const CreditCards = () => {
   const [smartSettleCardId, setSmartSettleCardId] = useState("");
   const [smartSettleCutoffDate, setSmartSettleCutoffDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [smartSettleActualBill, setSmartSettleActualBill] = useState("");
+  const [smartSettleDate, setSmartSettleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [smartSettleNotes, setSmartSettleNotes] = useState("");
+  const [smartSettling, setSmartSettling] = useState(false);
 
   // Fetch dues
   const loadDues = async () => {
@@ -254,16 +257,50 @@ const CreditCards = () => {
     if (cutoff > today) cutoff.setMonth(cutoff.getMonth() - 1);
     setSmartSettleCutoffDate(cutoff.toISOString().slice(0, 10));
     setSmartSettleActualBill("");
+    setSmartSettleDate(new Date().toISOString().slice(0, 10));
+    setSmartSettleNotes("");
     setShowSmartSettleModal(true);
   };
 
-  const handleApplySmartSettle = () => {
-    // pre-select the computed expense ids in the main dues table
-    setSelectedExpenseIds(smartSettleExpenses.map(e => e.id));
-    setSelectedAdvanceIds(smartSettleAdvancesItems.map(a => a.id));
-    setShowSmartSettleModal(false);
-    setActiveTab("dues");
+  const handleSmartSettleConfirm = async () => {
+    if (!smartSettleCardId) return;
+    setSmartSettling(true);
+    setError("");
+    try {
+      const cardName = smartSettleCard?.name || "Credit Card";
+      // Settle expenses
+      if (smartSettleExpenses.length > 0) {
+        await settleBill({
+          credit_card_id: smartSettleCardId,
+          credit_card_name: cardName,
+          expense_ids: smartSettleExpenses.map(e => e.id),
+          settlement_date: smartSettleDate,
+          notes: smartSettleNotes.trim() || undefined,
+        });
+      }
+      // Settle advances
+      if (smartSettleAdvancesItems.length > 0) {
+        await settleAdvances({
+          credit_card_id: smartSettleCardId,
+          credit_card_name: cardName,
+          advance_ids: smartSettleAdvancesItems.map(a => a.id),
+          settlement_date: smartSettleDate,
+          notes: smartSettleNotes.trim() || undefined,
+        });
+      }
+      setShowSmartSettleModal(false);
+      setSuccess(`Statement settled! ${formatCurrency(smartGrandTotal, currencyStyle)} cleared for ${cardName}.`);
+      setTimeout(() => setSuccess(""), 4000);
+      loadDues();
+      loadSettlements();
+      fetchAdvances();
+    } catch (err: any) {
+      setError(err.message || "Failed to settle");
+    } finally {
+      setSmartSettling(false);
+    }
   };
+
   useEffect(() => {
     setSelectedExpenseIds(filteredExpenses.map((e) => e.id));
   }, [filteredExpenses]);
@@ -593,10 +630,10 @@ const CreditCards = () => {
             {cards.length > 0 && (
               <button
                 onClick={handleOpenSmartSettle}
-                className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold border transition-all ${isDark ? "border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10" : "border-emerald-400 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"}`}
+                className={`flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold border transition-all ${isDark ? "border-white/10 bg-slate-800/80 text-slate-200 hover:bg-slate-700/80 hover:border-white/20" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm"}`}
               >
-                <FiCalendar size={16} />
-                Settle by Date
+                <FiCalendar size={15} />
+                Settle Statement
               </button>
             )}
             <button
@@ -865,39 +902,16 @@ const CreditCards = () => {
               )}
             </div>
 
-            {/* Selectable Transactions Table */}
+            {/* Transactions Table */}
             <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
               <div className={`p-4 sm:p-6 border-b space-y-4 ${divider}`}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h3 className={`text-base font-bold flex items-center gap-2 ${textPrimary}`}>
                       Unsettled Statement Transactions
-                      <span className={`text-xs font-mono font-normal ${textSecondary}`}>({selectedExpenseIds.length} of {displayedExpenses.length} selected)</span>
+                      <span className={`text-xs font-mono font-normal px-2 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"}`}>{displayedExpenses.length} transactions</span>
                     </h3>
-                    <p className={`text-xs mt-0.5 ${textSecondary}`}>Select transactions that appear on your generated statement to settle them together.</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (selectedExpenseIds.length === displayedExpenses.length) {
-                          setSelectedExpenseIds([]);
-                        } else {
-                          setSelectedExpenseIds(displayedExpenses.map((e) => e.id));
-                        }
-                      }}
-                      className={`px-3.5 py-2 rounded-xl border text-xs font-semibold transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}
-                    >
-                      {selectedExpenseIds.length === displayedExpenses.length && displayedExpenses.length > 0 ? "Deselect All" : "Select All"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={selectedExpenseIds.length === 0}
-                      onClick={() => setShowSettleModal(true)}
-                      className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      <FiCheck size={14} /> Settle Bill ({formatCurrency(selectedTotal, currencyStyle)})
-                    </button>
+                    <p className={`text-xs mt-0.5 ${textSecondary}`}>Use <strong>Settle Statement</strong> in the header to settle these transactions by date.</p>
                   </div>
                 </div>
                 {/* Search + Filter Row */}
@@ -935,20 +949,6 @@ const CreditCards = () => {
                   <table className="w-full">
                     <thead>
                       <tr className={`border-b text-left text-xs font-semibold uppercase tracking-wider ${textSecondary} ${theadBg} ${divider}`}>
-                        <th className="px-6 py-4 w-12 text-center">
-                          <input
-                            type="checkbox"
-                            checked={displayedExpenses.length > 0 && selectedExpenseIds.length === displayedExpenses.length}
-                            onChange={() => {
-                              if (selectedExpenseIds.length === displayedExpenses.length) {
-                                setSelectedExpenseIds([]);
-                              } else {
-                                setSelectedExpenseIds(displayedExpenses.map(e => e.id));
-                              }
-                            }}
-                            className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
-                          />
-                        </th>
                         <th className="px-6 py-4">Date</th>
                         <th className="px-6 py-4">Item & Notes</th>
                         <th className="px-6 py-4">Budget Account</th>
@@ -959,60 +959,45 @@ const CreditCards = () => {
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${divider}`}>
-                      {displayedExpenses.map((expense) => {
-                        const isSelected = selectedExpenseIds.includes(expense.id);
-                        return (
-                          <tr
-                            key={expense.id}
-                            onClick={() => handleToggleSelectExpense(expense.id)}
-                            className={`cursor-pointer transition-colors ${isSelected ? rowSelected : rowHover}`}
-                          >
-                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => handleToggleSelectExpense(expense.id)}
-                                className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
-                              />
-                            </td>
-                            <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(expense.date)}</td>
-                            <td className={`px-6 py-4 text-sm font-medium ${textPrimary}`}>
-                              <div>{expense.item}</div>
-                              {expense.description && <div className={`text-xs font-normal ${textSecondary}`}>{expense.description}</div>}
-                            </td>
-                            <td className="px-6 py-4 text-sm">
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-600">
-                                {expense.account_type}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
-                                <FiCreditCard size={12} /> {expense.credit_card_name || "Credit Card"}
-                              </span>
-                            </td>
-                            <td className={`px-6 py-4 text-sm ${textSecondary}`}>
-                              {expense.categories ? (
-                                <span className={`text-xs px-2 py-0.5 rounded ${categoryChip}`}>{expense.categories.name}</span>
-                              ) : "-"}
-                            </td>
-                            <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleToggleExpenseFundsSetAside(expense)}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                  expense.cc_funds_set_aside
-                                    ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
-                                    : `${isDark ? "bg-slate-700/60 text-slate-400 border border-white/10 hover:bg-slate-700" : "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"}`
-                                }`}
-                              >
-                                {expense.cc_funds_set_aside ? <><FiCheckCircle size={12} /> Moved</> : "⏳ Pending"}
-                              </button>
-                            </td>
-                            <td className="px-6 py-4 text-sm font-bold text-right text-red-500 font-mono whitespace-nowrap">
-                              {formatCurrency(expense.amount, currencyStyle)}
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {displayedExpenses.map((expense) => (
+                        <tr key={expense.id} className={`transition-colors ${rowHover}`}>
+                          <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(expense.date)}</td>
+                          <td className={`px-6 py-4 text-sm font-medium ${textPrimary}`}>
+                            <div>{expense.item}</div>
+                            {expense.description && <div className={`text-xs font-normal ${textSecondary}`}>{expense.description}</div>}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-600">
+                              {expense.account_type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
+                              <FiCreditCard size={12} /> {expense.credit_card_name || "Credit Card"}
+                            </span>
+                          </td>
+                          <td className={`px-6 py-4 text-sm ${textSecondary}`}>
+                            {expense.categories ? (
+                              <span className={`text-xs px-2 py-0.5 rounded ${categoryChip}`}>{expense.categories.name}</span>
+                            ) : "-"}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => handleToggleExpenseFundsSetAside(expense)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                expense.cc_funds_set_aside
+                                  ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
+                                  : `${isDark ? "bg-slate-700/60 text-slate-400 border border-white/10 hover:bg-slate-700" : "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"}`
+                              }`}
+                            >
+                              {expense.cc_funds_set_aside ? <><FiCheckCircle size={12} /> Moved</> : "⏳ Pending"}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-bold text-right text-red-500 font-mono whitespace-nowrap">
+                            {formatCurrency(expense.amount, currencyStyle)}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1609,15 +1594,32 @@ const CreditCards = () => {
               </div>
             )}
 
+            {/* Settlement Date + Notes */}
+            {smartSettleCardId && (smartSettleExpenses.length > 0 || smartSettleAdvancesItems.length > 0) && (
+              <div className={`space-y-3 pt-1 border-t ${divider}`}>
+                <p className={`text-xs font-semibold uppercase tracking-wider pt-3 ${textSecondary}`}>Settlement Details</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Bill Payment Date</label>
+                    <input type="date" value={smartSettleDate} onChange={e => setSmartSettleDate(e.target.value)} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Notes / Reference (Optional)</label>
+                    <input type="text" placeholder="e.g. Paid via Netbanking" value={smartSettleNotes} onChange={e => setSmartSettleNotes(e.target.value)} className={inputClass} />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2 pt-2">
               <button type="button" onClick={() => setShowSmartSettleModal(false)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>Cancel</button>
               <button
                 type="button"
-                disabled={!smartSettleCardId || (smartSettleExpenses.length === 0 && smartSettleAdvancesItems.length === 0)}
-                onClick={handleApplySmartSettle}
+                disabled={!smartSettleCardId || (smartSettleExpenses.length === 0 && smartSettleAdvancesItems.length === 0) || smartSettling}
+                onClick={handleSmartSettleConfirm}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                <FiCheck size={15} /> Apply Selection & Proceed
+                <FiCheck size={15} /> {smartSettling ? "Settling..." : `Confirm & Settle ${smartGrandTotal > 0 ? formatCurrency(smartGrandTotal, currencyStyle) : ""}`}
               </button>
             </div>
           </div>
