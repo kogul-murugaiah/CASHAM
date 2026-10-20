@@ -382,8 +382,8 @@ function AddEditTaskModal({ isDark, task, defaultFrequency, onClose, onSave }: M
                                     </div>
                                     <p className={`text-[11px] mt-1.5 ${label}`}>
                                         {dueDate
-                                            ? "📌 Scheduled for a specific date: Appears in your daily focus on that date."
-                                            : "🎯 Long-term goal (No date): Stored safely in All Tasks and will NOT clutter your daily focus list."
+                                            ? "Scheduled for a specific date: Appears in your daily focus on that date."
+                                            : "Long-term goal (No date): Stored safely in Long-Term Goals and will not clutter your daily focus list."
                                         }
                                     </p>
                                 </div>
@@ -522,11 +522,12 @@ interface TaskCardProps {
     onStop?: (id: string) => void;
     onScheduleToday?: (id: string) => void;
     showControls?: boolean;
+    hideTypeBadge?: boolean;
 }
 
 function TaskCard({
     task, isDark, onToggle, onEdit, onDelete,
-    onPause, onResume, onStop, onScheduleToday, showControls = false
+    onPause, onResume, onStop, onScheduleToday, showControls = false, hideTypeBadge = false
 }: TaskCardProps) {
     const done = task.completed_today;
     const priorityColor = PRIORITY_COLORS[task.priority];
@@ -586,7 +587,7 @@ function TaskCard({
                         </span>
                     )}
 
-                    {!isRepeating && !task.due_date && (
+                    {!hideTypeBadge && !isRepeating && !task.due_date && (
                         <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
                             Long-Term Goal
                         </span>
@@ -960,7 +961,7 @@ function MonthHeatmap({
 
             {/* Click tip */}
             <p className={`text-[11px] text-center pt-1 ${muted}`}>
-                💡 Tip: Click any day in the calendar to jump to its focus list and review or log tasks.
+                Tip: Click any day in the calendar to jump to its focus list and review or log tasks.
             </p>
         </div>
     );
@@ -1205,7 +1206,7 @@ function WeeklyActivityChart({ counts, isDark, color = '#10b981', todayStr, onDa
                 </div>
                 {bestDay && (
                     <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <span>⭐ Best Day:</span>
+                        <span>Best Day:</span>
                         <span className="font-bold">{bestDay.name} ({bestDay.count} {bestDay.count === 1 ? 'task' : 'tasks'})</span>
                     </div>
                 )}
@@ -1286,7 +1287,7 @@ function WeeklyActivityChart({ counts, isDark, color = '#10b981', todayStr, onDa
 
             {/* Click Tip */}
             <p className={`text-[11px] text-center pt-1 ${textMuted}`}>
-                💡 Tip: Click any day bar to jump to its daily focus list and review or log tasks.
+                Tip: Click any day bar to jump to its daily focus list and review or log tasks.
             </p>
         </div>
     );
@@ -1597,7 +1598,7 @@ export default function TaskTracker() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold font-heading tracking-tight flex items-center gap-2">
-                        <span className="text-emerald-400">✓</span> Task Manager
+                        <FiCheckCircle className="text-emerald-400" size={24} /> Task Manager
                     </h1>
                     <p className={`text-sm mt-0.5 ${muted}`}>Build habits. Stay consistent.</p>
                 </div>
@@ -1693,7 +1694,7 @@ export default function TaskTracker() {
                 {([
                     { key: 'today', label: "Today's Focus" },
                     { key: 'all', label: 'All Tasks' },
-                    { key: 'goals', label: '🎯 Long-Term Goals' },
+                    { key: 'goals', label: 'Long-Term Goals' },
                     { key: 'performance', label: 'Performance' },
                 ] as { key: Tab; label: string }[]).map(({ key, label }) => (
                     <button
@@ -1823,7 +1824,7 @@ export default function TaskTracker() {
                             </div>
                             {todayPct === 100 && (
                                 <p className="text-xs text-emerald-400 font-semibold mt-2 flex items-center gap-1">
-                                    <FiAward size={12} /> All done! Great job 🎉
+                                    <FiAward size={12} /> All done! Great job
                                 </p>
                             )}
                         </div>
@@ -1837,7 +1838,7 @@ export default function TaskTracker() {
 
                     {!loading && todayTotal === 0 && (
                         <div className={`rounded-2xl border p-10 text-center ${card}`}>
-                            <div className="text-4xl mb-3">🎯</div>
+                            <FiCheckCircle size={36} className="mx-auto mb-3 text-emerald-400 opacity-80" />
                             <p className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                                 {selectedDate === todayStr ? "No tasks for today" : `No tasks scheduled for ${formatNiceDate(selectedDate)}`}
                             </p>
@@ -1901,7 +1902,7 @@ export default function TaskTracker() {
                         {[
                             { key: 'all', label: 'All Tasks', count: allTasks.length },
                             { key: 'active', label: 'Active Routines', count: activeCount },
-                            { key: 'long_term', label: '🎯 Long-Term Goals', count: longTermCount },
+                            { key: 'long_term', label: 'Long-Term Goals', count: longTermCount },
                             { key: 'paused', label: 'Paused', count: pausedCount },
                             { key: 'stopped', label: 'Stopped', count: stoppedCount },
                         ].map(({ key, label: l, count }) => (
@@ -2026,8 +2027,8 @@ export default function TaskTracker() {
                         {/* ── Header Banner ── */}
                         <div className={`rounded-2xl border p-5 ${card} flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
                             <div>
-                                <h2 className="text-lg font-bold flex items-center gap-2">
-                                    <span>🎯</span> Long-Term Goals & Milestones
+                                <h2 className="text-lg font-bold tracking-tight">
+                                    Long-Term Goals & Milestones
                                 </h2>
                                 <p className={`text-xs mt-1 ${muted}`}>
                                     Store projects, bucket-list items, and personal milestones safely without cluttering your daily routines.
@@ -2139,7 +2140,7 @@ export default function TaskTracker() {
 
                         {!loading && filteredGoals.length === 0 && (
                             <div className={`rounded-2xl border p-10 text-center ${card}`}>
-                                <div className="text-4xl mb-3">🎯</div>
+                                <FiAward size={36} className="mx-auto mb-3 text-indigo-400 opacity-80" />
                                 <p className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                                     {allGoals.length === 0 ? 'No long-term goals yet' : 'No goals match your filters'}
                                 </p>
@@ -2173,6 +2174,7 @@ export default function TaskTracker() {
                                         onDelete={handleDelete}
                                         onScheduleToday={handleScheduleToday}
                                         showControls
+                                        hideTypeBadge
                                     />
                                 ))}
                             </div>
@@ -2202,7 +2204,7 @@ export default function TaskTracker() {
                                 onChange={e => handleSelectStreakTask(e.target.value)}
                                 className={`px-3 py-2.5 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/40 min-w-[240px] ${inputCls}`}
                             >
-                                <option value="all">⚡ All Repeating Habits Combined</option>
+                                <option value="all">All Repeating Habits Combined</option>
                                 {repeatingTasks.map(t => (
                                     <option key={t.id} value={t.id}>
                                         {t.title} ({t.frequency_type === 'custom' ? `every ${t.frequency_x_times || 2}d` : t.frequency_type?.replace('_', ' ')})
