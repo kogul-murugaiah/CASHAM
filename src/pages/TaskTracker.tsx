@@ -699,7 +699,273 @@ function TaskCard({
     );
 }
 
-// ─── Heatmap ──────────────────────────────────────────────────────────────────
+// ─── Month Heatmap Calendar ──────────────────────────────────────────────────
+interface MonthHeatmapProps {
+    counts: Record<string, number | undefined>;
+    isDark: boolean;
+    customColor?: string;
+    year: number;
+    month: number; // 0-indexed: 0 = Jan, 9 = Oct
+    todayStr: string;
+    onPrevMonth: () => void;
+    onNextMonth: () => void;
+    onGoToCurrentMonth: () => void;
+    canGoNext: boolean;
+    onDayClick?: (dateStr: string) => void;
+}
+
+function MonthHeatmap({
+    counts,
+    isDark,
+    customColor,
+    year,
+    month,
+    todayStr,
+    onPrevMonth,
+    onNextMonth,
+    onGoToCurrentMonth,
+    canGoNext,
+    onDayClick,
+}: MonthHeatmapProps) {
+    const monthDate = useMemo(() => new Date(year, month, 1), [year, month]);
+    const monthName = useMemo(() => monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), [monthDate]);
+
+    const items = useMemo(() => {
+        const total = new Date(year, month + 1, 0).getDate();
+        const firstDow = new Date(year, month, 1).getDay(); // 0 = Sun
+        const list: ({ day: number; dateStr: string } | null)[] = [];
+        for (let i = 0; i < firstDow; i++) {
+            list.push(null);
+        }
+        for (let d = 1; d <= total; d++) {
+            const mStr = String(month + 1).padStart(2, '0');
+            const dStr = String(d).padStart(2, '0');
+            list.push({
+                day: d,
+                dateStr: `${year}-${mStr}-${dStr}`,
+            });
+        }
+        return list;
+    }, [year, month]);
+
+    const [nowY, nowM] = useMemo(() => {
+        const d = new Date();
+        return [d.getFullYear(), d.getMonth()];
+    }, []);
+    const isCurrentMonth = year === nowY && month === nowM;
+
+    // Monthly stats
+    const { activeDaysCount, daysPassed, consistencyPct, totalCompletions, bestStreak } = useMemo(() => {
+        const validDates = items.filter(Boolean).map(x => x!.dateStr).filter(d => d <= todayStr);
+        const active = validDates.filter(d => (counts[d] || 0) > 0).length;
+        const total = validDates.reduce((acc, d) => acc + (counts[d] || 0), 0);
+        const pct = validDates.length > 0 ? Math.round((active / validDates.length) * 100) : 0;
+
+        let maxS = 0;
+        let curS = 0;
+        for (const d of validDates) {
+            if ((counts[d] || 0) > 0) {
+                curS++;
+                if (curS > maxS) maxS = curS;
+            } else {
+                curS = 0;
+            }
+        }
+
+        return {
+            activeDaysCount: active,
+            daysPassed: validDates.length,
+            consistencyPct: pct,
+            totalCompletions: total,
+            bestStreak: maxS,
+        };
+    }, [items, counts, todayStr]);
+
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const muted = isDark ? 'text-slate-400' : 'text-slate-500';
+
+    return (
+        <div className="space-y-4">
+            {/* ── Month Navigation & Stats Header ── */}
+            <div className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                isDark ? 'bg-slate-800/40 border-slate-700/60' : 'bg-slate-50 border-slate-200'
+            }`}>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={onPrevMonth}
+                        title="Previous Month"
+                        className={`p-1.5 rounded-lg border transition-all ${
+                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-white text-slate-700'
+                        }`}
+                    >
+                        <FiChevronLeft size={16} />
+                    </button>
+
+                    <h4 className="font-bold text-sm tracking-tight px-1">
+                        {monthName}
+                    </h4>
+
+                    <button
+                        type="button"
+                        onClick={onNextMonth}
+                        disabled={!canGoNext}
+                        title="Next Month"
+                        className={`p-1.5 rounded-lg border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-white text-slate-700'
+                        }`}
+                    >
+                        <FiChevronRight size={16} />
+                    </button>
+
+                    {!isCurrentMonth && (
+                        <button
+                            type="button"
+                            onClick={onGoToCurrentMonth}
+                            className="text-xs text-emerald-400 hover:underline font-semibold ml-1.5"
+                        >
+                            Jump to Current Month
+                        </button>
+                    )}
+                </div>
+
+                {/* Quick month metrics */}
+                <div className="flex items-center gap-3 text-xs flex-wrap">
+                    <div className="flex items-center gap-1">
+                        <span className={muted}>Active Days:</span>
+                        <strong className="text-emerald-400">{activeDaysCount}/{daysPassed}d</strong>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className={muted}>Consistency:</span>
+                        <strong className="text-emerald-400">{consistencyPct}%</strong>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className={muted}>Completions:</span>
+                        <strong className={isDark ? 'text-white' : 'text-slate-900'}>{totalCompletions}</strong>
+                    </div>
+                    {bestStreak > 0 && (
+                        <div className="flex items-center gap-1">
+                            <span className={muted}>Best Streak:</span>
+                            <strong className="text-amber-400">{bestStreak}d</strong>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* ── Calendar Grid ── */}
+            <div>
+                {/* Day of Week Headers */}
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-1.5 text-center">
+                    {dayHeaders.map((dh, i) => (
+                        <div
+                            key={dh}
+                            className={`text-[11px] font-bold py-1 ${
+                                i === 0 || i === 6 ? (isDark ? 'text-slate-500' : 'text-slate-400') : muted
+                            }`}
+                        >
+                            {dh}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Day Cells */}
+                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                    {items.map((item, idx) => {
+                        if (!item) {
+                            return (
+                                <div
+                                    key={`empty-${idx}`}
+                                    className={`min-h-[56px] sm:min-h-[72px] rounded-xl border border-transparent ${
+                                        isDark ? 'bg-slate-900/20' : 'bg-slate-100/30'
+                                    }`}
+                                />
+                            );
+                        }
+
+                        const { day, dateStr } = item;
+                        const count = counts[dateStr] || 0;
+                        const isToday = dateStr === todayStr;
+                        const isFuture = dateStr > todayStr;
+                        const done = count > 0;
+
+                        return (
+                            <button
+                                type="button"
+                                key={dateStr}
+                                onClick={() => onDayClick?.(dateStr)}
+                                title={`${dateStr}: ${done ? `${count} completed` : 'No completions'}. Click to view focus list.`}
+                                className={`min-h-[56px] sm:min-h-[72px] p-1.5 sm:p-2 rounded-xl border flex flex-col justify-between text-left transition-all relative group hover:scale-[1.02] cursor-pointer ${
+                                    isToday
+                                        ? 'ring-2 ring-emerald-400 ring-offset-1'
+                                        : ''
+                                } ${
+                                    done
+                                        ? customColor
+                                            ? isDark ? 'border-emerald-500/30 hover:border-emerald-500/50' : 'border-emerald-500/30 hover:border-emerald-500/50'
+                                            : isDark ? 'border-emerald-500/30 hover:border-emerald-500/50' : 'border-emerald-200 hover:border-emerald-300'
+                                        : isDark
+                                            ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                                            : 'bg-white border-slate-200 hover:border-slate-300'
+                                }`}
+                                style={{
+                                    backgroundColor: done
+                                        ? (customColor ? customColor + '20' : (isDark ? '#064e3b33' : '#dcfce7'))
+                                        : undefined,
+                                }}
+                            >
+                                {/* Top: Day Number + Today Badge */}
+                                <div className="flex items-center justify-between w-full">
+                                    <span className={`text-xs font-bold ${
+                                        isToday
+                                            ? 'text-emerald-400 font-extrabold'
+                                            : isFuture
+                                                ? isDark ? 'text-slate-600' : 'text-slate-400'
+                                                : isDark ? 'text-slate-300' : 'text-slate-700'
+                                    }`}>
+                                        {day}
+                                    </span>
+
+                                    {isToday && (
+                                        <span className="hidden sm:inline-block text-[9px] font-extrabold px-1 py-0.2 rounded bg-emerald-500 text-white leading-none">
+                                            TODAY
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Bottom: Status Indicator */}
+                                <div className="mt-1">
+                                    {done ? (
+                                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold" style={{ color: customColor || '#10b981' }}>
+                                            <FiCheckCircle size={12} className="flex-shrink-0" />
+                                            <span className="truncate">
+                                                {customColor ? 'Done' : `${count} task${count > 1 ? 's' : ''}`}
+                                            </span>
+                                        </div>
+                                    ) : isFuture ? (
+                                        <span className={`text-[9px] sm:text-[10px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                                            Upcoming
+                                        </span>
+                                    ) : (
+                                        <span className={`text-[10px] ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>
+                                            —
+                                        </span>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Click tip */}
+            <p className={`text-[11px] text-center pt-1 ${muted}`}>
+                💡 Tip: Click any day in the calendar to jump to its focus list and review or log tasks.
+            </p>
+        </div>
+    );
+}
+
+// ─── Heatmap (52-week horizontal grid) ───────────────────────────────────────
 function ContributionHeatmap({
     counts,
     isDark,
@@ -921,6 +1187,44 @@ export default function TaskTracker() {
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'long_term' | 'paused' | 'stopped'>('all');
     const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
+    // Heatmap View Mode: 'month' (default calendar) vs 'year' (52-week grid)
+    const [heatmapViewMode, setHeatmapViewMode] = useState<'month' | 'year'>('month');
+    const [heatmapYear, setHeatmapYear] = useState<number>(() => new Date().getFullYear());
+    const [heatmapMonth, setHeatmapMonth] = useState<number>(() => new Date().getMonth());
+
+    const handlePrevHeatmapMonth = () => {
+        if (heatmapMonth === 0) {
+            setHeatmapYear(y => y - 1);
+            setHeatmapMonth(11);
+        } else {
+            setHeatmapMonth(m => m - 1);
+        }
+    };
+
+    const handleNextHeatmapMonth = () => {
+        const now = new Date();
+        const isCurrent = heatmapYear === now.getFullYear() && heatmapMonth === now.getMonth();
+        if (isCurrent) return;
+
+        if (heatmapMonth === 11) {
+            setHeatmapYear(y => y + 1);
+            setHeatmapMonth(0);
+        } else {
+            setHeatmapMonth(m => m + 1);
+        }
+    };
+
+    const handleGoToCurrentHeatmapMonth = () => {
+        const now = new Date();
+        setHeatmapYear(now.getFullYear());
+        setHeatmapMonth(now.getMonth());
+    };
+
+    const handleDayClickFromHeatmap = (dateStr: string) => {
+        setSelectedDate(dateStr);
+        setActiveTab('today');
+    };
+
     // Web Notifications
     const [notifPermission, setNotifPermission] = useState<NotificationStatus>('default');
     const [notifMenuOpen, setNotifMenuOpen] = useState(false);
@@ -1002,7 +1306,7 @@ export default function TaskTracker() {
         ? 'bg-slate-800 border-slate-700 text-slate-100 placeholder-slate-500'
         : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400';
 
-    // ─── Today's tasks grouped by time block with Smart Sorting (incomplete high-priority first, completed sink to bottom)
+    // ─── Today's tasks grouped by time block with Smart Sorting
     const PRIORITY_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
     const todayGrouped = useMemo(() => {
         return TIME_BLOCKS.map(block => {
@@ -1549,7 +1853,7 @@ export default function TaskTracker() {
                                     Selected Habit / Task
                                 </label>
                                 <p className={`text-xs ${muted}`}>
-                                    Select any task below to view its specific streak records and 12-month habit heatmap.
+                                    Select any task below to view its specific streak records and habit heatmap.
                                 </p>
                             </div>
                             <select
@@ -1676,37 +1980,82 @@ export default function TaskTracker() {
                         />
                     </div>
 
-                    {/* ── Heatmap ── */}
+                    {/* ── Dynamic Heatmap Card (Month Calendar vs 12-Month Grid) ── */}
                     <div className={`rounded-2xl border p-5 ${card}`}>
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-sm flex items-center gap-2">
-                                <FiActivity size={14} className="text-emerald-400" />
-                                {selectedTask
-                                    ? `"${selectedTask.title}" · Habit Heatmap (Last 12 Months)`
-                                    : 'All Tasks Combined · Contribution History'
-                                }
-                            </h3>
-                            {selectedTask && (
-                                <span className={`text-xs ${muted}`}>
-                                    Color: <span style={{ color: selectedTask.color || '#10b981' }} className="font-bold">●</span>
-                                </span>
-                            )}
-                        </div>
-                        <p className={`text-xs mb-4 ${muted}`}>
-                            {selectedTask
-                                ? 'Each illuminated cell indicates a day you completed this specific habit.'
-                                : 'Each colored cell represents your total task completions on that day.'
-                            }
-                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                            <div>
+                                <h3 className="font-bold text-sm sm:text-base flex items-center gap-2">
+                                    <FiActivity size={16} className="text-emerald-400" />
+                                    {selectedTask
+                                        ? `"${selectedTask.title}" · Habit Heatmap`
+                                        : 'All Tasks Combined · Habit Heatmap'
+                                    }
+                                </h3>
+                                <p className={`text-xs mt-0.5 ${muted}`}>
+                                    {heatmapViewMode === 'month'
+                                        ? 'Calendar view with day-by-day consistency and task completion badges.'
+                                        : 'Full 12-month bird’s-eye contribution history.'
+                                    }
+                                </p>
+                            </div>
 
-                        {loading && <div className={`text-sm ${muted}`}>Loading habit history…</div>}
-                        {!loading && heatmapData && (
+                            {/* View Switcher: Month View vs 12 Months (Year) */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <div className={`flex gap-1 p-1 rounded-xl border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setHeatmapViewMode('month')}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                            heatmapViewMode === 'month'
+                                                ? 'bg-emerald-500 text-white shadow-sm font-bold'
+                                                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
+                                        }`}
+                                    >
+                                        <FiCalendar size={13} />
+                                        <span>Month View</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setHeatmapViewMode('year')}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                            heatmapViewMode === 'year'
+                                                ? 'bg-emerald-500 text-white shadow-sm font-bold'
+                                                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
+                                        }`}
+                                    >
+                                        <FiBarChart2 size={13} />
+                                        <span>12 Months (Year)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {loading && <div className={`text-sm py-8 text-center ${muted}`}>Loading habit history…</div>}
+
+                        {!loading && heatmapData && heatmapViewMode === 'month' && (
+                            <MonthHeatmap
+                                counts={activeHeatmapCounts}
+                                isDark={isDark}
+                                customColor={selectedTask?.color || undefined}
+                                year={heatmapYear}
+                                month={heatmapMonth}
+                                todayStr={todayStr}
+                                onPrevMonth={handlePrevHeatmapMonth}
+                                onNextMonth={handleNextHeatmapMonth}
+                                onGoToCurrentMonth={handleGoToCurrentHeatmapMonth}
+                                canGoNext={!(heatmapYear === new Date().getFullYear() && heatmapMonth >= new Date().getMonth())}
+                                onDayClick={handleDayClickFromHeatmap}
+                            />
+                        )}
+
+                        {!loading && heatmapData && heatmapViewMode === 'year' && (
                             <ContributionHeatmap
                                 counts={activeHeatmapCounts}
                                 isDark={isDark}
                                 customColor={selectedTask?.color || undefined}
                             />
                         )}
+
                         {!loading && !heatmapData && (
                             <div className={`text-sm ${muted}`}>No completion data yet. Check off some tasks to start your heatmap!</div>
                         )}
