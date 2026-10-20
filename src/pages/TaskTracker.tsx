@@ -2090,7 +2090,7 @@ export default function TaskTracker() {
                                     { key: 'all', label: 'All Goals', count: allGoals.length },
                                     { key: 'open', label: 'In Progress', count: openGoals.length },
                                     { key: 'completed', label: 'Completed', count: completedGoals.length },
-                                    { key: 'scheduled', label: 'In Today's Focus', count: scheduledTodayGoals.length },
+                                    { key: 'scheduled', label: "In Today's Focus", count: scheduledTodayGoals.length },
                                 ].map(({ key, label: l, count }) => (
                                     <button
                                         key={key}
