@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ElementType } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useTasks, getLocalDateStr, Task, NewTaskPayload } from '../hooks/useTasks';
+import { useTasks, getLocalDateStr, type Task, type NewTaskPayload } from '../hooks/useTasks';
 import {
     FiCheckCircle, FiCircle, FiPlus, FiTrash2, FiEdit2,
     FiZap, FiSun, FiMoon, FiCoffee, FiClock,
@@ -20,7 +20,7 @@ const COLORS = [
     '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6',
 ];
 const PRIORITY_COLORS = { low: 'emerald', medium: 'amber', high: 'red' } as const;
-const TIME_BLOCKS: { key: TimeBlock; label: string; icon: React.ElementType; range: string }[] = [
+const TIME_BLOCKS: { key: TimeBlock; label: string; icon: ElementType; range: string }[] = [
     { key: 'morning', label: 'Morning', icon: FiSun, range: '6 AM – 12 PM' },
     { key: 'afternoon', label: 'Afternoon', icon: FiCoffee, range: '12 PM – 5 PM' },
     { key: 'evening', label: 'Evening', icon: FiMoon, range: '5 PM – 10 PM' },
