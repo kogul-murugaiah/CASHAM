@@ -2,10 +2,19 @@ import { useState, useEffect, useMemo, type ElementType } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTasks, getLocalDateStr, type Task, type NewTaskPayload } from '../hooks/useTasks';
 import {
+    isNotificationSupported,
+    getNotificationPermission,
+    requestNotificationPermission,
+    sendTestNotification,
+    checkAndNotifyPendingTasks,
+    type NotificationStatus,
+} from '../lib/notifications';
+import {
     FiCheckCircle, FiCircle, FiPlus, FiTrash2, FiEdit2,
     FiZap, FiSun, FiMoon, FiCoffee, FiClock,
     FiX, FiSave, FiAward, FiTrendingUp, FiActivity,
-    FiSearch, FiFilter, FiPause, FiPlay, FiStopCircle, FiCalendar, FiBarChart2, FiRotateCcw
+    FiSearch, FiFilter, FiPause, FiPlay, FiStopCircle, FiCalendar, FiBarChart2,
+    FiChevronLeft, FiChevronRight, FiBell, FiBellOff, FiRepeat
 } from 'react-icons/fi';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -26,6 +35,26 @@ const TIME_BLOCKS: { key: TimeBlock; label: string; icon: ElementType; range: st
     { key: 'evening', label: 'Evening', icon: FiMoon, range: '5 PM – 10 PM' },
     { key: 'anytime', label: 'Anytime', icon: FiZap, range: 'No specific time' },
 ];
+
+// ─── Date Formatting Helpers ────────────────────────────────────────────────
+function formatNiceDate(dateStr: string): string {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDisplayDate(dateStr: string, todayStr: string, yesterdayStr: string): string {
+    if (dateStr === todayStr) return `Today · ${formatNiceDate(dateStr)}`;
+    if (dateStr === yesterdayStr) return `Yesterday · ${formatNiceDate(dateStr)}`;
+    return formatNiceDate(dateStr);
+}
+
+function shiftDateStr(dateStr: string, daysDelta: number): string {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setDate(date.getDate() + daysDelta);
+    return getLocalDateStr(date);
+}
 
 // ─── Heatmap cell color ──────────────────────────────────────────────────────
 function heatColor(count: number, isDark: boolean, customColor?: string): string {
@@ -109,6 +138,8 @@ function AddEditTaskModal({ isDark, task, onClose, onSave }: ModalProps) {
     const [frequencyType, setFrequencyType] = useState<FrequencyType>(task?.frequency_type || 'daily');
     const [freqDays, setFreqDays] = useState<number[]>(task?.frequency_days || []);
     const [freqMonthlyDate, setFreqMonthlyDate] = useState(task?.frequency_monthly_date || 1);
+    const [freqXTimes, setFreqXTimes] = useState<number>(task?.frequency_x_times || 2);
+    const [customStartDate, setCustomStartDate] = useState<string>(task?.due_date || getLocalDateStr());
     const [timeBlock, setTimeBlock] = useState<TimeBlock>(task?.time_block || 'anytime');
     const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium');
     const [estimatedMins, setEstimatedMins] = useState(task?.estimated_minutes?.toString() || '');
@@ -140,10 +171,11 @@ function AddEditTaskModal({ isDark, task, onClose, onSave }: ModalProps) {
                 frequency_type: frequencyType,
                 frequency_days: frequencyType === 'weekly' ? freqDays : undefined,
                 frequency_monthly_date: frequencyType === 'monthly' ? freqMonthlyDate : undefined,
+                frequency_x_times: frequencyType === 'custom' ? freqXTimes : undefined,
                 time_block: timeBlock,
                 priority,
                 estimated_minutes: estimatedMins ? parseInt(estimatedMins) : undefined,
-                due_date: frequencyType === 'one_time' ? (dueDate || undefined) : undefined,
+                due_date: frequencyType === 'one_time' ? (dueDate || undefined) : frequencyType === 'custom' ? (customStartDate || getLocalDateStr()) : undefined,
                 end_date: frequencyType !== 'one_time' ? (endDate || undefined) : undefined,
                 carry_forward: frequencyType === 'one_time' ? carryForward : false,
             });
@@ -154,18 +186,18 @@ function AddEditTaskModal({ isDark, task, onClose, onSave }: ModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className={`relative w-full max-w-lg rounded-2xl border shadow-2xl ${card} max-h-[90vh] overflow-y-auto`}>
+        <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4 flex items-start sm:items-center justify-center">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className={`relative w-full max-w-lg my-auto rounded-2xl border shadow-2xl ${card} flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[88vh] overflow-hidden`}>
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-inherit">
+                <div className="flex items-center justify-between p-5 border-b border-inherit flex-shrink-0">
                     <h2 className="font-bold text-lg">{task ? 'Edit Task' : 'New Task'}</h2>
                     <button onClick={onClose} className={`p-1.5 rounded-lg hover:bg-slate-700/30 ${label}`}>
                         <FiX size={18} />
                     </button>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-5 space-y-4 overflow-y-auto flex-1">
                     {/* Title */}
                     <div>
                         <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Task Title *</label>
@@ -264,6 +296,55 @@ function AddEditTaskModal({ isDark, task, onClose, onSave }: ModalProps) {
                                 placeholder="Day of month (1-31)"
                                 className={`mt-2 w-full px-3 py-2 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
                             />
+                        )}
+
+                        {frequencyType === 'custom' && (
+                            <div className="mt-3 space-y-3 p-3.5 rounded-xl border border-dashed border-emerald-500/30 bg-emerald-500/5">
+                                <div>
+                                    <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>
+                                        Repeat Interval (Every X Days)
+                                    </label>
+                                    <div className="mt-1.5 flex items-center gap-2">
+                                        <span className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Repeat every</span>
+                                        <input
+                                            type="number"
+                                            min={2}
+                                            max={365}
+                                            value={freqXTimes}
+                                            onChange={e => setFreqXTimes(Math.max(2, parseInt(e.target.value) || 2))}
+                                            className={`w-20 px-3 py-1.5 rounded-lg border text-sm text-center font-bold outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
+                                        />
+                                        <span className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>days</span>
+                                    </div>
+                                    <p className={`text-[11px] mt-1 ${label}`}>
+                                        e.g. 2 for alternate days, 3 for every 3 days, 14 for bi-weekly.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>
+                                            Starting From Date
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCustomStartDate(getLocalDateStr())}
+                                            className="text-[10px] text-emerald-400 hover:underline"
+                                        >
+                                            Set to today
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="date"
+                                        value={customStartDate}
+                                        onChange={e => setCustomStartDate(e.target.value)}
+                                        className={`mt-1.5 w-full px-3 py-2 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
+                                    />
+                                    <p className={`text-[11px] mt-1 ${label}`}>
+                                        This task will appear in your focus every {freqXTimes} days starting on {customStartDate || 'today'}.
+                                    </p>
+                                </div>
+                            </div>
                         )}
 
                         {frequencyType === 'one_time' && (
@@ -405,7 +486,7 @@ function AddEditTaskModal({ isDark, task, onClose, onSave }: ModalProps) {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-3 p-5 border-t border-inherit">
+                <div className="flex gap-3 p-5 border-t border-inherit flex-shrink-0">
                     <button
                         type="button"
                         onClick={onClose}
@@ -522,6 +603,12 @@ function TaskCard({
                             <span>{task.estimated_minutes} min</span>
                         </div>
                     )}
+                    {task.frequency_type === 'custom' && (
+                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-emerald-400/90' : 'text-emerald-600'}`}>
+                            <FiRepeat size={10} />
+                            <span>Every {task.frequency_x_times || 2} days</span>
+                        </div>
+                    )}
                     {task.end_date && isRepeating && (
                         <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-amber-400/80' : 'text-amber-600'}`}>
                             <FiCalendar size={10} />
@@ -539,7 +626,7 @@ function TaskCard({
 
             {/* Actions */}
             {showControls && (
-                <div className={`flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0`}>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                     {/* Pause / Resume button */}
                     {isRepeating && task.is_active && (
                         task.is_paused ? (
@@ -805,7 +892,6 @@ function DayOfWeekConsistencyChart({ counts, isDark, color = '#10b981' }: DayOfW
     );
 }
 
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function TaskTracker() {
     const { theme } = useTheme();
@@ -834,17 +920,55 @@ export default function TaskTracker() {
     }, []);
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'long_term' | 'paused' | 'stopped'>('all');
     const [selectedDate, setSelectedDate] = useState<string>(todayStr);
-    const isYesterday = selectedDate === yesterdayStr;
+
+    // Web Notifications
+    const [notifPermission, setNotifPermission] = useState<NotificationStatus>('default');
+    const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+    const [notifSuccessToast, setNotifSuccessToast] = useState<string | null>(null);
+
+    useEffect(() => {
+        setNotifPermission(getNotificationPermission());
+    }, []);
+
+    // Check & dispatch reminders for today's tasks
+    useEffect(() => {
+        if (selectedDate === todayStr && todayTasks.length > 0 && notifPermission === 'granted') {
+            checkAndNotifyPendingTasks(todayTasks, todayStr);
+        }
+    }, [todayTasks, selectedDate, todayStr, notifPermission]);
+
+    const handleEnableNotifications = async () => {
+        const res = await requestNotificationPermission();
+        setNotifPermission(res);
+        if (res === 'granted') {
+            sendTestNotification();
+            setNotifSuccessToast('Reminders activated! A test alert was sent.');
+            setTimeout(() => setNotifSuccessToast(null), 4000);
+        }
+    };
+
+    const handleSendTestNotif = () => {
+        const sent = sendTestNotification();
+        if (sent) {
+            setNotifSuccessToast('Test notification dispatched!');
+            setTimeout(() => setNotifSuccessToast(null), 3000);
+        }
+    };
 
     // Load data per tab
     useEffect(() => {
-        if (activeTab === 'today') fetchTodayTasks(selectedDate);
+        if (activeTab === 'today') {
+            fetchTodayTasks(selectedDate);
+        }
+    }, [activeTab, selectedDate, fetchTodayTasks]);
+
+    useEffect(() => {
         if (activeTab === 'all') fetchAllTasks();
         if (activeTab === 'performance') {
             fetchHeatmapData();
             fetchAllTasks();
         }
-    }, [activeTab, fetchTodayTasks, fetchAllTasks, fetchHeatmapData]);
+    }, [activeTab, fetchAllTasks, fetchHeatmapData]);
 
     // Available tasks list for dropdown
     const availableTasks = useMemo(() => {
@@ -953,11 +1077,11 @@ export default function TaskTracker() {
         if (editingTask) {
             await updateTask(editingTask.id, payload);
             if (activeTab === 'all') fetchAllTasks();
-            if (activeTab === 'today') fetchTodayTasks();
+            if (activeTab === 'today') fetchTodayTasks(selectedDate);
             if (activeTab === 'performance') fetchHeatmapData();
         } else {
             const created = await addTask(payload);
-            if (activeTab === 'today') fetchTodayTasks();
+            if (activeTab === 'today') fetchTodayTasks(selectedDate);
             if (activeTab === 'all') fetchAllTasks();
             if (activeTab === 'performance') {
                 fetchHeatmapData();
@@ -975,10 +1099,7 @@ export default function TaskTracker() {
 
     const handleToggle = async (id: string) => {
         await toggleComplete(id, selectedDate);
-        if (isYesterday) {
-            // Refetch heatmap to immediately show streak updated
-            fetchHeatmapData();
-        }
+        fetchHeatmapData();
     };
 
     const handlePause = async (id: string) => {
@@ -1016,14 +1137,92 @@ export default function TaskTracker() {
                     </h1>
                     <p className={`text-sm mt-0.5 ${muted}`}>Build habits. Stay consistent.</p>
                 </div>
-                <button
-                    type="button"
-                    onClick={openAdd}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/25"
-                >
-                    <FiPlus size={16} /> Add Task
-                </button>
+
+                <div className="flex items-center gap-2.5 flex-wrap">
+                    {/* Notification Control */}
+                    {isNotificationSupported() && (
+                        <div className="relative">
+                            {notifPermission === 'granted' ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+                                    title="Notification Settings"
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                                        isDark ? 'bg-slate-800 border-slate-700 text-emerald-400 hover:border-emerald-500/40' : 'bg-white border-slate-200 text-emerald-600 hover:border-emerald-300'
+                                    }`}
+                                >
+                                    <FiBell size={14} className="text-emerald-400" />
+                                    <span className="hidden sm:inline">Reminders Active</span>
+                                </button>
+                            ) : notifPermission === 'denied' ? (
+                                <button
+                                    type="button"
+                                    onClick={() => alert('Notifications are blocked by your browser settings. Please click the site settings / lock icon in your browser address bar to allow notifications for casham.site.')}
+                                    title="Notifications are blocked in browser"
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                                        isDark ? 'bg-slate-800 border-slate-700 text-slate-500' : 'bg-white border-slate-200 text-slate-400'
+                                    }`}
+                                >
+                                    <FiBellOff size={14} />
+                                    <span className="hidden sm:inline">Blocked</span>
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleEnableNotifications}
+                                    title="Enable browser reminders for daily habits"
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all shadow-sm ${
+                                        isDark ? 'bg-slate-800 border-slate-700 text-amber-300 hover:border-amber-400/50' : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
+                                    }`}
+                                >
+                                    <FiBell size={14} className="animate-pulse" />
+                                    <span>Enable Reminders</span>
+                                </button>
+                            )}
+
+                            {/* Dropdown menu when notifications are granted */}
+                            {notifMenuOpen && notifPermission === 'granted' && (
+                                <div className={`absolute right-0 mt-2 w-64 rounded-xl border shadow-xl p-3 z-30 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-inherit">
+                                        <span className="text-xs font-bold flex items-center gap-1.5 text-emerald-400">
+                                            <FiBell size={12} /> Web Notifications
+                                        </span>
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                            Enabled
+                                        </span>
+                                    </div>
+                                    <p className={`text-[11px] mb-3 ${muted}`}>
+                                        CASHAM alerts you about pending habits in your morning, afternoon, and evening routines.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => { handleSendTestNotif(); setNotifMenuOpen(false); }}
+                                        className="w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/25 transition-all text-center"
+                                    >
+                                        Send Test Notification
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={openAdd}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all shadow-lg shadow-emerald-500/25"
+                    >
+                        <FiPlus size={16} /> Add Task
+                    </button>
+                </div>
             </div>
+
+            {/* Notification Toast */}
+            {notifSuccessToast && (
+                <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold shadow-xl flex items-center gap-2 animate-bounce">
+                    <FiBell size={14} />
+                    <span>{notifSuccessToast}</span>
+                </div>
+            )}
 
             {/* ── Tabs ── */}
             <div className={`flex gap-1 p-1 rounded-xl border mb-6 w-fit ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
@@ -1048,61 +1247,104 @@ export default function TaskTracker() {
             {/* ══════════════════════════════════════════════════════════════════ */}
             {activeTab === 'today' && (
                 <div className="space-y-6">
-                    {/* ── Date Navigator & Backdate (Log for Yesterday) ── */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
+                    {/* ── Date Navigator Bar ── */}
+                    <div className={`p-3.5 rounded-2xl border ${card} shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {/* Prev Day Button */}
                             <button
                                 type="button"
-                                onClick={() => setSelectedDate(isYesterday ? todayStr : yesterdayStr)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${
-                                    isYesterday
-                                        ? "bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-sm"
-                                        : isDark ? "bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500" : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
-                                }`}
+                                onClick={() => setSelectedDate(shiftDateStr(selectedDate, -1))}
+                                title="Previous Day"
+                                className={`p-2 rounded-xl border transition-all ${isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'}`}
                             >
-                                <FiRotateCcw size={13} />
-                                <span>{isYesterday ? "⏪ Viewing Yesterday" : "⏪ Log for Yesterday"}</span>
+                                <FiChevronLeft size={16} />
                             </button>
 
-                            {isYesterday && (
+                            {/* Date Picker Input */}
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={e => e.target.value && setSelectedDate(e.target.value)}
+                                className={`px-3 py-1.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer ${inputCls}`}
+                            />
+
+                            {/* Next Day Button */}
+                            <button
+                                type="button"
+                                onClick={() => setSelectedDate(shiftDateStr(selectedDate, 1))}
+                                title="Next Day"
+                                className={`p-2 rounded-xl border transition-all ${isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'}`}
+                            >
+                                <FiChevronRight size={16} />
+                            </button>
+
+                            {/* Quick Presets: Yesterday & Today */}
+                            <div className="flex items-center gap-1.5 ml-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedDate(yesterdayStr)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${selectedDate === yesterdayStr
+                                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold'
+                                        : isDark ? 'border-slate-800 text-slate-400 hover:border-slate-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                                    }`}
+                                >
+                                    Yesterday
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => setSelectedDate(todayStr)}
-                                    className="text-xs text-emerald-400 hover:underline font-semibold"
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${selectedDate === todayStr
+                                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/25 font-bold'
+                                        : isDark ? 'border-slate-800 text-slate-400 hover:border-slate-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                                    }`}
                                 >
-                                    Back to Today
+                                    Today
                                 </button>
-                            )}
+                            </div>
                         </div>
 
-                        <span className={`text-xs ${muted}`}>
-                            Date: <strong className={isDark ? "text-slate-200" : "text-slate-800"}>{selectedDate}</strong>
-                        </span>
+                        {/* Date badge */}
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs ${muted}`}>Viewing:</span>
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${selectedDate === todayStr
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                                : selectedDate === yesterdayStr
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                                    : isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                                {formatDisplayDate(selectedDate, todayStr, yesterdayStr)}
+                            </span>
+                        </div>
                     </div>
 
-                    {isYesterday && (
-                        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs flex items-center justify-between gap-3 animate-fade-in">
+                    {/* Banner when viewing non-today date */}
+                    {selectedDate !== todayStr && (
+                        <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 animate-fade-in ${selectedDate === yesterdayStr
+                            ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
+                            : isDark ? 'bg-indigo-500/10 border-indigo-500/25 text-indigo-300' : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                        }`}>
                             <span className="flex items-center gap-2">
-                                <FiRotateCcw size={15} className="flex-shrink-0" />
+                                <FiCalendar size={15} className="flex-shrink-0" />
                                 <span>
-                                    Logging for <strong>Yesterday ({yesterdayStr})</strong>. Tasks checked here count toward yesterday and save your streak!
+                                    Viewing tasks for <strong>{formatDisplayDate(selectedDate, todayStr, yesterdayStr)}</strong>. Checking or unchecking tasks records completion for this date.
                                 </span>
                             </span>
                             <button
                                 type="button"
                                 onClick={() => setSelectedDate(todayStr)}
-                                className="underline font-bold hover:text-amber-300 flex-shrink-0"
+                                className="underline font-bold hover:opacity-80 flex-shrink-0"
                             >
-                                Done
+                                Return to Today
                             </button>
                         </div>
                     )}
+
                     {/* Progress bar */}
                     {todayTotal > 0 && (
                         <div className={`rounded-2xl border p-4 ${card}`}>
                             <div className="flex items-center justify-between mb-2">
                                 <span className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                    Today's Progress
+                                    {selectedDate === todayStr ? "Today's Progress" : `Progress for ${formatNiceDate(selectedDate)}`}
                                 </span>
                                 <span className="text-sm font-bold text-emerald-400">
                                     {todayCompleted}/{todayTotal} · {todayPct}%
@@ -1116,7 +1358,7 @@ export default function TaskTracker() {
                             </div>
                             {todayPct === 100 && (
                                 <p className="text-xs text-emerald-400 font-semibold mt-2 flex items-center gap-1">
-                                    <FiAward size={12} /> All done for today! Great job 🎉
+                                    <FiAward size={12} /> All done! Great job 🎉
                                 </p>
                             )}
                         </div>
@@ -1131,8 +1373,14 @@ export default function TaskTracker() {
                     {!loading && todayTotal === 0 && (
                         <div className={`rounded-2xl border p-10 text-center ${card}`}>
                             <div className="text-4xl mb-3">🎯</div>
-                            <p className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>No tasks for today</p>
-                            <p className={`text-sm mt-1 ${muted}`}>Add recurring tasks or tasks due today to start building your streak.</p>
+                            <p className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                {selectedDate === todayStr ? "No tasks for today" : `No tasks scheduled for ${formatNiceDate(selectedDate)}`}
+                            </p>
+                            <p className={`text-sm mt-1 ${muted}`}>
+                                {selectedDate === todayStr
+                                    ? "Add recurring tasks or tasks due today to start building your streak."
+                                    : "Add recurring or custom tasks scheduled for this day."}
+                            </p>
                             <button
                                 type="button"
                                 onClick={openAdd}
@@ -1311,7 +1559,7 @@ export default function TaskTracker() {
                             >
                                 {availableTasks.map(t => (
                                     <option key={t.id} value={t.id}>
-                                        {t.title} ({t.frequency_type?.replace('_', ' ')})
+                                        {t.title} ({t.frequency_type === 'custom' ? `every ${t.frequency_x_times || 2}d` : t.frequency_type?.replace('_', ' ')})
                                     </option>
                                 ))}
                                 <option value="all">⚡ All Tasks Combined</option>
@@ -1334,7 +1582,9 @@ export default function TaskTracker() {
                                     {selectedTask.category}
                                 </span>
                                 <span className={`text-xs ${muted}`}>
-                                    · Repeats: {selectedTask.frequency_type?.replace('_', ' ')}
+                                    · Repeats: {selectedTask.frequency_type === 'custom'
+                                        ? `Every ${selectedTask.frequency_x_times || 2} days`
+                                        : selectedTask.frequency_type?.replace('_', ' ')}
                                 </span>
                                 {selectedTask.end_date && (
                                     <span className="flex items-center gap-1 text-xs text-amber-400">

@@ -70,7 +70,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         return task.frequency_monthly_date === targetDateObj.getDate();
                     }
                     if (ft === 'custom') {
-                        return true;
+                        const interval = Math.max(1, task.frequency_x_times || 1);
+                        const anchorStr = task.due_date || task.created_at.slice(0, 10);
+                        const [ay, am, ad] = anchorStr.split('-').map(Number);
+                        const [ty, tm, td] = targetDateStr.split('-').map(Number);
+                        const anchorUtc = Date.UTC(ay, am - 1, ad);
+                        const targetUtc = Date.UTC(ty, tm - 1, td);
+                        const diffDays = Math.round((targetUtc - anchorUtc) / 86400000);
+                        return diffDays >= 0 && (diffDays % interval === 0);
                     }
                     if (ft === 'one_time') {
                         // 1. Long term goal with NO due date: DO NOT show in daily task list!
@@ -139,7 +146,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                 const { data: tasks } = await supabaseAdmin
                     .from('tasks')
-                    .select('id, title, color, frequency_type, frequency_days, frequency_monthly_date, due_date, end_date, is_paused, is_active, created_at')
+                    .select('id, title, color, frequency_type, frequency_days, frequency_monthly_date, frequency_x_times, frequency_x_period, due_date, end_date, is_paused, is_active, created_at')
                     .eq('user_id', user.id)
                     .order('created_at', { ascending: false });
 
