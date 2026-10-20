@@ -1053,107 +1053,240 @@ function ContributionHeatmap({
     );
 }
 
-// ─── Day-of-Week Consistency Chart ──────────────────────────────────────────
-interface DayOfWeekProps {
+// ─── Weekly Activity Chart (Current Week & Previous Weeks) ───────────────────
+interface WeeklyActivityProps {
     counts: Record<string, number | undefined>;
     isDark: boolean;
     color?: string;
+    todayStr: string;
+    onDayClick?: (dateStr: string) => void;
 }
 
-function DayOfWeekConsistencyChart({ counts, isDark, color = '#10b981' }: DayOfWeekProps) {
-    const { days, bestDay, bestPct } = useMemo(() => {
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const dayCounts = [0, 0, 0, 0, 0, 0, 0];
-        const dayTotals = [0, 0, 0, 0, 0, 0, 0];
+function WeeklyActivityChart({ counts, isDark, color = '#10b981', todayStr, onDayClick }: WeeklyActivityProps) {
+    const [weekOffset, setWeekOffset] = useState<number>(0); // 0 = current week, -1 = last week, etc.
 
-        const today = getLocalDateStr();
-        const dates = buildHeatmapGrid().filter(d => d <= today);
+    const { days, rangeLabel, isCurrentWeek, totalTasksThisWeek, activeDaysCount, elapsedDays, bestDay, maxCountInWeek } = useMemo(() => {
+        const [ty, tm, td] = todayStr.split('-').map(Number);
+        const today = new Date(ty, tm - 1, td);
 
-        for (const dateStr of dates) {
-            const d = new Date(dateStr);
-            const dow = d.getDay();
-            dayTotals[dow]++;
-            if ((counts[dateStr] || 0) > 0) {
-                dayCounts[dow]++;
+        // Monday-based week (0 for Mon, ..., 6 for Sun)
+        const dow = today.getDay();
+        const diffToMonday = dow === 0 ? 6 : dow - 1;
+
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - diffToMonday + (weekOffset * 7));
+
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const result = [];
+        let maxVal = 1;
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const dateStr = getLocalDateStr(d);
+            const count = counts[dateStr] || 0;
+            if (count > maxVal) maxVal = count;
+
+            result.push({
+                name: dayNames[i],
+                dateStr,
+                dayNum: d.getDate(),
+                monthShort: d.toLocaleDateString('en-US', { month: 'short' }),
+                count,
+                isToday: dateStr === todayStr,
+                isPast: dateStr < todayStr,
+                isFuture: dateStr > todayStr,
+            });
+        }
+
+        const start = result[0];
+        const end = result[6];
+        const range = `${start.monthShort} ${start.dayNum} – ${end.monthShort} ${end.dayNum}, ${monday.getFullYear()}`;
+
+        // Stats for elapsed days in this week (days <= todayStr)
+        const elapsed = result.filter(d => !d.isFuture);
+        const totalTasks = elapsed.reduce((sum, d) => sum + d.count, 0);
+        const activeDays = elapsed.filter(d => d.count > 0).length;
+
+        let peakDay: { name: string; count: number } | null = null;
+        for (const d of elapsed) {
+            if (d.count > 0 && (!peakDay || d.count > peakDay.count)) {
+                peakDay = { name: d.name, count: d.count };
             }
         }
 
-        let maxPct = -1;
-        let bestIdx = -1;
-
-        const result = dayNames.map((name, i) => {
-            const completed = dayCounts[i];
-            const total = dayTotals[i] || 52;
-            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-            if (pct > maxPct && completed > 0) {
-                maxPct = pct;
-                bestIdx = i;
-            }
-            return { name, completed, total, pct };
-        });
-
         return {
             days: result,
-            bestDay: bestIdx >= 0 ? dayNames[bestIdx] : null,
-            bestPct: maxPct >= 0 ? maxPct : 0,
+            rangeLabel: range,
+            isCurrentWeek: weekOffset === 0,
+            totalTasksThisWeek: totalTasks,
+            activeDaysCount: activeDays,
+            elapsedDays: elapsed.length,
+            bestDay: peakDay,
+            maxCountInWeek: maxVal,
         };
-    }, [counts]);
+    }, [todayStr, weekOffset, counts]);
 
     const trackBg = isDark ? 'bg-slate-800' : 'bg-slate-100';
     const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h4 className="font-bold text-sm flex items-center gap-2">
-                        <FiBarChart2 size={15} className="text-emerald-400" />
-                        Day-of-Week Consistency
-                    </h4>
-                    <p className={`text-xs ${textMuted}`}>
-                        Habit completion frequency across each day of the week over the past year.
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-sm sm:text-base flex items-center gap-2">
+                            <FiBarChart2 size={16} className="text-emerald-400" />
+                            {isCurrentWeek ? "This Week's Activity" : "Weekly Activity"}
+                        </h4>
+                        <span className={`text-xs px-2.5 py-0.5 rounded-lg font-semibold border ${
+                            isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
+                        }`}>
+                            {rangeLabel}
+                        </span>
+                    </div>
+                    <p className={`text-xs mt-0.5 ${textMuted}`}>
+                        {isCurrentWeek
+                            ? "Track your daily momentum for the current week (Monday to Sunday)."
+                            : `Daily performance recorded for ${rangeLabel}.`
+                        }
                     </p>
                 </div>
+
+                {/* Week Navigator */}
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setWeekOffset(w => w - 1)}
+                        title="Previous Week"
+                        className={`p-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1 ${
+                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'
+                        }`}
+                    >
+                        <FiChevronLeft size={14} />
+                        <span>Last Week</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
+                        disabled={isCurrentWeek}
+                        title="Next Week"
+                        className={`p-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed ${
+                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'
+                        }`}
+                    >
+                        <span>Next Week</span>
+                        <FiChevronRight size={14} />
+                    </button>
+
+                    {!isCurrentWeek && (
+                        <button
+                            type="button"
+                            onClick={() => setWeekOffset(0)}
+                            className="text-xs text-emerald-400 hover:underline font-semibold ml-1"
+                        >
+                            This Week
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Quick Summary Row */}
+            <div className="flex items-center gap-3 text-xs pt-0.5 flex-wrap">
+                <div className="flex items-center gap-1">
+                    <span className={textMuted}>Tasks Done:</span>
+                    <strong className="text-emerald-400">{totalTasksThisWeek}</strong>
+                </div>
+                <div className="flex items-center gap-1">
+                    <span className={textMuted}>Active Days:</span>
+                    <strong className="text-emerald-400">{activeDaysCount} / {elapsedDays} days</strong>
+                </div>
                 {bestDay && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit">
-                        <span>⭐ Peak Day:</span>
-                        <span className="font-bold">{bestDay} ({bestPct}% consistency)</span>
+                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span>⭐ Best Day:</span>
+                        <span className="font-bold">{bestDay.name} ({bestDay.count} {bestDay.count === 1 ? 'task' : 'tasks'})</span>
                     </div>
                 )}
             </div>
 
-            <div className="grid grid-cols-7 gap-2 sm:gap-4 pt-3">
+            {/* 7 Columns for Monday to Sunday */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-3 pt-2">
                 {days.map((d) => {
-                    const isBest = bestDay === d.name && d.completed > 0;
+                    const done = d.count > 0;
+                    const barHeightPct = done ? Math.max(18, Math.round((d.count / maxCountInWeek) * 100)) : (d.isToday ? 8 : 4);
+
                     return (
-                        <div key={d.name} className="flex flex-col items-center gap-2 group">
-                            <span className={`text-[11px] font-bold transition-transform group-hover:scale-110 ${isBest ? 'text-emerald-400 font-extrabold' : textMuted}`}>
-                                {d.pct}%
+                        <button
+                            key={d.dateStr}
+                            type="button"
+                            onClick={() => onDayClick?.(d.dateStr)}
+                            title={`${d.name}, ${d.monthShort} ${d.dayNum}: ${done ? `${d.count} completed` : d.isFuture ? 'Upcoming' : '0 completed'}. Click to view focus.`}
+                            className={`flex flex-col items-center gap-2 group p-2 rounded-xl border transition-all cursor-pointer ${
+                                d.isToday
+                                    ? 'ring-2 ring-emerald-400/80 ring-offset-1 bg-emerald-500/5 border-emerald-500/30'
+                                    : isDark ? 'border-transparent hover:bg-slate-800/40 hover:border-slate-700/50' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
+                            }`}
+                        >
+                            {/* Top: Actual Task Count (NO meaningless %) */}
+                            <span className={`text-[11px] font-bold transition-transform group-hover:scale-105 ${
+                                done
+                                    ? 'text-emerald-400 font-extrabold'
+                                    : d.isToday
+                                        ? 'text-amber-400 font-semibold'
+                                        : d.isFuture
+                                            ? textMuted + ' opacity-40'
+                                            : textMuted
+                            }`}>
+                                {done
+                                    ? `${d.count} ${d.count === 1 ? 'task' : 'tasks'}`
+                                    : d.isToday
+                                        ? '0 today'
+                                        : d.isFuture
+                                            ? '—'
+                                            : '0'
+                                }
                             </span>
 
-                            <div className={`w-full max-w-[44px] h-28 rounded-xl ${trackBg} p-1 flex flex-col justify-end relative overflow-hidden transition-all group-hover:ring-1 group-hover:ring-emerald-400/40 shadow-inner`}>
+                            {/* Bar Track */}
+                            <div className={`w-full max-w-[48px] h-28 rounded-xl ${trackBg} p-1 flex flex-col justify-end relative overflow-hidden transition-all group-hover:ring-1 group-hover:ring-emerald-400/40 shadow-inner`}>
                                 <div
                                     className="w-full rounded-lg transition-all duration-700 relative"
                                     style={{
-                                        height: `${Math.max(d.pct, 4)}%`,
+                                        height: `${barHeightPct}%`,
                                         backgroundColor: color,
-                                        opacity: d.completed === 0 ? 0.15 : (isBest ? 1 : 0.8),
+                                        opacity: done ? 1 : (d.isToday ? 0.35 : 0.12),
                                     }}
                                 />
                             </div>
 
+                            {/* Bottom: Day name & date */}
                             <div className="text-center">
-                                <p className={`text-xs font-bold ${isBest ? (isDark ? 'text-white' : 'text-slate-900') : textMuted}`}>
+                                <p className={`text-xs font-bold ${
+                                    d.isToday
+                                        ? 'text-emerald-400 font-extrabold'
+                                        : isDark ? 'text-slate-200' : 'text-slate-800'
+                                }`}>
                                     {d.name}
                                 </p>
                                 <p className={`text-[10px] ${textMuted}`}>
-                                    {d.completed}d
+                                    {d.dayNum}
                                 </p>
+                                {d.isToday && (
+                                    <span className="inline-block mt-0.5 text-[8px] font-black uppercase px-1 rounded bg-emerald-500 text-white leading-tight">
+                                        Today
+                                    </span>
+                                )}
                             </div>
-                        </div>
+                        </button>
                     );
                 })}
             </div>
+
+            {/* Click Tip */}
+            <p className={`text-[11px] text-center pt-1 ${textMuted}`}>
+                💡 Tip: Click any day bar to jump to its daily focus list and review or log tasks.
+            </p>
         </div>
     );
 }
@@ -1971,12 +2104,14 @@ export default function TaskTracker() {
                         </div>
                     </div>
 
-                    {/* ── Day-of-Week Consistency 7-Day Chart ── */}
+                    {/* ── Weekly Activity 7-Day Chart (Current Week & Navigation) ── */}
                     <div className={`rounded-2xl border p-5 ${card}`}>
-                        <DayOfWeekConsistencyChart
+                        <WeeklyActivityChart
                             counts={activeHeatmapCounts}
                             isDark={isDark}
                             color={selectedTask?.color || '#10b981'}
+                            todayStr={todayStr}
+                            onDayClick={handleDayClickFromHeatmap}
                         />
                     </div>
 
