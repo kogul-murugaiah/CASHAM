@@ -37,6 +37,8 @@ const Ledger = lazy(() => import('./pages/Ledger'));
 const RentTracker = lazy(() => import('./pages/RentTracker'));
 const FundTracker = lazy(() => import('./pages/FundTracker'));
 const TaskTracker = lazy(() => import('./pages/TaskTracker'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -67,6 +69,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/privacy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+              <Route path="/terms" element={<Suspense fallback={<PageLoader />}><TermsOfService /></Suspense>} />
 
               <Route
                 path="/*"
