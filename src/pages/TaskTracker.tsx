@@ -18,7 +18,7 @@ import {
 } from 'react-icons/fi';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
-type Tab = 'today' | 'all' | 'performance';
+type Tab = 'today' | 'all' | 'goals' | 'performance';
 type TimeBlock = 'morning' | 'afternoon' | 'evening' | 'anytime';
 type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'one_time' | 'custom';
 
@@ -126,16 +126,17 @@ function calcStreaks(counts: Record<string, number | undefined>): { current: num
 interface ModalProps {
     isDark: boolean;
     task?: Task;
+    defaultFrequency?: FrequencyType;
     onClose: () => void;
     onSave: (payload: NewTaskPayload) => Promise<void>;
 }
 
-function AddEditTaskModal({ isDark, task, onClose, onSave }: ModalProps) {
+function AddEditTaskModal({ isDark, task, defaultFrequency, onClose, onSave }: ModalProps) {
     const [title, setTitle] = useState(task?.title || '');
     const [description, setDescription] = useState(task?.description || '');
     const [category, setCategory] = useState(task?.category || 'Personal');
     const [color, setColor] = useState(task?.color || '#10b981');
-    const [frequencyType, setFrequencyType] = useState<FrequencyType>(task?.frequency_type || 'daily');
+    const [frequencyType, setFrequencyType] = useState<FrequencyType>(task?.frequency_type || defaultFrequency || 'daily');
     const [freqDays, setFreqDays] = useState<number[]>(task?.frequency_days || []);
     const [freqMonthlyDate, setFreqMonthlyDate] = useState(task?.frequency_monthly_date || 1);
     const [freqXTimes, setFreqXTimes] = useState<number>(task?.frequency_x_times || 2);
@@ -1307,10 +1308,16 @@ export default function TaskTracker() {
     const [activeTab, setActiveTab] = useState<Tab>('today');
     const [showModal, setShowModal] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+    const [modalDefaultFreq, setModalDefaultFreq] = useState<FrequencyType | undefined>(undefined);
     const [searchQ, setSearchQ] = useState('');
     const [filterCat, setFilterCat] = useState('');
     const [filterFreq, setFilterFreq] = useState('');
-    const [streakTaskId, setStreakTaskId] = useState<string>('');
+    const [goalsFilter, setGoalsFilter] = useState<'all' | 'open' | 'completed' | 'scheduled'>('all');
+    const [goalsSearchQ, setGoalsSearchQ] = useState('');
+    const [goalsCat, setGoalsCat] = useState('');
+    const [streakTaskId, setStreakTaskId] = useState<string>(() => {
+        return localStorage.getItem('casham_selected_streak_task') || 'all';
+    });
     const todayStr = useMemo(() => getLocalDateStr(), []);
     const yesterdayStr = useMemo(() => {
         const y = new Date();
@@ -1400,34 +1407,51 @@ export default function TaskTracker() {
     }, [activeTab, selectedDate, fetchTodayTasks]);
 
     useEffect(() => {
-        if (activeTab === 'all') fetchAllTasks();
+        if (activeTab === 'all' || activeTab === 'goals') fetchAllTasks();
         if (activeTab === 'performance') {
             fetchHeatmapData();
             fetchAllTasks();
         }
     }, [activeTab, fetchAllTasks, fetchHeatmapData]);
 
-    // Available tasks list for dropdown
-    const availableTasks = useMemo(() => {
-        return heatmapData?.tasks && heatmapData.tasks.length > 0
+    // Only repeating habits for the Performance Habit dropdown (HIDE one_time tasks)
+    const repeatingTasks = useMemo(() => {
+        const source = (heatmapData?.tasks && heatmapData.tasks.length > 0)
             ? heatmapData.tasks
             : allTasks;
+        return source.filter(t => t.frequency_type !== 'one_time');
     }, [heatmapData, allTasks]);
 
-    // Automatically default streakTaskId to the first task if not set or invalid
+    const handleSelectStreakTask = (id: string) => {
+        setStreakTaskId(id);
+        localStorage.setItem('casham_selected_streak_task', id);
+    };
+
+    // Ensure selected task stays sticky and never resets automatically unless deleted
     useEffect(() => {
-        if (availableTasks.length > 0) {
-            if (!streakTaskId || (streakTaskId !== 'all' && !availableTasks.some(t => t.id === streakTaskId))) {
-                setStreakTaskId(availableTasks[0].id);
+        if (repeatingTasks.length > 0) {
+            const saved = localStorage.getItem('casham_selected_streak_task');
+            if (saved === 'all') {
+                if (streakTaskId !== 'all') setStreakTaskId('all');
+                return;
             }
+            if (saved && repeatingTasks.some(t => t.id === saved)) {
+                if (streakTaskId !== saved) setStreakTaskId(saved);
+                return;
+            }
+            if (streakTaskId === 'all' || repeatingTasks.some(t => t.id === streakTaskId)) {
+                return;
+            }
+            // Fallback only if currently selected task was deleted
+            setStreakTaskId('all');
         }
-    }, [availableTasks, streakTaskId]);
+    }, [repeatingTasks, streakTaskId]);
 
     // Selected task object
     const selectedTask = useMemo(() => {
         if (!streakTaskId || streakTaskId === 'all') return null;
-        return availableTasks.find(t => t.id === streakTaskId) || null;
-    }, [availableTasks, streakTaskId]);
+        return repeatingTasks.find(t => t.id === streakTaskId) || null;
+    }, [repeatingTasks, streakTaskId]);
 
     // Theme classes
     const page = isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800';
@@ -1519,10 +1543,12 @@ export default function TaskTracker() {
         } else {
             const created = await addTask(payload);
             if (activeTab === 'today') fetchTodayTasks(selectedDate);
-            if (activeTab === 'all') fetchAllTasks();
+            if (activeTab === 'all' || activeTab === 'goals') fetchAllTasks();
             if (activeTab === 'performance') {
                 fetchHeatmapData();
-                setStreakTaskId(created.id);
+                if (payload.frequency_type !== 'one_time') {
+                    handleSelectStreakTask(created.id);
+                }
             }
         }
         setEditingTask(undefined);
@@ -1561,8 +1587,9 @@ export default function TaskTracker() {
         fetchTodayTasks(selectedDate);
     };
 
-    const openAdd = () => { setEditingTask(undefined); setShowModal(true); };
-    const openEdit = (t: Task) => { setEditingTask(t); setShowModal(true); };
+    const openAdd = () => { setEditingTask(undefined); setModalDefaultFreq(undefined); setShowModal(true); };
+    const openAddGoal = () => { setEditingTask(undefined); setModalDefaultFreq('one_time'); setShowModal(true); };
+    const openEdit = (t: Task) => { setEditingTask(t); setModalDefaultFreq(t.frequency_type); setShowModal(true); };
 
     return (
         <div className={`min-h-screen p-4 md:p-6 lg:p-8 ${page}`}>
@@ -1662,10 +1689,11 @@ export default function TaskTracker() {
             )}
 
             {/* ── Tabs ── */}
-            <div className={`flex gap-1 p-1 rounded-xl border mb-6 w-fit ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
+            <div className={`flex gap-1 p-1 rounded-xl border mb-6 w-fit flex-wrap ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
                 {([
                     { key: 'today', label: "Today's Focus" },
                     { key: 'all', label: 'All Tasks' },
+                    { key: 'goals', label: '🎯 Long-Term Goals' },
                     { key: 'performance', label: 'Performance' },
                 ] as { key: Tab; label: string }[]).map(({ key, label }) => (
                     <button
@@ -1974,6 +2002,186 @@ export default function TaskTracker() {
             )}
 
             {/* ══════════════════════════════════════════════════════════════════ */}
+            {/* LONG-TERM GOALS TAB */}
+            {/* ══════════════════════════════════════════════════════════════════ */}
+            {activeTab === 'goals' && (() => {
+                const allGoals = allTasks.filter(t => t.frequency_type === 'one_time');
+                const openGoals = allGoals.filter(g => !g.completed_today);
+                const completedGoals = allGoals.filter(g => g.completed_today);
+                const scheduledTodayGoals = allGoals.filter(g => g.due_date === todayStr && !g.completed_today);
+
+                const filteredGoals = allGoals.filter(g => {
+                    if (goalsFilter === 'open' && g.completed_today) return false;
+                    if (goalsFilter === 'completed' && !g.completed_today) return false;
+                    if (goalsFilter === 'scheduled' && g.due_date !== todayStr) return false;
+
+                    const q = goalsSearchQ.toLowerCase();
+                    const matchQ = !q || g.title.toLowerCase().includes(q) || (g.description || '').toLowerCase().includes(q);
+                    const matchCat = !goalsCat || g.category === goalsCat;
+                    return matchQ && matchCat;
+                });
+
+                return (
+                    <div className="space-y-6">
+                        {/* ── Header Banner ── */}
+                        <div className={`rounded-2xl border p-5 ${card} flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+                            <div>
+                                <h2 className="text-lg font-bold flex items-center gap-2">
+                                    <span>🎯</span> Long-Term Goals & Milestones
+                                </h2>
+                                <p className={`text-xs mt-1 ${muted}`}>
+                                    Store projects, bucket-list items, and personal milestones safely without cluttering your daily routines.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={openAddGoal}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-all shadow-md shadow-emerald-500/25 w-fit"
+                            >
+                                <FiPlus size={15} /> Add Long-Term Goal
+                            </button>
+                        </div>
+
+                        {/* ── Stats Overview ── */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className={`rounded-2xl border p-4 ${card}`}>
+                                <div className="flex items-center gap-1.5 mb-1 text-indigo-400">
+                                    <FiActivity size={14} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Total Goals</span>
+                                </div>
+                                <p className="text-2xl font-bold">{allGoals.length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>Projects & Milestones</p>
+                            </div>
+
+                            <div className={`rounded-2xl border p-4 ${card}`}>
+                                <div className="flex items-center gap-1.5 mb-1 text-emerald-400">
+                                    <FiAward size={14} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Completed</span>
+                                </div>
+                                <p className="text-2xl font-bold">{completedGoals.length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>
+                                    {allGoals.length > 0 ? `${Math.round((completedGoals.length / allGoals.length) * 100)}% accomplished` : '0%'}
+                                </p>
+                            </div>
+
+                            <div className={`rounded-2xl border p-4 ${card}`}>
+                                <div className="flex items-center gap-1.5 mb-1 text-amber-400">
+                                    <FiClock size={14} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">In Progress</span>
+                                </div>
+                                <p className="text-2xl font-bold">{openGoals.length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>Active aspirations</p>
+                            </div>
+
+                            <div className={`rounded-2xl border p-4 ${card}`}>
+                                <div className="flex items-center gap-1.5 mb-1 text-teal-400">
+                                    <FiZap size={14} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Do Today</span>
+                                </div>
+                                <p className="text-2xl font-bold">{scheduledTodayGoals.length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>In Today's Focus</p>
+                            </div>
+                        </div>
+
+                        {/* ── Filter Pills & Search ── */}
+                        <div className="space-y-3">
+                            <div className="flex flex-wrap gap-1.5 pb-1">
+                                {[
+                                    { key: 'all', label: 'All Goals', count: allGoals.length },
+                                    { key: 'open', label: 'In Progress', count: openGoals.length },
+                                    { key: 'completed', label: 'Completed', count: completedGoals.length },
+                                    { key: 'scheduled', label: 'In Today's Focus', count: scheduledTodayGoals.length },
+                                ].map(({ key, label: l, count }) => (
+                                    <button
+                                        key={key}
+                                        type="button"
+                                        onClick={() => setGoalsFilter(key as any)}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${goalsFilter === key
+                                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/20'
+                                            : isDark ? 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        <span>{l}</span>
+                                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${goalsFilter === key ? 'bg-white/20 text-white' : isDark ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-500'}`}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2">
+                                <div className={`flex items-center gap-2 flex-1 px-3 py-2.5 rounded-xl border ${inputCls}`}>
+                                    <FiSearch size={14} className={muted} />
+                                    <input
+                                        value={goalsSearchQ}
+                                        onChange={e => setGoalsSearchQ(e.target.value)}
+                                        placeholder="Search long-term goals…"
+                                        className="flex-1 bg-transparent text-sm outline-none"
+                                    />
+                                </div>
+                                <select
+                                    value={goalsCat}
+                                    onChange={e => setGoalsCat(e.target.value)}
+                                    className={`px-3 py-2.5 rounded-xl border text-sm outline-none ${inputCls}`}
+                                >
+                                    <option value="">All Categories</option>
+                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* ── Goals Cards List ── */}
+                        {loading && (
+                            <div className={`flex items-center justify-center py-16 ${muted}`}>
+                                <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                            </div>
+                        )}
+
+                        {!loading && filteredGoals.length === 0 && (
+                            <div className={`rounded-2xl border p-10 text-center ${card}`}>
+                                <div className="text-4xl mb-3">🎯</div>
+                                <p className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    {allGoals.length === 0 ? 'No long-term goals yet' : 'No goals match your filters'}
+                                </p>
+                                <p className={`text-xs mt-1 ${muted}`}>
+                                    {allGoals.length === 0
+                                        ? 'Set target dates or open-ended goals you want to accomplish over time.'
+                                        : 'Try clearing your filters or search keywords.'
+                                    }
+                                </p>
+                                {allGoals.length === 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={openAddGoal}
+                                        className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 transition-all"
+                                    >
+                                        + Create your first long-term goal
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {!loading && filteredGoals.length > 0 && (
+                            <div className="space-y-2">
+                                {filteredGoals.map(goal => (
+                                    <TaskCard
+                                        key={goal.id}
+                                        task={goal}
+                                        isDark={isDark}
+                                        onToggle={handleToggle}
+                                        onEdit={openEdit}
+                                        onDelete={handleDelete}
+                                        onScheduleToday={handleScheduleToday}
+                                        showControls
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
+
+            {/* ══════════════════════════════════════════════════════════════════ */}
             {/* PERFORMANCE TAB (TASK-BASED HEATMAP & STREAK) */}
             {/* ══════════════════════════════════════════════════════════════════ */}
             {activeTab === 'performance' && (
@@ -1991,15 +2199,15 @@ export default function TaskTracker() {
                             </div>
                             <select
                                 value={streakTaskId}
-                                onChange={e => setStreakTaskId(e.target.value)}
+                                onChange={e => handleSelectStreakTask(e.target.value)}
                                 className={`px-3 py-2.5 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/40 min-w-[240px] ${inputCls}`}
                             >
-                                {availableTasks.map(t => (
+                                <option value="all">⚡ All Repeating Habits Combined</option>
+                                {repeatingTasks.map(t => (
                                     <option key={t.id} value={t.id}>
                                         {t.title} ({t.frequency_type === 'custom' ? `every ${t.frequency_x_times || 2}d` : t.frequency_type?.replace('_', ' ')})
                                     </option>
                                 ))}
-                                <option value="all">⚡ All Tasks Combined</option>
                             </select>
                         </div>
 
@@ -2226,6 +2434,7 @@ export default function TaskTracker() {
                 <AddEditTaskModal
                     isDark={isDark}
                     task={editingTask}
+                    defaultFrequency={modalDefaultFreq}
                     onClose={() => { setShowModal(false); setEditingTask(undefined); }}
                     onSave={handleSaveTask}
                 />

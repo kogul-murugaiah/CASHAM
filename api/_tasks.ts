@@ -117,7 +117,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
-                return res.status(200).json(data || []);
+
+                // Also fetch completed task IDs for completion status
+                const { data: comps } = await supabaseAdmin
+                    .from('task_completions')
+                    .select('task_id')
+                    .eq('user_id', user.id);
+
+                const completedIds = new Set((comps || []).map((c: any) => c.task_id));
+                const result = (data || []).map((t: any) => ({
+                    ...t,
+                    completed_today: completedIds.has(t.id),
+                }));
+
+                return res.status(200).json(result);
             }
 
             if (action === 'get_heatmap_data') {

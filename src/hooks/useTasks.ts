@@ -153,6 +153,9 @@ export function useTasks() {
         setTodayTasks(prev =>
             prev.map(t => t.id === taskId ? { ...t, completed_today: result.completed } : t)
         );
+        setAllTasks(prev =>
+            prev.map(t => t.id === taskId ? { ...t, completed_today: result.completed } : t)
+        );
         return result.completed;
     }, []);
 
