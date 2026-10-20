@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { FiUsers, FiPlus, FiArrowUpRight, FiArrowDownLeft, FiCheckCircle, FiTrash2, FiX, FiAlertCircle } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
+import { getLocalDateString, formatShortDate } from '../lib/formatters';
 
 interface LedgerTransaction {
     id: string;
@@ -43,7 +44,7 @@ export default function Ledger() {
     const [txAmount, setTxAmount] = useState('');
     const [txType, setTxType] = useState<'gave' | 'got'>('gave');
     const [txNote, setTxNote] = useState('');
-    const [txDate, setTxDate] = useState(new Date().toISOString().slice(0, 10));
+    const [txDate, setTxDate] = useState(getLocalDateString());
 
     useEffect(() => {
         fetchContacts();
@@ -137,7 +138,7 @@ export default function Ledger() {
             // Reset form
             setTxAmount('');
             setTxNote('');
-            setTxDate(new Date().toISOString().slice(0, 10));
+            setTxDate(getLocalDateString());
         } catch (err: any) {
             alert(err.message || 'Failed to add transaction');
         }
@@ -156,7 +157,7 @@ export default function Ledger() {
                 amount: Math.abs(selectedContact.net_balance),
                 type: 'settled',
                 note: 'Settled up',
-                date: new Date().toISOString().slice(0, 10)
+                date: getLocalDateString()
             });
 
             setContactTransactions(prev => [newTx, ...prev]);
@@ -417,7 +418,7 @@ export default function Ledger() {
                                                         {tx.type === 'gave' ? 'You Gave' : tx.type === 'got' ? 'You Got' : 'Settled'}
                                                     </p>
                                                     <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                        <span>{new Date(tx.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                                                        <span>{formatShortDate(tx.date)}</span>
                                                         {tx.note && (
                                                             <>
                                                                 <span className="w-1 h-1 bg-slate-600 rounded-full"></span>

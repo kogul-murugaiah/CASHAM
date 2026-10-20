@@ -216,7 +216,11 @@ export default function SavingsGoals() {
               {activeGoals.map((goal) => {
                 const pct = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
                 const remaining = Math.max(0, goal.target_amount - goal.current_amount);
-                const daysLeft = goal.deadline ? Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+                const daysLeft = goal.deadline ? (() => {
+                  const parts = goal.deadline.split("-").map(Number);
+                  const endOfDay = (parts.length === 3 && !isNaN(parts[0])) ? new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999) : new Date(goal.deadline);
+                  return Math.ceil((endOfDay.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                })() : null;
 
                 return (
                   <div key={goal.id} className="glass-card p-6 relative overflow-hidden group">

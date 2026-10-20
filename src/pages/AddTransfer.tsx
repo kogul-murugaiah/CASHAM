@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { getLocalDateString, formatDate } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
 import { FiArrowRight, FiTrash2, FiEdit2, FiCheck, FiX } from "react-icons/fi";
 import { useTheme } from "../contexts/ThemeContext";
@@ -15,7 +16,7 @@ const initialForm = {
   from_account: "",
   to_account: "",
   amount: "",
-  date: new Date().toISOString().slice(0, 10),
+  date: getLocalDateString(),
   note: "",
 };
 
@@ -90,7 +91,7 @@ const AddTransfer = () => {
         note: form.note || null,
       });
       setSuccess(`Transferred ${currencyFormatter.format(Number(form.amount))} from ${form.from_account} → ${form.to_account}`);
-      setForm({ ...initialForm, date: new Date().toISOString().slice(0, 10) });
+      setForm({ ...initialForm, date: getLocalDateString() });
       fetchTransfers();
     } catch (err: any) {
       setError(err.message || "Transfer failed");
@@ -316,7 +317,7 @@ const AddTransfer = () => {
                     {recentTransfers.map((t) => (
                       <tr key={t.id} className="hover:bg-white/5 transition-colors group">
                         <td className="px-6 py-4 text-sm text-slate-400 whitespace-nowrap">
-                          {new Date(t.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          {formatDate(t.date)}
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-sm font-medium text-slate-200 bg-slate-700/50 px-2.5 py-1 rounded-lg border border-white/5">

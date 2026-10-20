@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useFunds, type Fund, type FundTransaction } from "../hooks/useFunds";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useTheme } from "../contexts/ThemeContext";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency, getLocalDateString, formatDate } from "../lib/formatters";
 import {
     FiBriefcase,
     FiPlus,
@@ -51,7 +51,7 @@ const FundTracker = () => {
     }>({
         type: "expense",
         amount: "",
-        date: new Date().toISOString().slice(0, 10),
+        date: getLocalDateString(),
         description: "",
         status: "completed"
     });
@@ -232,7 +232,7 @@ const FundTracker = () => {
                                                     {tx.type}
                                                 </span>
                                                 <span className={`text-xs ${textSecondary}`}>•</span>
-                                                <span className={`text-xs ${textSecondary}`}>{new Date(tx.date).toLocaleDateString()}</span>
+                                                <span className={`text-xs ${textSecondary}`}>{formatDate(tx.date)}</span>
                                             </div>
                                         </div>
                                     </div>

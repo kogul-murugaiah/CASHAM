@@ -4,7 +4,7 @@ import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useCreditCards } from "../hooks/useCreditCards";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import { formatCurrency, formatDate } from "../lib/formatters";
+import { formatCurrency, formatDate, getLocalDateString } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
 import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus } from "react-icons/fi";
 
@@ -19,15 +19,6 @@ type ExpenseTemplate = {
   credit_card_id?: string | null;
   credit_card_name?: string | null;
   categories: { id: string; name: string } | null;
-};
-
-// Helper for local YYYY-MM-DD date without UTC shift
-const getLocalDateString = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 };
 
 const initialForm = {

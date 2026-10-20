@@ -1,3 +1,8 @@
+function getISTDateStr(date: Date = new Date()): string {
+    const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+    return formatter.format(date);
+}
+
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabase.js';
 import { getUserFromRequest } from './_lib/auth.js';
@@ -42,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             const { data, error } = await supabaseAdmin
                 .from('transfers')
-                .insert([{ user_id: user.id, from_account, to_account, amount: Number(amount), date, note: note || null }])
+                .insert([{ user_id: user.id, from_account, to_account, amount: Number(amount), date: date || getISTDateStr(), note: note || null }])
                 .select()
                 .single();
 

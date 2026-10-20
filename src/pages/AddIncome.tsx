@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { useIncomeSources } from "../hooks/useIncomeSources";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { CustomDropdown } from "../components/CustomDropdown";
+import { getLocalDateString } from "../lib/formatters";
 // import Footer from "../components/Footer";
 
 const initialForm = {
@@ -17,7 +18,7 @@ const AddIncome = () => {
   const { accountTypes, addAccountType } = useAccountTypes();
   const { sources, addSource } = useIncomeSources();
   const [form, setForm] = useState(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateString();
     return {
       ...initialForm,
       date: today,
@@ -88,7 +89,7 @@ const AddIncome = () => {
       setSuccess("Income added successfully");
       setForm({
         ...initialForm,
-        date: new Date().toISOString().slice(0, 10), // Reset to today's date
+        date: getLocalDateString(), // Reset to today's date
       });
     } catch (err: any) {
       setError(err.message || "Something went wrong");

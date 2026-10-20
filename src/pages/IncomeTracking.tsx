@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
 import * as XLSX from 'xlsx';
+import { formatDate, formatShortDate } from '../lib/formatters';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -263,7 +264,7 @@ const IncomeTracking = () => {
             return MONTH_NAMES.map((name, index) => {
                 const monthNum = index + 1;
                 const total = filteredRecords
-                    .filter(e => new Date(e.date).getMonth() + 1 === monthNum)
+                    .filter(e => parseInt(e.date.split("-")[1], 10) === monthNum)
                     .reduce((sum, e) => sum + e.amount, 0);
                 return { period: name, label: name, total };
             });
@@ -284,7 +285,7 @@ const IncomeTracking = () => {
 
     const handleExport = () => {
         const exportData = filteredRecords.map(rec => ({
-            Date: new Date(rec.date).toLocaleDateString('en-IN'),
+            Date: formatDate(rec.date),
             Source: rec.source || rec.income_sources?.name || "Unknown",
             Account: rec.account_type,
             Amount: rec.amount,
@@ -514,7 +515,7 @@ const IncomeTracking = () => {
                                             <tbody className="divide-y divide-white/5">
                                                 {currentRecords.map((rec) => (
                                                     <tr key={rec.id} className="group hover:bg-white/5 transition-colors">
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{new Date(rec.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{formatShortDate(rec.date)}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{rec.source || rec.income_sources?.name || "Unknown"}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-[10px] text-slate-500 uppercase tracking-tight">{rec.account_type}</td>
                                                         <td className="px-6 py-4 text-sm text-slate-400 max-w-[200px] truncate" title={rec.description || ""}>
@@ -541,7 +542,7 @@ const IncomeTracking = () => {
                                                     <div>
                                                         <h4 className="text-sm font-bold text-white mb-1">{rec.source || rec.income_sources?.name || "Unknown"}</h4>
                                                         <div className="flex items-center gap-2 text-xs">
-                                                            <span className="text-slate-400">{new Date(rec.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                                            <span className="text-slate-400">{formatShortDate(rec.date)}</span>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">

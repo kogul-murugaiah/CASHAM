@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRent, type RentProperty, type RentCollection } from "../hooks/useRent";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useTheme } from "../contexts/ThemeContext";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency, getLocalDateString, formatDate } from "../lib/formatters";
 import {
   FiPlus,
   FiCheckCircle,
@@ -56,8 +56,7 @@ const getOrdinalSuffix = (day: number) => {
 
 const formatDateDisplay = (dateStr?: string | null) => {
   if (!dateStr) return "—";
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatDate(dateStr);
 };
 
 const getPaymentModeLabel = (mode?: string) => {
@@ -99,7 +98,7 @@ const RentTracker = () => {
   const [collectingProp, setCollectingProp] = useState<RentProperty | null>(null);
   const [collectForm, setCollectForm] = useState({
     amount_paid: "",
-    paid_on: new Date().toISOString().slice(0, 10),
+    paid_on: getLocalDateString(),
     payment_mode: "cash",
     payment_notes: ""
   });
@@ -188,7 +187,7 @@ const RentTracker = () => {
     setCollectingProp(prop);
     setCollectForm({
       amount_paid: String(prop.rent_amount),
-      paid_on: new Date().toISOString().slice(0, 10),
+      paid_on: getLocalDateString(),
       payment_mode: "cash",
       payment_notes: ""
     });

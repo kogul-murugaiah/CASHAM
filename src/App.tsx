@@ -36,6 +36,7 @@ const Portfolio = lazy(() => import('./pages/Portfolio'));
 const Ledger = lazy(() => import('./pages/Ledger'));
 const RentTracker = lazy(() => import('./pages/RentTracker'));
 const FundTracker = lazy(() => import('./pages/FundTracker'));
+const TaskTracker = lazy(() => import('./pages/TaskTracker'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -88,6 +89,7 @@ function App() {
                             <Route path="/ledger" element={<Ledger />} />
                             <Route path="/rent-tracker" element={<RentTracker />} />
                             <Route path="/fund-tracker" element={<FundTracker />} />
+                            <Route path="/tasks" element={<TaskTracker />} />
                             <Route path="/add-investment" element={<AddInvestment />} />
                             <Route path="/portfolio" element={<Portfolio />} />
                             <Route path="/budget-planner" element={<BudgetPlanner />} />

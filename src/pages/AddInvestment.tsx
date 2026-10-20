@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency, getLocalDateString, formatShortDate } from "../lib/formatters";
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -37,14 +37,15 @@ const COMPOUNDING_FREQ: Record<string, number> = {
 
 // Safe month addition — JS Date.setMonth overflows (e.g. Jan 31 + 1 = Mar 3)
 const addMonths = (dateStr: string, months: number): string => {
-    const d = new Date(dateStr);
+    const parts = dateStr.split("-").map(Number);
+    const d = (parts.length === 3 && !isNaN(parts[0])) ? new Date(parts[0], parts[1] - 1, parts[2]) : new Date(dateStr);
     const originalDay = d.getDate();
     d.setDate(1); // go to 1st to prevent overflow
     d.setMonth(d.getMonth() + months);
     // Clamp to last day of target month if original day exceeds it
     const daysInTarget = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     d.setDate(Math.min(originalDay, daysInTarget));
-    return d.toISOString().slice(0, 10);
+    return getLocalDateString(d);
 };
 
 
@@ -63,7 +64,7 @@ const AddInvestment = () => {
 
   // Common fields
   const [name, setName] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getLocalDateString());
   const [amount, setAmount] = useState("");
   const [accountType, setAccountType] = useState("");
   const [notes, setNotes] = useState("");
@@ -135,11 +136,11 @@ const AddInvestment = () => {
 
   const resetAll = () => {
     setSelectedType(null); setAction("buy");
-    setName(""); setDate(new Date().toISOString().slice(0, 10)); setAmount(""); setAccountType(""); setNotes("");
+    setName(""); setDate(getLocalDateString()); setAmount(""); setAccountType(""); setNotes("");
     setMf({ fund_house: "", fund_category: "Equity", folio_number: "", units: "", nav_at_purchase: "", is_sip: false, sip_day: "", amfi_code: "" });
     setStock({ ticker: "", exchange: "NSE", quantity: "", buy_price: "", sector: "", market_cap: "" });
     setGold({ gold_form: "Physical", grams: "", purity: "24K", buy_price_per_gram: "" });
-    setFd({ bank_name: "", fd_number: "", principal: "", interest_rate: "", tenure_months: "", start_date: new Date().toISOString().slice(0, 10), compounding: "Quarterly", maturity_amount: "" });
+    setFd({ bank_name: "", fd_number: "", principal: "", interest_rate: "", tenure_months: "", start_date: getLocalDateString(), compounding: "Quarterly", maturity_amount: "" });
     setRe({ property_type: "Residential", address: "", area_sqft: "", buy_price_per_sqft: "", monthly_rental: "", loan_emi: "" });
     setCrypto({ token_symbol: "", exchange: "Binance", quantity: "", buy_price_inr: "", buy_price_usd: "" });
     setPf({ pf_type: "EPF", account_number: "", current_balance: "", interest_rate: "8.1", monthly_contribution: "", employer_contribution: "" });
@@ -590,7 +591,7 @@ const AddInvestment = () => {
                 <tbody className="divide-y divide-white/5">
                   {recent.map(inv => (
                     <tr key={inv.id} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4 text-sm text-slate-400">{new Date(inv.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
+                      <td className="px-6 py-4 text-sm text-slate-400">{formatShortDate(inv.date)}</td>
                       <td className="px-6 py-4 text-sm font-medium text-white">{inv.name}</td>
                       <td className="px-6 py-4"><span className="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-white/5">{inv.type}</span></td>
                       <td className="px-6 py-4"><span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${inv.action === "buy" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"}`}>{inv.action === "buy" ? "↑ Buy" : "↓ Sell"}</span></td>

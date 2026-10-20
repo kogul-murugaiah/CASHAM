@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
 import { FiCreditCard } from "react-icons/fi";
+import { getLocalDateString, formatDate, formatShortDate } from "../lib/formatters";
 import * as XLSX from 'xlsx';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
@@ -109,7 +110,7 @@ const ExpenseTracking = () => {
         return new Date().getFullYear().toString();
     });
     const [selectedDate, setSelectedDate] = useState(() => {
-        return new Date().toISOString().slice(0, 10);
+        return getLocalDateString();
     });
     const [selectedWeekStart, setSelectedWeekStart] = useState(() => {
         const today = new Date();
@@ -117,7 +118,7 @@ const ExpenseTracking = () => {
         const diff = today.getDate() - day + (day === 0 ? -6 : 1);
         const monday = new Date(today);
         monday.setDate(diff);
-        return monday.toISOString().slice(0, 10);
+        return getLocalDateString(monday);
     });
     const [weekInputValue, setWeekInputValue] = useState(() => {
         const today = new Date();
@@ -150,14 +151,16 @@ const ExpenseTracking = () => {
 
             if (viewMode === "daily") {
                 startDate = selectedDate;
-                const d = new Date(selectedDate);
+                const [y, m, day] = selectedDate.split("-").map(Number);
+                const d = new Date(y, m - 1, day);
                 d.setDate(d.getDate() + 1);
-                endDate = d.toISOString().slice(0, 10);
+                endDate = getLocalDateString(d);
             } else if (viewMode === "weekly") {
                 startDate = selectedWeekStart;
-                const d = new Date(selectedWeekStart);
+                const [y, m, day] = selectedWeekStart.split("-").map(Number);
+                const d = new Date(y, m - 1, day);
                 d.setDate(d.getDate() + 7);
-                endDate = d.toISOString().slice(0, 10);
+                endDate = getLocalDateString(d);
             } else if (viewMode === "monthly") {
                 const [year, month] = selectedMonth.split("-").map(Number);
                 startDate = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -322,10 +325,11 @@ const ExpenseTracking = () => {
             }));
         } else if (viewMode === "weekly") {
             const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            const [wy, wm, wday] = selectedWeekStart.split("-").map(Number);
             return Array.from({ length: 7 }, (_, i) => {
-                const d = new Date(selectedWeekStart);
+                const d = new Date(wy, wm - 1, wday);
                 d.setDate(d.getDate() + i);
-                const dateStr = d.toISOString().slice(0, 10);
+                const dateStr = getLocalDateString(d);
                 const total = filteredExpenses
                     .filter(e => e.date === dateStr)
                     .reduce((sum, e) => sum + e.amount, 0);
@@ -347,7 +351,7 @@ const ExpenseTracking = () => {
             return MONTH_NAMES.map((name, index) => {
                 const monthNum = index + 1;
                 const total = filteredExpenses
-                    .filter(e => new Date(e.date).getMonth() + 1 === monthNum)
+                    .filter(e => parseInt(e.date.split("-")[1], 10) === monthNum)
                     .reduce((sum, e) => sum + e.amount, 0);
                 return { period: name, label: name, total };
             });
@@ -368,7 +372,7 @@ const ExpenseTracking = () => {
 
     const handleExport = () => {
         const exportData = filteredExpenses.map(exp => ({
-            Date: new Date(exp.date).toLocaleDateString('en-IN'),
+            Date: formatDate(exp.date),
             Item: exp.item,
             Category: exp.categories?.name || "Uncategorized",
             Account: exp.account_type,
@@ -472,7 +476,7 @@ const ExpenseTracking = () => {
                                     startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
                                     const monday = new Date(startOfWeek1);
                                     monday.setDate(startOfWeek1.getDate() + (week - 1) * 7);
-                                    setSelectedWeekStart(monday.toISOString().slice(0, 10));
+                                    setSelectedWeekStart(getLocalDateString(monday));
                                 }}
                                 style={{ colorScheme: theme }}
                                 className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
@@ -767,7 +771,7 @@ const ExpenseTracking = () => {
                                             <tbody className="divide-y divide-white/5">
                                                 {currentExpenses.map((exp) => (
                                                     <tr key={exp.id} className="group hover:bg-white/5 transition-colors">
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{new Date(exp.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{formatShortDate(exp.date)}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{exp.item}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className="inline-flex px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 uppercase">
@@ -814,7 +818,7 @@ const ExpenseTracking = () => {
                                                     <div>
                                                         <h4 className="text-sm font-bold text-white mb-1">{exp.item}</h4>
                                                         <div className="flex items-center gap-2 text-xs">
-                                                            <span className="text-slate-400">{new Date(exp.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })}</span>
+                                                            <span className="text-slate-400">{formatShortDate(exp.date)}</span>
                                                             <span className="text-slate-600">•</span>
                                                             <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-300 uppercase">
                                                                 {exp.categories?.name || "Uncategorized"}

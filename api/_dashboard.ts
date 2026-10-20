@@ -1,3 +1,8 @@
+function getISTDateStr(date: Date = new Date()): string {
+  const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+  return formatter.format(date);
+}
+
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabase.js';
 import { getUserFromRequest } from './_lib/auth.js';
@@ -185,10 +190,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = await getUserFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const getYearMonth = (q: any) => ({
-    year: parseInt(q.year as string) || new Date().getFullYear(),
-    month: parseInt(q.month as string) || new Date().getMonth() + 1,
-  });
+  const getYearMonth = (q: any) => {
+    let year = parseInt(q.year as string);
+    let month = parseInt(q.month as string);
+    if (!year || !month) {
+      const istParts = getISTDateStr().split("-");
+      year = year || parseInt(istParts[0], 10);
+      month = month || parseInt(istParts[1], 10);
+    }
+    return { year, month };
+  };
 
   const getCarryoverSource = async () => {
     let { data } = await supabaseAdmin

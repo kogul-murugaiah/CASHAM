@@ -7,7 +7,7 @@ import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { FiEdit2, FiAlertTriangle, FiDownload, FiGlobe, FiEye, FiEyeOff, FiCheck, FiX, FiZap } from "react-icons/fi";
 import { CustomDropdown } from "../components/CustomDropdown";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency, getLocalDateString } from "../lib/formatters";
 
 const APP_VERSION = "2.0.0";
 const APP_BUILD_DATE = "2026";
@@ -340,7 +340,7 @@ const Settings = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `CASHAM_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute("download", `CASHAM_Report_${getLocalDateString()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

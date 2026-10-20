@@ -3,7 +3,7 @@ import { useCreditCards, type CreditCard, type CreditCardSettlement } from "../h
 import { useCCAdvances, type CCAdvance } from "../hooks/useCCAdvances";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { useTheme } from "../contexts/ThemeContext";
-import { formatCurrency, formatDate } from "../lib/formatters";
+import { formatCurrency, formatDate, getLocalDateString } from "../lib/formatters";
 import {
   FiCreditCard,
   FiPlus,
@@ -97,7 +97,7 @@ const CreditCards = () => {
     amount: "",
     credit_card_id: "",
     credit_card_name: "",
-    date: new Date().toISOString().slice(0, 10),
+    date: getLocalDateString(),
     description: "",
   });
   const [savingAdvance, setSavingAdvance] = useState(false);
@@ -105,7 +105,7 @@ const CreditCards = () => {
   // CC Advances Settle State
   const [selectedAdvanceIds, setSelectedAdvanceIds] = useState<string[]>([]);
   const [showAdvanceSettleModal, setShowAdvanceSettleModal] = useState(false);
-  const [advanceSettleDate, setAdvanceSettleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [advanceSettleDate, setAdvanceSettleDate] = useState(() => getLocalDateString());
   const [advanceSettleNotes, setAdvanceSettleNotes] = useState("");
   const [settlingAdvances, setSettlingAdvances] = useState(false);
 
@@ -118,9 +118,9 @@ const CreditCards = () => {
   // Smart "Settle by Date" State
   const [showSmartSettleModal, setShowSmartSettleModal] = useState(false);
   const [smartSettleCardId, setSmartSettleCardId] = useState("");
-  const [smartSettleCutoffDate, setSmartSettleCutoffDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [smartSettleCutoffDate, setSmartSettleCutoffDate] = useState(() => getLocalDateString());
   const [smartSettleActualBill, setSmartSettleActualBill] = useState("");
-  const [smartSettleDate, setSmartSettleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [smartSettleDate, setSmartSettleDate] = useState(() => getLocalDateString());
   const [smartSettleNotes, setSmartSettleNotes] = useState("");
   const [smartSettling, setSmartSettling] = useState(false);
 
@@ -246,9 +246,9 @@ const CreditCards = () => {
     const billingDay = sel?.billing_cycle_day || today.getDate();
     const cutoff = new Date(today.getFullYear(), today.getMonth(), billingDay);
     if (cutoff > today) cutoff.setMonth(cutoff.getMonth() - 1);
-    setSmartSettleCutoffDate(cutoff.toISOString().slice(0, 10));
+    setSmartSettleCutoffDate(getLocalDateString(cutoff));
     setSmartSettleActualBill("");
-    setSmartSettleDate(new Date().toISOString().slice(0, 10));
+    setSmartSettleDate(getLocalDateString());
     setSmartSettleNotes("");
     setShowSmartSettleModal(true);
   };
@@ -411,7 +411,7 @@ const CreditCards = () => {
       amount: "",
       credit_card_id: defaultCard?.id || "",
       credit_card_name: defaultCard?.name || "",
-      date: new Date().toISOString().slice(0, 10),
+      date: getLocalDateString(),
       description: "",
     });
     setShowAdvanceModal(true);
@@ -1400,7 +1400,7 @@ const CreditCards = () => {
                       const billingDay = sel.billing_cycle_day || today.getDate();
                       const cutoff = new Date(today.getFullYear(), today.getMonth(), billingDay);
                       if (cutoff > today) cutoff.setMonth(cutoff.getMonth() - 1);
-                      setSmartSettleCutoffDate(cutoff.toISOString().slice(0, 10));
+                      setSmartSettleCutoffDate(getLocalDateString(cutoff));
                     }
                   }}
                   className={inputClass}

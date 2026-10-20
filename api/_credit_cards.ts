@@ -1,3 +1,8 @@
+function getISTDateStr(date: Date = new Date()): string {
+    const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+    return formatter.format(date);
+}
+
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabaseAdmin } from './_lib/supabase.js';
 import { getUserFromRequest } from './_lib/auth.js';
@@ -199,7 +204,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     breakdown[acc] = (breakdown[acc] || 0) + amt;
                 }
 
-                const settleDate = settlement_date || new Date().toISOString().slice(0, 10);
+                const settleDate = settlement_date || getISTDateStr();
 
                 // 1. Insert settlement record
                 const { data: settlement, error: settleErr } = await supabaseAdmin
@@ -281,7 +286,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     breakdown[person] = (breakdown[person] || 0) + amt;
                 }
 
-                const settleDate = settlement_date || new Date().toISOString().slice(0, 10);
+                const settleDate = settlement_date || getISTDateStr();
 
                 // 1. Insert settlement record (with settlement_type = 'advances')
                 const { data: settlement, error: settleErr } = await supabaseAdmin

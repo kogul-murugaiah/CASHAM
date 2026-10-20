@@ -1,11 +1,12 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight } from "react-icons/fi";
+import { useTasks, getLocalDateStr } from "../hooks/useTasks";
 import {
   BarChart,
   Bar,
@@ -34,6 +35,43 @@ const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "Ju
 // ─── Component ──────────────────────────────────────────────────
 
 const Dashboard = () => {
+  const { todayTasks, fetchTodayTasks, toggleComplete, heatmapData, fetchHeatmapData } = useTasks();
+
+  useEffect(() => {
+    fetchTodayTasks();
+    fetchHeatmapData();
+  }, [fetchTodayTasks, fetchHeatmapData]);
+
+  const todayTasksCompleted = todayTasks.filter(t => t.completed_today).length;
+  const todayTasksTotal = todayTasks.length;
+  const todayTasksPct = todayTasksTotal > 0 ? Math.round((todayTasksCompleted / todayTasksTotal) * 100) : 0;
+
+  const dashboardStreak = useMemo(() => {
+    if (!heatmapData?.counts) return 0;
+    const today = getLocalDateStr();
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = getLocalDateStr(yesterdayDate);
+
+    const hasToday = (heatmapData.counts[today] || 0) > 0;
+    const hasYesterday = (heatmapData.counts[yesterday] || 0) > 0;
+
+    if (!hasToday && !hasYesterday) return 0;
+
+    let count = 0;
+    let curr = hasToday ? new Date() : yesterdayDate;
+    while (true) {
+      const dStr = getLocalDateStr(curr);
+      if ((heatmapData.counts[dStr] || 0) > 0) {
+        count++;
+        curr.setDate(curr.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return count;
+  }, [heatmapData]);
+
   const { accountTypes } = useAccountTypes();
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -119,7 +157,7 @@ const Dashboard = () => {
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const monthlyBalance = monthlyIncome - monthlyExpenses;
 
-  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayISO = getLocalDateStr();
   const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
 
   const accountBalances = accountTypes.map((accountType) => {
@@ -292,6 +330,106 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* ── Today's Habits & Tasks Widget ── */}
+          <div className="glass-card p-6 border-emerald-500/15 relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shadow-sm shadow-emerald-500/10">
+                  <FiCheckSquare size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-bold text-white font-heading">Today's Focus & Habits</h3>
+                    {todayTasksTotal > 0 && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        {todayTasksCompleted}/{todayTasksTotal} Done ({todayTasksPct}%)
+                      </span>
+                    )}
+                    {dashboardStreak > 0 && (
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <FiZap size={11} />
+                        {dashboardStreak}d Streak
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">Track and complete your daily routines directly</p>
+                </div>
+              </div>
+
+              <Link
+                to="/tasks"
+                className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors w-fit group"
+              >
+                <span>Open Task Tracker</span>
+                <FiArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+
+            {/* Progress Bar */}
+            {todayTasksTotal > 0 && (
+              <div className="mb-4">
+                <div className="h-2 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                    style={{ width: `${todayTasksPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Quick-Action Task List */}
+            {todayTasksTotal === 0 ? (
+              <div className="py-6 text-center rounded-xl bg-white/[0.02] border border-white/5">
+                <p className="text-xs text-slate-400">No habits or tasks scheduled for today.</p>
+                <Link
+                  to="/tasks"
+                  className="inline-flex items-center gap-1 text-xs text-emerald-400 font-semibold mt-2 hover:underline"
+                >
+                  + Add daily habits in Task Tracker
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {todayTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    onClick={() => toggleComplete(task.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none group ${
+                      task.completed_today
+                        ? "bg-emerald-500/5 border-emerald-500/20 text-slate-400"
+                        : "bg-slate-700/30 hover:bg-slate-700/60 border-white/5 text-slate-200"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      className={`flex-shrink-0 transition-colors ${
+                        task.completed_today ? "text-emerald-400" : "text-slate-500 group-hover:text-emerald-400"
+                      }`}
+                    >
+                      {task.completed_today ? <FiCheckCircle size={18} /> : <FiCircle size={18} />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold truncate ${task.completed_today ? "line-through text-slate-500" : "text-white"}`}>
+                          {task.title}
+                        </span>
+                        <span
+                          style={{ backgroundColor: (task.color || '#10b981') + '22', color: task.color || '#10b981' }}
+                          className="px-1.5 py-0.2 rounded text-[9px] font-bold"
+                        >
+                          {task.category}
+                        </span>
+                      </div>
+                      {task.time_block && (
+                        <p className="text-[10px] text-slate-500 capitalize">{task.time_block}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

@@ -710,7 +710,8 @@ const Portfolio = () => {
 
   // Timeline Derived Data
   const chartData = snapshots.map(s => {
-      const d = new Date(s.snapshot_date);
+      const parts = s.snapshot_date.split("-").map(Number);
+      const d = (parts.length >= 2 && !isNaN(parts[0])) ? new Date(parts[0], parts[1] - 1, parts[2] || 1) : new Date(s.snapshot_date);
       return {
           name: `${d.toLocaleString('default', { month: 'short' })} '${d.getFullYear().toString().slice(2)}`,
           Invested: s.total_invested,
