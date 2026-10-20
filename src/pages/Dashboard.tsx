@@ -362,7 +362,7 @@ const Dashboard = () => {
                 to="/tasks"
                 className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors w-fit group"
               >
-                <span>Open Task Tracker</span>
+                <span>Open Task Manager</span>
                 <FiArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
@@ -387,7 +387,7 @@ const Dashboard = () => {
                   to="/tasks"
                   className="inline-flex items-center gap-1 text-xs text-emerald-400 font-semibold mt-2 hover:underline"
                 >
-                  + Add daily habits in Task Tracker
+                  + Add daily habits in Task Manager
                 </Link>
               </div>
             ) : (

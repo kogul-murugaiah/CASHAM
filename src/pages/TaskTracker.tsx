@@ -1012,7 +1012,7 @@ export default function TaskTracker() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold font-heading tracking-tight flex items-center gap-2">
-                        <span className="text-emerald-400">✓</span> Task Tracker
+                        <span className="text-emerald-400">✓</span> Task Manager
                     </h1>
                     <p className={`text-sm mt-0.5 ${muted}`}>Build habits. Stay consistent.</p>
                 </div>

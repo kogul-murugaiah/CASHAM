@@ -14,6 +14,7 @@ const NAV_GROUPS = [
         label: "Overview",
         items: [
             { to: "/dashboard", icon: FiHome, label: "Dashboard" },
+            { to: "/tasks", icon: FiCheckSquare, label: "Task Manager" },
         ],
     },
     {
@@ -33,7 +34,6 @@ const NAV_GROUPS = [
             { to: "/credit-cards", icon: FiCreditCard, label: "Credit Cards" },
             { to: "/ledger", icon: FiUsers, label: "Ledger (IOU)" },
             { to: "/fund-tracker", icon: FiBriefcase, label: "Independent Funds" },
-            { to: "/tasks", icon: FiCheckSquare, label: "Task Tracker" },
             { to: "/rent-tracker", icon: FiHome, label: "Rent Tracker" },
             { to: "/portfolio", icon: FiTrendingUp, label: "Portfolio" },
         ],
