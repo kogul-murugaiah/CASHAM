@@ -5,7 +5,7 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown } from "react-icons/fi";
 import { useTasks, getLocalDateStr } from "../hooks/useTasks";
 import {
   BarChart,
@@ -177,18 +177,24 @@ const Dashboard = () => {
   // "Days Remaining Including Today"
   const daysRemainingIncludingToday = isCurrentMonth ? Math.max(1, totalDaysInMonth - daysPassed + 1) : 1;
 
-  // ── All-account aggregates (always across every account) ──────────
-  // Today's expense = ALL accounts regardless of selector
-  // (todayExpenses is already defined above on line 120)
+  // ── Selected-account aggregates (for Avg Daily Spend, Base Limit, Today's Expense & Daily Limit Left) ──
+  const selectedAccountExpenses = dailyLimitAccount === 'All'
+    ? expenses
+    : expenses.filter(e => e.account_type === dailyLimitAccount);
 
-  // Avg Daily Spend = ALL accounts
-  const avgDailySpend = monthlyExpenses / (daysPassed || 1);
+  const selectedAccountMonthlyExpenses = selectedAccountExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-  // ── Selected-account aggregates (for Base Limit & Daily Limit Left) ────────────
-  const selectedAccountExpenses = dailyLimitAccount === 'All' ? expenses : expenses.filter(e => e.account_type === dailyLimitAccount);
-  const selectedPastExpenses = selectedAccountExpenses.filter(e => !e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
-  // Today's spend from the selected account only
-  const todaySelectedExpenses = selectedAccountExpenses.filter(e => e.date.startsWith(todayISO)).reduce((s, e) => s + e.amount, 0);
+  // Avg Daily Spend (for selected account or all accounts)
+  const avgDailySpend = selectedAccountMonthlyExpenses / (daysPassed || 1);
+
+  const selectedPastExpenses = selectedAccountExpenses
+    .filter(e => !e.date.startsWith(todayISO))
+    .reduce((s, e) => s + e.amount, 0);
+
+  // Today's spend from the selected account (or all accounts if 'All')
+  const todaySelectedExpenses = selectedAccountExpenses
+    .filter(e => e.date.startsWith(todayISO))
+    .reduce((s, e) => s + e.amount, 0);
 
   // Income available for the selected account (including transfers)
   const effectiveTargetIncome = dailyLimitAccount === 'All'
@@ -309,24 +315,45 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
-                  <p className={`text-xl font-bold text-rose-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(todayExpenses, currencyStyle)}</p>
+                  <p className={`text-xl font-bold text-rose-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(todaySelectedExpenses, currencyStyle)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
                   <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weekly Expense</p>
-                  <p className={`text-xl font-bold text-amber-500 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>
-                    {formatCurrency(expenses.filter(e => {
-                        const d = new Date(e.date);
-                        const t = new Date();
-                        const monday = new Date(t);
-                        monday.setDate(t.getDate() - ((t.getDay() + 6) % 7));
-                        monday.setHours(0,0,0,0);
-                        return d >= monday;
-                    }).reduce((s, e) => s + e.amount, 0), currencyStyle)}
-                  </p>
+                <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col justify-end">
+                  <label htmlFor="dashboard-kpi-account-selector" className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                    Account
+                  </label>
+                  <div className="relative mt-0.5">
+                    <select
+                      id="dashboard-kpi-account-selector"
+                      value={dailyLimitAccount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setDailyLimitAccount(val);
+                        localStorage.setItem("dashboard_daily_limit_account", val);
+                      }}
+                      className={`w-full font-bold text-xs sm:text-sm py-1.5 px-3 rounded-xl border outline-none transition-all cursor-pointer appearance-none truncate pr-8 shadow-sm ${
+                        isDark
+                          ? "bg-slate-800/90 hover:bg-slate-700/90 text-white border-white/10 hover:border-emerald-500/40 focus:border-emerald-500"
+                          : "bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-emerald-500/40 focus:border-emerald-500"
+                      }`}
+                      title="Filter daily limits by account"
+                    >
+                      <option value="All" className={isDark ? "bg-slate-900 text-white font-medium" : "bg-white text-slate-900 font-medium"}>
+                        All Accounts
+                      </option>
+                      {accountTypes.map((type) => (
+                        <option key={type} value={type} className={isDark ? "bg-slate-900 text-white font-medium" : "bg-white text-slate-900 font-medium"}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                      <FiChevronDown size={14} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
