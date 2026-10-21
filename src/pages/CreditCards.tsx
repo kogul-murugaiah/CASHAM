@@ -113,8 +113,10 @@ const CreditCards = () => {
   // Search & Filter State
   const [duesSearch, setDuesSearch] = useState("");
   const [duesFilterCard, setDuesFilterCard] = useState("all");
+  const [duesFilterFundsStatus, setDuesFilterFundsStatus] = useState<"all" | "moved" | "pending">("all");
   const [advancesSearch, setAdvancesSearch] = useState("");
   const [advancesFilterCard, setAdvancesFilterCard] = useState("all");
+  const [advancesFilterCashStatus, setAdvancesFilterCashStatus] = useState<"all" | "received" | "pending">("all");
 
   // Smart "Settle by Date" State
   const [showSmartSettleModal, setShowSmartSettleModal] = useState(false);
@@ -175,12 +177,18 @@ const CreditCards = () => {
     );
   }, [advances, activeCardId, currentCard]);
 
-  // Search + filter on top of filteredExpenses
+  // Search + filter on top of filteredExpenses (combines card selection + funds moved status)
   const displayedExpenses = useMemo(() => {
-    let list = filteredExpenses;
-    if (duesFilterCard !== "all") {
-      const fc = cards.find(c => c.id === duesFilterCard);
-      list = list.filter(e => e.credit_card_id === duesFilterCard || e.credit_card_name === fc?.name);
+    let list = unsettledExpenses;
+    const effectiveCardId = duesFilterCard !== "all" ? duesFilterCard : activeCardId;
+    if (effectiveCardId !== "all") {
+      const fc = cards.find(c => c.id === effectiveCardId);
+      list = list.filter(e => e.credit_card_id === effectiveCardId || e.credit_card_name === fc?.name);
+    }
+    if (duesFilterFundsStatus === "moved") {
+      list = list.filter(e => e.cc_funds_set_aside);
+    } else if (duesFilterFundsStatus === "pending") {
+      list = list.filter(e => !e.cc_funds_set_aside);
     }
     if (duesSearch.trim()) {
       const q = duesSearch.toLowerCase();
@@ -194,14 +202,20 @@ const CreditCards = () => {
       );
     }
     return list;
-  }, [filteredExpenses, duesSearch, duesFilterCard, cards]);
+  }, [unsettledExpenses, activeCardId, duesFilterCard, duesFilterFundsStatus, duesSearch, cards]);
 
-  // Search + filter on top of filteredAdvances
+  // Search + filter on top of filteredAdvances (combines card selection + cash received status)
   const displayedAdvances = useMemo(() => {
-    let list = filteredAdvances.filter(a => !(a as any).cc_bill_settled);
-    if (advancesFilterCard !== "all") {
-      const fc = cards.find(c => c.id === advancesFilterCard);
-      list = list.filter(a => a.credit_card_id === advancesFilterCard || a.credit_card_name === fc?.name);
+    let list = advances.filter(a => !(a as any).cc_bill_settled);
+    const effectiveCardId = advancesFilterCard !== "all" ? advancesFilterCard : activeCardId;
+    if (effectiveCardId !== "all") {
+      const fc = cards.find(c => c.id === effectiveCardId);
+      list = list.filter(a => a.credit_card_id === effectiveCardId || a.credit_card_name === fc?.name);
+    }
+    if (advancesFilterCashStatus === "received") {
+      list = list.filter(a => a.cash_received);
+    } else if (advancesFilterCashStatus === "pending") {
+      list = list.filter(a => !a.cash_received);
     }
     if (advancesSearch.trim()) {
       const q = advancesSearch.toLowerCase();
@@ -213,7 +227,7 @@ const CreditCards = () => {
       );
     }
     return list;
-  }, [filteredAdvances, advancesSearch, advancesFilterCard, cards]);
+  }, [advances, activeCardId, advancesFilterCard, advancesFilterCashStatus, advancesSearch, cards]);
 
   // Smart settle computed values
   const smartSettleCard = useMemo(() => cards.find(c => c.id === smartSettleCardId), [cards, smartSettleCardId]);
@@ -734,7 +748,7 @@ const CreditCards = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {/* "All Cards" Card */}
               <div
-                onClick={() => setActiveCardId("all")}
+                onClick={() => { setActiveCardId("all"); setDuesFilterCard("all"); setAdvancesFilterCard("all"); }}
                 className={`cursor-pointer rounded-2xl p-5 border transition-all relative overflow-hidden ${activeCardId === "all" ? cardSelectedBg : cardUnselectedBg}`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -763,7 +777,7 @@ const CreditCards = () => {
                 return (
                   <div
                     key={card.id}
-                    onClick={() => setActiveCardId(card.id)}
+                    onClick={() => { setActiveCardId(card.id); setDuesFilterCard(card.id); setAdvancesFilterCard(card.id); }}
                     className={`cursor-pointer rounded-2xl p-5 border transition-all relative overflow-hidden group ${isSelected ? cardSelectedBg : cardUnselectedBg}`}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -889,17 +903,30 @@ const CreditCards = () => {
                   </div>
                   <select
                     value={duesFilterCard}
-                    onChange={e => setDuesFilterCard(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setDuesFilterCard(val);
+                      setActiveCardId(val);
+                    }}
                     className={`${inputClass} sm:w-48`}
                   >
                     <option value="all">All Cards</option>
                     {cards.map(c => <option key={c.id} value={c.id}>{c.name}{c.card_last4 ? ` ••${c.card_last4}` : ""}</option>)}
                   </select>
+                  <select
+                    value={duesFilterFundsStatus}
+                    onChange={e => setDuesFilterFundsStatus(e.target.value as "all" | "moved" | "pending")}
+                    className={`${inputClass} sm:w-44`}
+                  >
+                    <option value="all">All Funds Status</option>
+                    <option value="moved">Funds Moved</option>
+                    <option value="pending">Funds Pending</option>
+                  </select>
                 </div>
               </div>
 
               {displayedExpenses.length === 0 ? (
-                <div className={`p-12 text-center text-sm ${textSecondary}`}>{duesSearch || duesFilterCard !== "all" ? "No transactions match your search/filter." : "No unsettled expenses found for this selection."}</div>
+                <div className={`p-12 text-center text-sm ${textSecondary}`}>{duesSearch || duesFilterCard !== "all" || duesFilterFundsStatus !== "all" ? "No transactions match your search/filter." : "No unsettled expenses found for this selection."}</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1044,11 +1071,24 @@ const CreditCards = () => {
                   </div>
                   <select
                     value={advancesFilterCard}
-                    onChange={e => setAdvancesFilterCard(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setAdvancesFilterCard(val);
+                      setActiveCardId(val);
+                    }}
                     className={`${inputClass} sm:w-48`}
                   >
                     <option value="all">All Cards</option>
                     {cards.map(c => <option key={c.id} value={c.id}>{c.name}{c.card_last4 ? ` ••${c.card_last4}` : ""}</option>)}
+                  </select>
+                  <select
+                    value={advancesFilterCashStatus}
+                    onChange={e => setAdvancesFilterCashStatus(e.target.value as "all" | "received" | "pending")}
+                    className={`${inputClass} sm:w-44`}
+                  >
+                    <option value="all">All Cash Status</option>
+                    <option value="received">Cash Received</option>
+                    <option value="pending">Cash Pending</option>
                   </select>
                 </div>
               </div>
@@ -1056,7 +1096,7 @@ const CreditCards = () => {
               {displayedAdvances.length === 0 ? (
                 <div className={`p-12 text-center space-y-2 ${textSecondary}`}>
                   <FiUsers size={32} className="mx-auto opacity-30" />
-                  <p className="text-sm">{advancesSearch || advancesFilterCard !== "all" ? "No advances match your search/filter." : "No unsettled advances. All cleared!"}</p>
+                  <p className="text-sm">{advancesSearch || advancesFilterCard !== "all" || advancesFilterCashStatus !== "all" ? "No advances match your search/filter." : "No unsettled advances. All cleared!"}</p>
                   {!advancesSearch && advancesFilterCard === "all" && <p className="text-xs opacity-70">Settled advances are archived in Settlement History.</p>}
                 </div>
               ) : (

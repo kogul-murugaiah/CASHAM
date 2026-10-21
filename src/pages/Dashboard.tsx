@@ -158,7 +158,6 @@ const Dashboard = () => {
   const monthlyBalance = monthlyIncome - monthlyExpenses;
 
   const todayISO = getLocalDateStr();
-  const todayExpenses = expenses.filter(exp => exp.date.startsWith(todayISO)).reduce((sum, exp) => sum + exp.amount, 0);
 
   const accountBalances = accountTypes.map((accountType) => {
     const accIncome = income.filter((inc) => inc.account_type === accountType).reduce((sum, inc) => sum + inc.amount, 0);
