@@ -110,6 +110,14 @@ export const useCreditCards = () => {
     }
   };
 
+  const fetchMasterExpenses = async () => {
+    try {
+      return await api.get('/api/credit-cards?view=master');
+    } catch (err: any) {
+      throw new Error(err.message || 'Failed to fetch master credit card expenses');
+    }
+  };
+
   const fetchSettlements = async (): Promise<CreditCardSettlement[]> => {
     try {
       const data = await api.get('/api/credit-cards?view=settlements');
@@ -191,6 +199,7 @@ export const useCreditCards = () => {
     updateCard,
     deleteCard,
     fetchDues,
+    fetchMasterExpenses,
     fetchSettlements,
     settleBill,
     unsettleBill,

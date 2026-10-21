@@ -67,6 +67,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         }
 
+        // View: Master CC Activity (All Credit Card Expenses, both settled and unsettled)
+        if (view === 'master') {
+            try {
+                const { data, error } = await supabaseAdmin
+                    .from('expenses')
+                    .select(
+                        id,
+                        amount,
+                        date,
+                        item,
+                        description,
+                        category_id,
+                        account_type,
+                        paid_via_credit_card,
+                        credit_card_id,
+                        credit_card_name,
+                        cc_bill_settled,
+                        cc_settled_at,
+                        cc_funds_set_aside,
+                        categories (
+                            id,
+                            name
+                        )
+                    )
+                    .eq('user_id', user.id)
+                    .eq('paid_via_credit_card', true)
+                    .order('date', { ascending: false });
+
+                if (error) throw error;
+                return res.status(200).json(data || []);
+            } catch (error: any) {
+                return res.status(500).json({ error: error.message });
+            }
+        }
+
         // View: Past Settlements History
         if (view === 'settlements') {
             try {
