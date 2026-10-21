@@ -41,6 +41,7 @@ type UnsettledExpense = {
 const CreditCards = () => {
   const {
     cards,
+    fetchCards,
     addCard,
     updateCard,
     deleteCard,
@@ -285,6 +286,7 @@ const CreditCards = () => {
       loadDues();
       loadSettlements();
       fetchAdvances();
+      fetchCards();
     } catch (err: any) {
       setError(err.message || "Failed to settle");
     } finally {
@@ -292,10 +294,56 @@ const CreditCards = () => {
     }
   };
 
-  // Aggregate stats across all cards
+  // Active (unsettled) advances across all cards
+  const unsettledAdvances = useMemo(() => {
+    return advances.filter((a) => !(a as any).cc_bill_settled);
+  }, [advances]);
+
+  const totalUnsettledAdvancesAmount = useMemo(() => {
+    return unsettledAdvances.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+  }, [unsettledAdvances]);
+
+  // Reactive dues per card combining unsettled expenses + unsettled advances
+  const cardDuesMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of cards) {
+      map[c.id] = 0;
+    }
+
+    for (const exp of unsettledExpenses) {
+      const matchCard = cards.find(
+        (c) => (exp.credit_card_id && c.id === exp.credit_card_id) || (exp.credit_card_name && c.name === exp.credit_card_name)
+      );
+      if (matchCard) {
+        map[matchCard.id] = (map[matchCard.id] || 0) + Number(exp.amount || 0);
+      }
+    }
+
+    for (const adv of advances) {
+      if (!(adv as any).cc_bill_settled) {
+        const matchCard = cards.find(
+          (c) => (adv.credit_card_id && c.id === adv.credit_card_id) || (adv.credit_card_name && c.name === adv.credit_card_name)
+        );
+        if (matchCard) {
+          map[matchCard.id] = (map[matchCard.id] || 0) + Number(adv.amount || 0);
+        }
+      }
+    }
+
+    return map;
+  }, [cards, unsettledExpenses, advances]);
+
+  const getCardDues = (card: CreditCard): number => {
+    if (!loadingDues) {
+      return cardDuesMap[card.id] ?? 0;
+    }
+    return card.total_dues ?? (cardDuesMap[card.id] || 0);
+  };
+
+  // Aggregate stats across all cards (reactive to advances & expenses immediately)
   const totalOutstandingDues = useMemo(() => {
-    return cards.reduce((sum, c) => sum + Number(c.total_dues || 0), 0);
-  }, [cards]);
+    return cards.reduce((sum, c) => sum + getCardDues(c), 0);
+  }, [cards, cardDuesMap, loadingDues]);
 
   const totalCreditLimit = useMemo(() => {
     return cards.reduce((sum, c) => sum + Number(c.credit_limit || 0), 0);
@@ -305,18 +353,6 @@ const CreditCards = () => {
     if (totalCreditLimit <= 0) return 0;
     return Number(((totalOutstandingDues / totalCreditLimit) * 100).toFixed(1));
   }, [totalOutstandingDues, totalCreditLimit]);
-
-  // Underlying Account Breakdown for the currently selected card / view
-  const accountBreakdown = useMemo(() => {
-    const map: Record<string, { total: number; count: number }> = {};
-    for (const exp of filteredExpenses) {
-      const acc = exp.account_type || "Unspecified";
-      if (!map[acc]) map[acc] = { total: 0, count: 0 };
-      map[acc].total += Number(exp.amount || 0);
-      map[acc].count += 1;
-    }
-    return map;
-  }, [filteredExpenses]);
 
   // Card Modal Handlers
   const handleOpenAddCard = () => {
@@ -385,8 +421,23 @@ const CreditCards = () => {
       setTimeout(() => setSuccess(""), 3000);
       loadDues();
       loadSettlements();
+      fetchCards();
     } catch (err: any) {
       setError(err.message || "Failed to reopen statement");
+    }
+  };
+
+  const handleUnsettleAdvances = async (settlementId: string) => {
+    if (!window.confirm("Reopen this advance settlement? The advances will become unsettled again.")) return;
+    try {
+      await unsettleAdvances(settlementId);
+      setSuccess("Advance settlement reopened");
+      setTimeout(() => setSuccess(""), 3000);
+      fetchAdvances();
+      loadSettlements();
+      fetchCards();
+    } catch (err: any) {
+      setError(err.message || "Failed to reopen advance settlement");
     }
   };
 
@@ -433,6 +484,7 @@ const CreditCards = () => {
       setShowAdvanceModal(false);
       setSuccess("Advance logged successfully");
       setTimeout(() => setSuccess(""), 3000);
+      fetchCards();
     } catch (err: any) {
       setError(err.message || "Failed to log advance");
     } finally {
@@ -456,6 +508,7 @@ const CreditCards = () => {
       await deleteAdvance(id);
       setSuccess("Advance removed");
       setTimeout(() => setSuccess(""), 2000);
+      fetchCards();
     } catch (err: any) {
       setError(err.message || "Failed to delete");
     }
@@ -495,6 +548,7 @@ const CreditCards = () => {
       setTimeout(() => setSuccess(""), 4000);
       fetchAdvances();
       loadSettlements();
+      fetchCards();
     } catch (err: any) {
       setError(err.message || "Failed to settle advances");
     } finally {
@@ -527,9 +581,7 @@ const CreditCards = () => {
     ? "w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none"
     : "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500/30 outline-none";
   const modalBg = isDark ? "bg-slate-800/95 border border-white/10" : "bg-white border border-slate-200";
-  const accountChip = isDark
-    ? "rounded-xl border border-white/10 bg-slate-700/30 p-4 space-y-2 hover:border-emerald-500/30 transition-all"
-    : "rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 hover:border-emerald-400/50 transition-all";
+
   const tabBorder = isDark ? "border-white/10" : "border-slate-200";
   const cardSelectedBg = isDark
     ? "bg-slate-800 border-emerald-500/50 shadow-xl shadow-emerald-500/10 ring-2 ring-emerald-500/30"
@@ -557,7 +609,7 @@ const CreditCards = () => {
               Cards & Statement Settlement
             </h1>
             <p className={`text-sm mt-1 ${textSecondary}`}>
-              Track dues per card, collect exact amounts from budget accounts, and reconcile bills.
+              Track dues per card, manage CC advances, and reconcile statements seamlessly.
             </p>
           </div>
 
@@ -640,9 +692,13 @@ const CreditCards = () => {
           </div>
 
           <div className={`rounded-2xl border p-5 ${cardBg}`}>
-            <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Active Budget Envelopes</p>
-            <p className={`text-2xl sm:text-3xl font-bold font-heading ${textPrimary}`}>{Object.keys(accountBreakdown).length} Accounts</p>
-            <p className={`text-xs mt-2 ${textSecondary}`}>Ready to collect on bill generation</p>
+            <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textSecondary}`}>Active CC Advances</p>
+            <p className="text-2xl sm:text-3xl font-bold font-heading text-amber-500">
+              {formatCurrency(totalUnsettledAdvancesAmount, currencyStyle)}
+            </p>
+            <p className={`text-xs mt-2 ${textSecondary}`}>
+              {unsettledAdvances.length} {unsettledAdvances.length === 1 ? "advance" : "advances"} across cards
+            </p>
           </div>
 
           <div className={`rounded-2xl border p-5 ${cardBg}`}>
@@ -699,7 +755,7 @@ const CreditCards = () => {
               {/* Individual Card Items */}
               {cards.map((card) => {
                 const isSelected = activeCardId === card.id;
-                const cardDues = card.total_dues || 0;
+                const cardDues = getCardDues(card);
                 const cardLimit = Number(card.credit_limit || 0);
                 const cardUtil = cardLimit > 0 ? (cardDues / cardLimit) * 100 : 0;
                 const daysUntilDue = getDueCountdown(card.payment_due_day || 20);
@@ -746,7 +802,7 @@ const CreditCards = () => {
                       <div className={`flex justify-between text-[10px] mb-1 ${textSecondary}`}>
                         <span>Utilization</span>
                         <span className={cardUtil > 30 ? "text-amber-500 font-bold" : "text-emerald-500 font-bold"}>
-                          {cardUtil.toFixed(1)}% {cardUtil > 30 && "⚠️"}
+                          {cardUtil.toFixed(1)}%
                         </span>
                       </div>
                       <div className={`w-full h-1.5 rounded-full overflow-hidden ${progressTrack}`}>
@@ -801,49 +857,7 @@ const CreditCards = () => {
 
         {/* ── DUES TAB ── */}
         {activeTab === "dues" && (
-          <div className="space-y-8 animate-fade-in">
-            {/* Account Collection Summary */}
-            <div className={`rounded-2xl border border-emerald-500/20 p-6 relative overflow-hidden ${isDark ? "bg-emerald-500/5" : "bg-emerald-50"}`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                <div>
-                  <h3 className={`text-lg font-bold font-heading flex items-center gap-2 ${textPrimary}`}>
-                    <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-500"><FiCheckCircle size={18} /></span>
-                    Money to Collect from Budget Accounts
-                  </h3>
-                  <p className={`text-xs mt-1 ${textSecondary}`}>
-                    These amounts were already deducted from each account when you swiped your card. Collect them to pay your bill.
-                  </p>
-                </div>
-                {Object.keys(accountBreakdown).length > 0 && (
-                  <div className="text-right">
-                    <span className={`text-[11px] uppercase font-semibold ${textSecondary}`}>Total to Pay</span>
-                    <p className="text-xl font-bold font-heading text-emerald-500">
-                      {formatCurrency(Object.values(accountBreakdown).reduce((sum, a) => sum + a.total, 0), currencyStyle)}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {Object.keys(accountBreakdown).length === 0 ? (
-                <div className={`p-6 text-center text-sm ${textSecondary}`}>🎉 No pending credit card charges! All charges are settled.</div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-                  {Object.entries(accountBreakdown).map(([accountName, data]) => (
-                    <div key={accountName} className={accountChip}>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs font-bold uppercase tracking-wide ${textPrimary}`}>{accountName}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${isDark ? "bg-slate-700 text-slate-300" : "bg-white border border-slate-200 text-slate-600"}`}>
-                          {data.count} {data.count === 1 ? "item" : "items"}
-                        </span>
-                      </div>
-                      <p className={`text-2xl font-bold font-heading ${textPrimary}`}>{formatCurrency(data.total, currencyStyle)}</p>
-                      <p className="text-[11px] text-emerald-500 flex items-center gap-1"><FiArrowRight size={10} /> Collect for credit card bill</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
+          <div className="space-y-6 animate-fade-in">
             {/* Transactions Table */}
             <div className={`rounded-2xl border overflow-hidden ${cardBg}`}>
               <div className={`p-4 sm:p-6 border-b space-y-4 ${divider}`}>
@@ -932,7 +946,7 @@ const CreditCards = () => {
                                   : `${isDark ? "bg-slate-700/60 text-slate-400 border border-white/10 hover:bg-slate-700" : "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"}`
                               }`}
                             >
-                              {expense.cc_funds_set_aside ? <><FiCheckCircle size={12} /> Moved</> : "⏳ Pending"}
+                              {expense.cc_funds_set_aside ? <><FiCheckCircle size={12} /> Moved</> : "Pending"}
                             </button>
                           </td>
                           <td className="px-6 py-4 text-sm font-bold text-right text-red-500 font-mono whitespace-nowrap">
@@ -1170,7 +1184,7 @@ const CreditCards = () => {
                           <p className="text-xl font-bold font-heading text-emerald-500 font-mono">{formatCurrency(settlement.total_amount, currencyStyle)}</p>
                         </div>
                         <button
-                          onClick={() => isAdvanceSettlement ? unsettleAdvances(settlement.id) : handleUnsettle(settlement.id)}
+                          onClick={() => isAdvanceSettlement ? handleUnsettleAdvances(settlement.id) : handleUnsettle(settlement.id)}
                           className={`px-3 py-1.5 rounded-lg text-xs transition-all ${isDark ? "text-slate-400 hover:text-red-400 hover:bg-red-500/10" : "text-slate-500 hover:text-red-500 hover:bg-red-50"}`}
                           title="Reopen"
                         >
@@ -1460,10 +1474,10 @@ const CreditCards = () => {
                   }`}>
                     <span className="font-medium">
                       {Math.abs(Number(smartSettleActualBill) - smartGrandTotal) < 1
-                        ? "✅ Calculated amount matches your bill!"
+                        ? "Calculated amount matches your bill!"
                         : Number(smartSettleActualBill) > smartGrandTotal
-                        ? `⚠️ Bill is ₹${(Number(smartSettleActualBill) - smartGrandTotal).toFixed(0)} more than tracked (check for unlogged txns)`
-                        : `ℹ️ Tracked is ₹${(smartGrandTotal - Number(smartSettleActualBill)).toFixed(0)} more than bill (check dates)`}
+                        ? `Bill is ₹${(Number(smartSettleActualBill) - smartGrandTotal).toFixed(0)} more than tracked (check for unlogged txns)`
+                        : `Tracked is ₹${(smartGrandTotal - Number(smartSettleActualBill)).toFixed(0)} more than bill (check dates)`}
                     </span>
                     <span className="font-bold font-mono">{formatCurrency(Number(smartSettleActualBill), currencyStyle)}</span>
                   </div>
