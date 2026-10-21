@@ -573,6 +573,9 @@ const CreditCards = () => {
       setUnsettledExpenses(prev =>
         prev.map(e => e.id === expense.id ? { ...e, cc_funds_set_aside: newValue } : e)
       );
+      setMasterExpenses(prev =>
+        prev.map(e => e.id === expense.id ? { ...e, cc_funds_set_aside: newValue } : e)
+      );
     } catch (err: any) {
       setError(err.message || "Failed to update funds status");
     }

@@ -72,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             try {
                 const { data, error } = await supabaseAdmin
                     .from('expenses')
-                    .select(
+                    .select(`
                         id,
                         amount,
                         date,
@@ -90,7 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             id,
                             name
                         )
-                    )
+                    `)
                     .eq('user_id', user.id)
                     .eq('paid_via_credit_card', true)
                     .order('date', { ascending: false });
