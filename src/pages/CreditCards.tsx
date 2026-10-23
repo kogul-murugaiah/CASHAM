@@ -110,12 +110,7 @@ const CreditCards = () => {
   });
   const [savingAdvance, setSavingAdvance] = useState(false);
 
-  // CC Advances Settle State
-  const [selectedAdvanceIds, setSelectedAdvanceIds] = useState<string[]>([]);
-  const [showAdvanceSettleModal, setShowAdvanceSettleModal] = useState(false);
-  const [advanceSettleDate, setAdvanceSettleDate] = useState(() => getLocalDateString());
-  const [advanceSettleNotes, setAdvanceSettleNotes] = useState("");
-  const [settlingAdvances, setSettlingAdvances] = useState(false);
+
 
   // Search & Filter State
   const [duesSearch, setDuesSearch] = useState("");
@@ -644,45 +639,7 @@ const CreditCards = () => {
   // Advance selection handlers
   const pendingAdvances = filteredAdvances.filter(a => !(a as any).cc_bill_settled);
 
-  const handleToggleSelectAdvance = (id: string) => {
-    setSelectedAdvanceIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  };
 
-  const selectedAdvancesTotal = advances
-    .filter(a => selectedAdvanceIds.includes(a.id))
-    .reduce((sum, a) => sum + Number(a.amount || 0), 0);
-
-  const handleConfirmSettleAdvances = async () => {
-    if (selectedAdvanceIds.length === 0) return;
-    setSettlingAdvances(true);
-    try {
-      const activeCard = cards.find(c => c.id === activeCardId);
-      const cardName = activeCard?.name || cards[0]?.name || "Credit Card";
-      const cardId = activeCard?.id || cards[0]?.id || null;
-      await settleAdvances({
-        credit_card_id: cardId,
-        credit_card_name: cardName,
-        advance_ids: selectedAdvanceIds,
-        settlement_date: advanceSettleDate,
-        notes: advanceSettleNotes,
-      });
-      setShowAdvanceSettleModal(false);
-      setSelectedAdvanceIds([]);
-      setAdvanceSettleNotes("");
-      setSuccess(`Advances settled! ₹${selectedAdvancesTotal.toFixed(0)} cleared.`);
-      setTimeout(() => setSuccess(""), 4000);
-      fetchAdvances();
-      loadSettlements();
-      loadMasterExpenses();
-      fetchCards();
-    } catch (err: any) {
-      setError(err.message || "Failed to settle advances");
-    } finally {
-      setSettlingAdvances(false);
-    }
-  };
 
   // Helper for due date calculation
   const getDueCountdown = (dueDay: number) => {
@@ -703,7 +660,6 @@ const CreditCards = () => {
   const textMuted = isDark ? "text-slate-500" : "text-slate-400";
   const divider = isDark ? "border-white/10" : "border-slate-200";
   const rowHover = isDark ? "hover:bg-white/5" : "hover:bg-slate-50";
-  const rowSelected = isDark ? "bg-emerald-500/10 hover:bg-emerald-500/15" : "bg-emerald-50 hover:bg-emerald-100/60";
   const theadBg = isDark ? "bg-slate-700/40" : "bg-slate-50";
   const inputClass = isDark
     ? "w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none"
@@ -1144,7 +1100,7 @@ const CreditCards = () => {
                 <p className={`text-sm font-semibold ${isDark ? "text-blue-300" : "text-blue-700"}`}>How CC Advances Work</p>
                 <p className={`text-xs mt-0.5 ${isDark ? "text-blue-300/70" : "text-blue-600/80"}`}>
                   When you pay for someone using your credit card, log it here. Once they pay you back, mark "Cash Received".
-                  After you pay your CC bill, select the advances and click "Settle Advances" — they'll be archived in Settlement History.
+                  When your credit card bill arrives, use "Settle Statement" in the header to settle all card expenses and CC advances up to your statement date in one go.
                 </p>
               </div>
             </div>
@@ -1156,25 +1112,17 @@ const CreditCards = () => {
                   <div>
                     <h3 className={`text-base font-bold flex items-center gap-2 ${textPrimary}`}>
                       Unsettled Advances
-                      <span className={`text-xs font-mono font-normal ${textSecondary}`}>({selectedAdvanceIds.length} of {displayedAdvances.length} selected)</span>
+                      <span className={`text-xs font-mono font-normal px-2 py-0.5 rounded-full ${isDark ? "bg-slate-700 text-slate-300" : "bg-slate-100 text-slate-500"}`}>{displayedAdvances.length} advances</span>
                     </h3>
-                    <p className={`text-xs mt-0.5 ${textSecondary}`}>Select advances included in your paid bill and mark them as settled.</p>
+                    <p className={`text-xs mt-0.5 ${textSecondary}`}>Use <strong>Settle Statement</strong> in the header to settle these advances along with card expenses by date.</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleOpenAdvanceModal}
                       disabled={cards.length === 0}
-                      className={`px-4 py-2.5 rounded-xl border text-xs font-semibold transition-colors flex items-center gap-2 ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"} disabled:opacity-40 disabled:cursor-not-allowed`}
+                      className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       <FiPlus size={14} /> Log Advance
-                    </button>
-                    <button
-                      type="button"
-                      disabled={selectedAdvanceIds.length === 0}
-                      onClick={() => setShowAdvanceSettleModal(true)}
-                      className="btn-primary rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      <FiCheck size={14} /> Settle Advances ({formatCurrency(selectedAdvancesTotal, currencyStyle)})
                     </button>
                   </div>
                 </div>
@@ -1230,20 +1178,6 @@ const CreditCards = () => {
                   <table className="w-full">
                     <thead>
                       <tr className={`border-b text-left text-xs font-semibold uppercase tracking-wider ${textSecondary} ${theadBg} ${divider}`}>
-                        <th className="px-6 py-4 w-12 text-center">
-                          <input
-                            type="checkbox"
-                            checked={displayedAdvances.length > 0 && selectedAdvanceIds.length === displayedAdvances.length}
-                            onChange={() => {
-                              if (selectedAdvanceIds.length === displayedAdvances.length) {
-                                setSelectedAdvanceIds([]);
-                              } else {
-                                setSelectedAdvanceIds(displayedAdvances.map(a => a.id));
-                              }
-                            }}
-                            className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
-                          />
-                        </th>
                         <th className="px-6 py-4">Person</th>
                         <th className="px-6 py-4">Description</th>
                         <th className="px-6 py-4">Card Used</th>
@@ -1254,57 +1188,47 @@ const CreditCards = () => {
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${divider}`}>
-                      {displayedAdvances.map((advance) => {
-                        const isSelected = selectedAdvanceIds.includes(advance.id);
-                        return (
-                          <tr key={advance.id} onClick={() => handleToggleSelectAdvance(advance.id)} className={`cursor-pointer transition-colors ${isSelected ? rowSelected : rowHover}`}>
-                            <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => handleToggleSelectAdvance(advance.id)}
-                                className="w-4 h-4 rounded cursor-pointer accent-emerald-500"
-                              />
-                            </td>
-                            <td className={`px-6 py-4 text-sm font-semibold ${textPrimary}`}>
-                              <div className="flex items-center gap-2">
-                                <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold">
-                                  {advance.person_name[0].toUpperCase()}
-                                </span>
-                                {advance.person_name}
-                              </div>
-                            </td>
-                            <td className={`px-6 py-4 text-sm ${textSecondary}`}>{advance.description || "—"}</td>
-                            <td className="px-6 py-4 text-sm">
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
-                                <FiCreditCard size={12} /> {advance.credit_card_name}
+                      {displayedAdvances.map((advance) => (
+                        <tr key={advance.id} className={`transition-colors ${rowHover}`}>
+                          <td className={`px-6 py-4 text-sm font-semibold ${textPrimary}`}>
+                            <div className="flex items-center gap-2">
+                              <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold">
+                                {advance.person_name[0].toUpperCase()}
                               </span>
-                            </td>
-                            <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(advance.date)}</td>
-                            <td className="px-6 py-4 text-sm font-bold text-blue-500 font-mono">{formatCurrency(advance.amount, currencyStyle)}</td>
-                            <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleToggleReceived(advance)}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                  advance.cash_received
-                                    ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
-                                    : `${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-300 hover:bg-amber-100"}`
-                                }`}
-                              >
-                                {advance.cash_received ? <><FiCheckCircle size={12} /> Received</> : "Pending"}
-                              </button>
-                            </td>
-                            <td className="px-6 py-4 text-center" onClick={e => e.stopPropagation()}>
-                              <button
-                                onClick={() => handleDeleteAdvance(advance.id, advance.person_name)}
-                                className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
-                              >
-                                <FiTrash2 size={14} />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              {advance.person_name}
+                            </div>
+                          </td>
+                          <td className={`px-6 py-4 text-sm ${textSecondary}`}>{advance.description || "—"}</td>
+                          <td className="px-6 py-4 text-sm">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
+                              <FiCreditCard size={12} /> {advance.credit_card_name}
+                            </span>
+                          </td>
+                          <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>{formatDate(advance.date)}</td>
+                          <td className="px-6 py-4 text-sm font-bold text-blue-500 font-mono">{formatCurrency(advance.amount, currencyStyle)}</td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => handleToggleReceived(advance)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                advance.cash_received
+                                  ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
+                                  : `${isDark ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-300 hover:bg-amber-100"}`
+                              }`}
+                            >
+                              {advance.cash_received ? <><FiCheckCircle size={12} /> Received</> : "Pending"}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => handleDeleteAdvance(advance.id, advance.person_name)}
+                              className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
+                              title="Delete advance"
+                            >
+                              <FiTrash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1584,54 +1508,7 @@ const CreditCards = () => {
           </div>
         )}
 
-        {/* ── Settle Advances Modal ── */}
-        {showAdvanceSettleModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className={`max-w-lg w-full p-6 space-y-5 rounded-2xl shadow-2xl ${modalBg}`}>
-              <div className={`flex items-center justify-between border-b pb-3 ${divider}`}>
-                <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}>
-                  <FiCheckCircle className="text-emerald-500" /> Settle CC Advances
-                </h3>
-                <button type="button" onClick={() => setShowAdvanceSettleModal(false)} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"}`}>
-                  <FiX size={16} />
-                </button>
-              </div>
 
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-                <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-emerald-600 font-semibold uppercase">Total Advances Being Settled</span>
-                  <span className={`text-2xl font-bold font-heading ${textPrimary}`}>{formatCurrency(selectedAdvancesTotal, currencyStyle)}</span>
-                </div>
-                <p className={`text-xs ${isDark ? "text-emerald-300/80" : "text-emerald-600/80"}`}>
-                  {selectedAdvanceIds.length} advance{selectedAdvanceIds.length !== 1 ? "s" : ""} — these will be archived in Settlement History.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Bill Payment Date</label>
-                  <input type="date" value={advanceSettleDate} onChange={(e) => setAdvanceSettleDate(e.target.value)} className={inputClass} />
-                </div>
-                <div>
-                  <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Notes (Optional)</label>
-                  <input type="text" placeholder="e.g. Paid via Netbanking" value={advanceSettleNotes} onChange={(e) => setAdvanceSettleNotes(e.target.value)} className={inputClass} />
-                </div>
-              </div>
-
-              <div className={`p-3 rounded-xl text-xs flex items-start gap-2 ${isDark ? "bg-slate-700/40 border border-white/5 text-slate-400" : "bg-slate-50 border border-slate-200 text-slate-500"}`}>
-                <FiInfo className="text-emerald-500 flex-shrink-0 mt-0.5" size={14} />
-                <span>These advances will move to <strong>Settlement History</strong> and will no longer count towards your outstanding dues.</span>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setShowAdvanceSettleModal(false)} className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}>Cancel</button>
-                <button type="button" disabled={settlingAdvances} onClick={handleConfirmSettleAdvances} className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50">
-                  {settlingAdvances ? "Settling..." : "Confirm & Settle"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Add Advance Modal ── */}
         {showAdvanceModal && (
