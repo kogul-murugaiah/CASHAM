@@ -303,54 +303,64 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 pt-8 border-t border-white/5">
-                <div className="flex flex-col justify-end">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Avg Daily Spend</p>
-                  <p className={`text-xl font-bold text-orange-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 pt-8 border-t border-slate-200/60 dark:border-white/5 items-start">
+                <div className="flex flex-col">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Avg Daily Spend</p>
+                  <div className="h-8 flex items-center mt-1">
+                    <p className={`text-xl font-bold text-orange-400 font-mono leading-none ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailySpend, currencyStyle)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base Limit</p>
-                  <p className={`text-xl font-bold text-slate-300 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(baseDailyLimit, currencyStyle)}</p>
+                <div className="flex flex-col">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Base Limit</p>
+                  <div className="h-8 flex items-center mt-1">
+                    <p className={`text-xl font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'} font-mono leading-none ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(baseDailyLimit, currencyStyle)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today's Expense</p>
-                  <p className={`text-xl font-bold text-rose-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(todaySelectedExpenses, currencyStyle)}</p>
+                <div className="flex flex-col">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Today's Expense</p>
+                  <div className="h-8 flex items-center mt-1">
+                    <p className={`text-xl font-bold text-rose-400 font-mono leading-none ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(todaySelectedExpenses, currencyStyle)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
-                  <p className={`text-xl font-bold text-teal-400 font-mono mt-1 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
+                <div className="flex flex-col">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap" title={`${daysRemainingIncludingToday} days remaining`}>Daily Limit Left</p>
+                  <div className="h-8 flex items-center mt-1">
+                    <p className={`text-xl font-bold text-teal-400 font-mono leading-none ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(avgDailyLimitRemaining, currencyStyle)}</p>
+                  </div>
                 </div>
-                <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col justify-end">
-                  <label htmlFor="dashboard-kpi-account-selector" className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">
+                <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col">
+                  <label htmlFor="dashboard-kpi-account-selector" className="text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap block">
                     Account
                   </label>
-                  <div className="relative mt-0.5">
-                    <select
-                      id="dashboard-kpi-account-selector"
-                      value={dailyLimitAccount}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setDailyLimitAccount(val);
-                        localStorage.setItem("dashboard_daily_limit_account", val);
-                      }}
-                      className={`w-full font-bold text-xs sm:text-sm py-1.5 px-3 rounded-xl border outline-none transition-all cursor-pointer appearance-none truncate pr-8 shadow-sm ${
-                        isDark
-                          ? "bg-slate-800/90 hover:bg-slate-700/90 text-white border-white/10 hover:border-emerald-500/40 focus:border-emerald-500"
-                          : "bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-emerald-500/40 focus:border-emerald-500"
-                      }`}
-                      title="Filter daily limits by account"
-                    >
-                      <option value="All" className={isDark ? "bg-slate-900 text-white font-medium" : "bg-white text-slate-900 font-medium"}>
-                        All Accounts
-                      </option>
-                      {accountTypes.map((type) => (
-                        <option key={type} value={type} className={isDark ? "bg-slate-900 text-white font-medium" : "bg-white text-slate-900 font-medium"}>
-                          {type}
+                  <div className="h-8 flex items-center mt-1">
+                    <div className="relative w-full">
+                      <select
+                        id="dashboard-kpi-account-selector"
+                        value={dailyLimitAccount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setDailyLimitAccount(val);
+                          localStorage.setItem("dashboard_daily_limit_account", val);
+                        }}
+                        className={`w-full h-8 font-bold text-xs sm:text-sm px-3 rounded-xl border outline-none transition-all cursor-pointer appearance-none truncate pr-8 shadow-sm ${
+                          isDark
+                            ? "bg-slate-800/90 hover:bg-slate-700/90 text-white border-white/10 hover:border-emerald-500/40 focus:border-emerald-500"
+                            : "bg-white hover:bg-slate-50 text-slate-800 border-slate-200 hover:border-emerald-500/40 focus:border-emerald-500"
+                        }`}
+                        title="Filter daily limits by account"
+                      >
+                        <option value="All" className={isDark ? "bg-slate-900 text-white font-medium" : "bg-white text-slate-900 font-medium"}>
+                          All Accounts
                         </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
-                      <FiChevronDown size={14} />
+                        {accountTypes.map((type) => (
+                          <option key={type} value={type} className={isDark ? "bg-slate-900 text-white font-medium" : "bg-white text-slate-900 font-medium"}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                        <FiChevronDown size={14} />
+                      </div>
                     </div>
                   </div>
                 </div>
