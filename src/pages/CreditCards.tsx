@@ -20,6 +20,7 @@ import {
   FiInfo,
   FiLayers,
   FiUsers,
+  FiDownload,
 } from "react-icons/fi";
 
 type UnsettledExpense = {
@@ -322,6 +323,57 @@ const CreditCards = () => {
 
     return list;
   }, [unifiedMasterTransactions, masterFilterCard, activeCardId, masterFilterType, masterFilterStatus, masterSearch, cards]);
+
+  // Export current filtered master statement as CSV
+  const handleExportCSV = () => {
+    if (displayedMasterTransactions.length === 0) return;
+
+    const headers = [
+      "Date",
+      "Type",
+      "Title / Item",
+      "Description",
+      "Card Used",
+      "Budget Account",
+      "Category",
+      "Amount (INR)",
+      "Settlement Status",
+      "Funds / Cash Status"
+    ];
+
+    const rows = displayedMasterTransactions.map((t) => [
+      t.date,
+      t.type === "expense" ? "Card Purchase" : "CC Advance",
+      t.title || "",
+      t.description || "",
+      t.credit_card_name || "Credit Card",
+      t.account_type || "",
+      t.category || "",
+      t.amount,
+      t.settled ? "Settled" : "Active Due",
+      t.type === "expense"
+        ? (t.funds_set_aside ? "Funds Moved" : "Funds Pending")
+        : (t.cash_received ? "Cash Received" : "Cash Pending")
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+    ].join("\r\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const cardSlug = masterFilterCard !== "all"
+      ? (cards.find(c => c.id === masterFilterCard)?.name || "Card").replace(/[^a-zA-Z0-9]/g, "_")
+      : "All_Cards";
+    link.download = `CC_Statement_${cardSlug}_${getLocalDateString()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const masterStats = useMemo(() => {
     const totalAmount = displayedMasterTransactions.reduce((s, t) => s + t.amount, 0);
@@ -1289,6 +1341,17 @@ const CreditCards = () => {
                     <p className={`text-xs mt-0.5 ${textSecondary}`}>
                       Unified chronological activity statement of card purchases and CC advances across all cards.
                     </p>
+                  </div>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={handleExportCSV}
+                      disabled={displayedMasterTransactions.length === 0}
+                      className="btn-primary rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                      title="Download current filtered statement as CSV"
+                    >
+                      <FiDownload size={14} /> Export Statement (CSV)
+                    </button>
                   </div>
                 </div>
 

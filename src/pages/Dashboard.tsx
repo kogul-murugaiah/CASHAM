@@ -5,7 +5,8 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown, FiCreditCard } from "react-icons/fi";
+import type { CreditCard } from "../hooks/useCreditCards";
 import { useTasks, getLocalDateStr } from "../hooks/useTasks";
 import {
   BarChart,
@@ -77,6 +78,7 @@ const Dashboard = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -142,7 +144,11 @@ const Dashboard = () => {
         setExpenses(data.expenses || []);
         setTransfers(data.transfers || []);
 
-        const goalsData = await api.get('/api/goals');
+        const [cardsData, goalsData] = await Promise.all([
+          api.get('/api/credit-cards').catch(() => []),
+          api.get('/api/goals').catch(() => [])
+        ]);
+        setCreditCards(cardsData || []);
         setGoals(goalsData || []);
       } catch (err: any) {
         setError(err.message || "Failed to fetch data");
@@ -152,6 +158,39 @@ const Dashboard = () => {
     };
     fetchData();
   }, [currentYear, currentMonth, accountTypes]);
+  // ── Due-Soon Credit Card Alerts (within 5 days with pending dues) ────────
+  const dueSoonCards = useMemo(() => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const totalDaysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+
+    return creditCards
+      .filter(card => {
+        const dues = Number(card.total_dues || 0);
+        if (dues <= 0) return false;
+        const dueDay = card.payment_due_day;
+        if (!dueDay) return false;
+
+        let daysLeft = dueDay - currentDay;
+        if (daysLeft < 0) {
+          daysLeft = totalDaysInMonth - currentDay + dueDay;
+        }
+        return daysLeft <= 5;
+      })
+      .map(card => {
+        const dueDay = card.payment_due_day || 20;
+        let daysLeft = dueDay - currentDay;
+        if (daysLeft < 0) {
+          daysLeft = totalDaysInMonth - currentDay + dueDay;
+        }
+        return {
+          ...card,
+          daysUntilDue: daysLeft
+        };
+      })
+      .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+  }, [creditCards]);
+
   // Derived state
   const monthlyIncome = income.reduce((sum, inc) => sum + inc.amount, 0);
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -266,6 +305,64 @@ const Dashboard = () => {
         {error && <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-6 text-red-300"><p className="font-bold mb-1 font-heading text-lg">System Error</p><p className="text-sm">{error}</p></div>}
 
         <div className="space-y-8 animate-fade-in">
+          {/* 💳 Bill Due-Date Alert Banner */}
+          {dueSoonCards.length > 0 && (
+            <div className="space-y-3">
+              {dueSoonCards.map(card => {
+                const daysLeft = card.daysUntilDue;
+                const dueText = daysLeft === 0
+                  ? "due today"
+                  : daysLeft === 1
+                  ? "due tomorrow"
+                  : `due in ${daysLeft} days`;
+
+                return (
+                  <div
+                    key={card.id}
+                    onClick={() => navigate('/credit-cards')}
+                    className={`cursor-pointer rounded-2xl p-4 sm:p-5 border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:scale-[1.005] group ${
+                      isDark
+                        ? "bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/15"
+                        : "bg-amber-50/90 border-amber-200 hover:bg-amber-100/70"
+                    }`}
+                    title="Click to view and settle card dues"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2.5 rounded-xl transition-transform group-hover:scale-105 ${isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-700"}`}>
+                        <FiCreditCard size={22} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? "text-amber-400" : "text-amber-800"}`}>
+                            Bill Due Alert
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            daysLeft <= 1
+                              ? "bg-rose-500/15 text-rose-500 border border-rose-500/25"
+                              : "bg-amber-500/15 text-amber-500 border border-amber-500/25"
+                          }`}>
+                            {daysLeft === 0 ? "Due Today" : daysLeft === 1 ? "Due Tomorrow" : `${daysLeft} Days Left`}
+                          </span>
+                        </div>
+                        <p className={`text-sm sm:text-base font-bold mt-0.5 ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                          <span className="font-extrabold">{card.name}</span> bill payment {dueText}{" "}
+                          <span className="font-mono text-amber-500">
+                            ({formatCurrency(card.total_dues || 0, currencyStyle)} pending)
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto text-xs font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-0.5 transition-transform">
+                      <span>Settle in Credit Cards</span>
+                      <FiArrowRight size={14} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Monthly Net Balance Master Card */}
           <div className="glass-card p-10 relative overflow-hidden group border-emerald-500/10 bg-slate-800/20">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-64 h-64 rounded-full bg-emerald-500 blur-3xl" /></div>
