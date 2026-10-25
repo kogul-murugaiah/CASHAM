@@ -36,6 +36,14 @@
     -webkit-font-smoothing: antialiased;
     selection-background-color: rgba(16, 185, 129, 0.3);
   }
+
+  /* Contrast safety baseline: headings in light mode must never render invisible white text */
+  html:not(.dark) h1:where(.text-white),
+  html:not(.dark) h2:where(.text-white),
+  html:not(.dark) h3:where(.text-white),
+  html:not(.dark) h4:where(.text-white) {
+    color: #0f172a;
+  }
 }
 
 @layer components {

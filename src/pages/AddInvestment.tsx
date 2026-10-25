@@ -201,8 +201,8 @@ const AddInvestment = () => {
               <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold font-heading text-white mb-2">Log Investment</h1>
-          <p className="text-slate-400">Track your MF, Stock, Gold, FD, and Real Estate holdings.</p>
+          <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white mb-2">Log Investment</h1>
+          <p className="text-slate-500 dark:text-slate-400">Track your MF, Stock, Gold, FD, and Real Estate holdings.</p>
         </header>
 
         {error && <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm text-center">{error}</div>}

@@ -154,12 +154,12 @@ export default function SavingsGoals() {
         <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between animate-fade-in">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="p-2 bg-emerald-500/10 rounded-lg">
+              <span className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><circle cx="12" cy="12" r="10" /><path d="m16 10-5.5 5.5L8 13" /></svg>
               </span>
-              <h1 className="text-3xl font-bold font-heading text-white">Savings Goals</h1>
+              <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">Savings Goals</h1>
             </div>
-            <p className="text-slate-400">Track progress toward your financial targets.</p>
+            <p className="text-slate-500 dark:text-slate-400">Track progress toward your financial targets.</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}

@@ -60,8 +60,8 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
           : isConfirming
           ? "border-emerald-500/40 shadow-lg shadow-emerald-500/10"
           : item.status === "paid"
-          ? "border-emerald-500/15 bg-emerald-500/5"
-          : "border-white/8 bg-slate-700/40 hover:bg-slate-700/60"
+          ? "border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-500/5"
+          : "border-slate-200 dark:border-white/8 bg-white dark:bg-slate-700/40 hover:bg-slate-50 dark:hover:bg-slate-700/60 shadow-sm"
       } group`}
     >
       {isEditing ? (
@@ -75,10 +75,10 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
               if (e.key === "Enter") submitEdit();
               if (e.key === "Escape") cancelEdit();
             }}
-            className="flex-1 bg-slate-800/80 border border-sky-500/30 text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500/40 font-medium"
+            className="flex-1 bg-white dark:bg-slate-800/80 border border-sky-500/30 text-slate-900 dark:text-white text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500/40 font-medium shadow-sm"
             placeholder="Item name"
           />
-          <div className="flex items-center gap-1.5 bg-slate-800/80 border border-sky-500/30 rounded-lg px-3 py-1.5">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800/80 border border-sky-500/30 rounded-lg px-3 py-1.5 shadow-sm">
             <span className="text-slate-400 text-sm font-bold">₹</span>
             <input
               type="number"
@@ -88,7 +88,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
                 if (e.key === "Enter") submitEdit();
                 if (e.key === "Escape") cancelEdit();
               }}
-              className="w-24 bg-transparent text-white font-mono text-sm font-bold focus:outline-none"
+              className="w-24 bg-transparent text-slate-900 dark:text-white font-mono text-sm font-bold focus:outline-none"
             />
           </div>
           <div className="flex gap-1.5">
@@ -101,7 +101,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
             </button>
             <button
               onClick={cancelEdit}
-              className="p-1.5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white rounded-md transition-colors"
+              className="p-1.5 bg-slate-100 dark:bg-white/5 text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white rounded-md transition-colors"
               title="Cancel"
             >
               <FiX size={15} />
@@ -114,7 +114,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
             {item.status === "planned" ? (
               <button
                 onClick={() => onRequestMarkPaid(item)}
-                className="flex-shrink-0 w-5 h-5 rounded border-2 border-slate-400 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all flex items-center justify-center text-transparent hover:text-emerald-500"
+                className="flex-shrink-0 w-5 h-5 rounded border-2 border-slate-300 dark:border-slate-400 hover:border-emerald-500 hover:bg-emerald-500/10 transition-all flex items-center justify-center text-transparent hover:text-emerald-500"
                 title="Mark as Paid"
               >
                 <FiCheck size={12} strokeWidth={3} />
@@ -130,7 +130,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
             )}
             <span
               className={`text-sm font-medium truncate ${
-                item.status === "paid" ? "text-slate-400 line-through decoration-slate-400" : "text-slate-100"
+                item.status === "paid" ? "text-slate-400 line-through decoration-slate-400" : "text-slate-900 dark:text-slate-100"
               }`}
             >
               {item.name}
@@ -140,17 +140,17 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
             <div className="text-right">
               {amountDiffers ? (
                 <>
-                  <span className="text-[10px] text-slate-500 line-through font-mono block leading-none">
+                  <span className="text-[10px] text-slate-400 line-through font-mono block leading-none">
                     {currencyFormatter.format(parseNum(item.amount))}
                   </span>
-                  <span className="text-sm font-bold font-mono text-emerald-400">
+                  <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400">
                     {currencyFormatter.format(parseNum(item.paid_amount))}
                   </span>
                 </>
               ) : (
                 <span
                   className={`text-sm font-bold font-mono ${
-                    item.status === "paid" ? "text-emerald-400" : "text-slate-200"
+                    item.status === "paid" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-200"
                   }`}
                 >
                   {currencyFormatter.format(effectiveAmount)}
@@ -160,8 +160,8 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
             <span
               className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
                 item.status === "paid"
-                  ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/30"
-                  : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
               }`}
             >
               {item.status}
@@ -173,7 +173,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
                   setEditName(item.name);
                   setEditAmount(String(item.amount));
                 }}
-                className="text-slate-500 hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-all p-1 flex-shrink-0"
+                className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-all p-1 flex-shrink-0"
                 title="Edit item"
               >
                 <FiEdit2 size={13} />
@@ -181,7 +181,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
             )}
             <button
               onClick={() => onDeleteItem(categoryId, item.id)}
-              className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 flex-shrink-0"
+              className="text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1 flex-shrink-0"
               title="Delete item"
             >
               <FiTrash2 size={14} />
@@ -194,7 +194,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
         <div className="border-t border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1">
-              <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2 uppercase tracking-widest">
                 How much did you actually spend?
               </p>
               <div className="flex items-center gap-2">
@@ -203,10 +203,10 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
                   type="number"
                   value={confirmAmount}
                   onChange={(e) => setConfirmAmount(e.target.value)}
-                  className="bg-slate-700/50 border border-emerald-500/30 text-white font-mono font-bold rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+                  className="bg-white dark:bg-slate-700/50 border border-emerald-500/30 text-slate-900 dark:text-white font-mono font-bold rounded-lg px-3 py-1.5 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm"
                   autoFocus
                 />
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">
                   Planned: {currencyFormatter.format(item.amount)}
                 </span>
               </div>
@@ -220,7 +220,7 @@ export const BudgetItemRow: React.FC<BudgetItemRowProps> = ({
               </button>
               <button
                 onClick={onCancelConfirm}
-                className="px-3 py-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium rounded-lg transition-colors border border-white/5"
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-medium rounded-lg transition-colors border border-slate-200 dark:border-white/5"
               >
                 Cancel
               </button>

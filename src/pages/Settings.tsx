@@ -349,8 +349,8 @@ const Settings = () => {
     <div className="pb-24 pt-8 md:pb-8 animate-fade-in text-left">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <header className="mb-8">
-          <p className="text-slate-400 font-medium text-sm uppercase tracking-wider mb-1">Configuration</p>
-          <h1 className="text-4xl font-bold font-heading text-white">Settings</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm uppercase tracking-wider mb-1">Configuration</p>
+          <h1 className="text-4xl font-bold font-heading text-slate-900 dark:text-white">Settings</h1>
         </header>
 
         <div className="flex flex-col gap-8">

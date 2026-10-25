@@ -85,9 +85,9 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
   };
 
   return (
-    <div className="glass-card mb-6 border-white/5 overflow-hidden">
+    <div className="glass-card mb-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-800/40 overflow-hidden shadow-sm">
       {/* Category header */}
-      <div className="bg-slate-700/30 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5">
+      <div className="bg-slate-50 dark:bg-slate-700/30 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/5">
         <div className="group/name">
           {isEditingName ? (
             <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
                   if (e.key === "Enter") submitNameEdit();
                   if (e.key === "Escape") cancelNameEdit();
                 }}
-                className="text-xl font-bold bg-slate-800/80 border border-sky-500/40 text-white font-heading rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-sky-500/40 w-full max-w-xs"
+                className="text-xl font-bold bg-white dark:bg-slate-800/80 border border-sky-500/40 text-slate-900 dark:text-white font-heading rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-sky-500/40 w-full max-w-xs shadow-sm"
               />
               <button
                 onClick={submitNameEdit}
@@ -120,7 +120,7 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
           ) : (
             <div className="flex items-center gap-2">
               <h3
-                className="text-xl font-bold text-white font-heading cursor-pointer hover:text-sky-300 transition-colors"
+                className="text-xl font-bold text-slate-900 dark:text-white font-heading cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                 onDoubleClick={() => {
                   setIsEditingName(true);
                   setEditCategoryName(category.name);
@@ -134,7 +134,7 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
                   setIsEditingName(true);
                   setEditCategoryName(category.name);
                 }}
-                className="p-1 text-slate-600 hover:text-sky-400 opacity-0 group-hover/name:opacity-100 transition-all rounded"
+                className="p-1 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 opacity-0 group-hover/name:opacity-100 transition-all rounded"
                 title="Rename category"
               >
                 <FiEdit2 size={13} />
@@ -154,7 +154,7 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
                     if (e.key === "Enter") submitAmountEdit();
                     if (e.key === "Escape") cancelAmountEdit();
                   }}
-                  className="w-28 bg-slate-800/80 border border-sky-500/40 text-white font-mono font-bold text-sm rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+                  className="w-28 bg-white dark:bg-slate-800/80 border border-sky-500/40 text-slate-900 dark:text-white font-mono font-bold text-sm rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-sky-500/40 shadow-sm"
                 />
                 <button
                   onClick={submitAmountEdit}
@@ -165,7 +165,7 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
                 </button>
                 <button
                   onClick={cancelAmountEdit}
-                  className="p-1 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white rounded transition-colors"
+                  className="p-1 bg-slate-100 dark:bg-white/5 text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white rounded transition-colors"
                   title="Cancel"
                 >
                   <FiX size={13} />
@@ -173,15 +173,15 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
               </div>
             ) : (
               <>
-                <p className="text-sm text-slate-400">
-                  Budget: <strong className="text-emerald-400">{currencyFormatter.format(catAllocated)}</strong>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Budget: <strong className="text-emerald-600 dark:text-emerald-400">{currencyFormatter.format(catAllocated)}</strong>
                 </p>
                 <button
                   onClick={() => {
                     setIsEditingAmount(true);
                     setEditCategoryAmount(String(category.allocated_amount));
                   }}
-                  className="p-0.5 text-slate-500 hover:text-sky-400 opacity-0 group-hover/amount:opacity-100 transition-all rounded"
+                  className="p-0.5 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 opacity-0 group-hover/amount:opacity-100 transition-all rounded"
                   title="Edit budget amount"
                 >
                   <FiEdit2 size={12} />
@@ -192,21 +192,21 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
         </div>
 
         <div className="flex flex-wrap gap-3 text-xs font-medium">
-          <div className="glass-card px-4 py-2.5 border-white/5 bg-slate-700/40 !rounded-xl !shadow-none hover:!shadow-none">
-            <span className="text-slate-500 block mb-0.5 text-[10px] uppercase tracking-widest">Actual Balance</span>
-            <span className={`text-sm font-bold font-mono ${actualBalance < 0 ? "text-red-400" : "text-white"}`}>
+          <div className="glass-card px-4 py-2.5 border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-700/40 !rounded-xl !shadow-none hover:!shadow-none">
+            <span className="text-slate-400 dark:text-slate-500 block mb-0.5 text-[10px] uppercase tracking-widest font-semibold">Actual Balance</span>
+            <span className={`text-sm font-bold font-mono ${actualBalance < 0 ? "text-red-500 dark:text-red-400" : "text-slate-900 dark:text-white"}`}>
               {currencyFormatter.format(actualBalance)}
             </span>
           </div>
-          <div className="glass-card px-4 py-2.5 border-white/5 bg-slate-700/40 !rounded-xl !shadow-none hover:!shadow-none">
-            <span className="text-slate-500 block mb-0.5 text-[10px] uppercase tracking-widest">Projected</span>
-            <span className={`text-sm font-bold font-mono ${projBalance < 0 ? "text-orange-400" : "text-white"}`}>
+          <div className="glass-card px-4 py-2.5 border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-700/40 !rounded-xl !shadow-none hover:!shadow-none">
+            <span className="text-slate-400 dark:text-slate-500 block mb-0.5 text-[10px] uppercase tracking-widest font-semibold">Projected</span>
+            <span className={`text-sm font-bold font-mono ${projBalance < 0 ? "text-orange-500 dark:text-orange-400" : "text-slate-900 dark:text-white"}`}>
               {currencyFormatter.format(projBalance)}
             </span>
           </div>
           <button
             onClick={() => handleDeleteCategory(category.id)}
-            className="p-2 text-slate-500 hover:text-red-400 transition-colors bg-white/5 rounded-lg flex self-center"
+            className="p-2 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 transition-colors bg-slate-100 dark:bg-white/5 rounded-lg flex self-center"
             title="Delete category"
           >
             <FiTrash2 size={16} />
@@ -215,13 +215,13 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
       </div>
 
       {/* Account assignment row */}
-      <div className="px-5 py-2.5 border-b border-white/5 flex items-center gap-3 bg-slate-800/20">
-        <FiCreditCard size={13} className="text-slate-500 flex-shrink-0" />
-        <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Account</span>
+      <div className="px-5 py-2.5 border-b border-slate-200 dark:border-white/5 flex items-center gap-3 bg-slate-50/70 dark:bg-slate-800/20">
+        <FiCreditCard size={13} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
+        <span className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold">Account</span>
         <select
           value={category.account_name || ""}
           onChange={(e) => handleUpdateCategoryAccount(category.id, e.target.value || null)}
-          className="ml-auto text-xs font-semibold bg-slate-800/60 border border-white/10 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer"
+          className="ml-auto text-xs font-semibold bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer shadow-sm"
         >
           <option value="">— Unassigned —</option>
           {accountTypes.map((acc) => (
@@ -259,47 +259,47 @@ export const BudgetCategoryCard: React.FC<BudgetCategoryCardProps> = ({
             })}
           </div>
         ) : (
-          <p className="text-sm text-slate-500 mb-4 px-2">No planned expenses in this category yet.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mb-4 px-2">No planned expenses in this category yet.</p>
         )}
 
         {!isAdding ? (
           <button
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 font-medium px-2 py-1 transition-colors"
+            className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium px-2 py-1 transition-colors"
           >
             <FiPlus size={16} /> Add Expense Item
           </button>
         ) : (
-          <div className="flex items-center gap-3 bg-slate-800/80 p-3 rounded-xl border border-emerald-500/20">
+          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-emerald-500/20 shadow-sm">
             <input
               type="text"
               placeholder="Item Name (e.g. Rent)"
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
-              className="flex-1 bg-transparent border-none text-sm text-white focus:outline-none placeholder-slate-500"
+              className="flex-1 bg-transparent border-none text-sm text-slate-900 dark:text-white focus:outline-none placeholder-slate-400"
               autoFocus
             />
-            <div className="flex items-center gap-2 border-l border-white/10 pl-3">
-              <span className="text-slate-500 text-sm">₹</span>
+            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-white/10 pl-3">
+              <span className="text-slate-400 text-sm font-bold">₹</span>
               <input
                 type="number"
                 placeholder="0"
                 value={newItemAmount}
                 onChange={(e) => setNewItemAmount(e.target.value)}
-                className="w-20 bg-transparent border-none text-sm font-mono text-white focus:outline-none placeholder-slate-500"
+                className="w-20 bg-transparent border-none text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none placeholder-slate-400"
               />
             </div>
             <div className="flex gap-1 ml-2">
               <button
                 onClick={submitAddItem}
-                className="p-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-md transition-colors"
+                className="p-1.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-md transition-colors"
                 title="Save"
               >
                 <FiCheck size={16} />
               </button>
               <button
                 onClick={() => setIsAdding(false)}
-                className="p-1.5 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white rounded-md transition-colors"
+                className="p-1.5 bg-slate-200/60 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors"
                 title="Cancel"
               >
                 <FiX size={16} />

@@ -198,9 +198,9 @@ export default function Ledger() {
                             <span className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
                                 <FiUsers className="text-emerald-500 text-xl" strokeWidth={2.5} />
                             </span>
-                            <h1 className="text-3xl font-bold font-heading text-white">Ledger</h1>
+                            <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">Ledger</h1>
                         </div>
-                        <p className="text-slate-400">Track who owes you and whom you owe.</p>
+                        <p className="text-slate-500 dark:text-slate-400">Track who owes you and whom you owe.</p>
                     </div>
 
                     {!isAddingContact && (
@@ -213,25 +213,25 @@ export default function Ledger() {
                     )}
                 </div>
 
-                {error && <div className="mb-6 p-4 glass-card bg-red-500/10 border-red-500/20 text-red-400 text-sm">{error}</div>}
+                {error && <div className="mb-6 p-4 glass-card bg-red-500/10 border-red-500/20 text-red-500 dark:text-red-400 text-sm">{error}</div>}
 
                 {/* Dashboard Summary */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 animate-fade-in">
-                    <div className="glass-card p-6 border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden">
+                    <div className="glass-card p-6 border border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-500/5 relative overflow-hidden shadow-sm">
                         <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
-                        <p className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-2">Total You Are Owed</p>
-                        <p className="text-3xl font-bold font-mono text-emerald-300">{currencyFormatter.format(totalYouAreOwed)}</p>
+                        <p className="text-xs uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-bold mb-2">Total You Are Owed</p>
+                        <p className="text-3xl font-bold font-mono text-emerald-800 dark:text-emerald-300">{currencyFormatter.format(totalYouAreOwed)}</p>
                     </div>
-                    <div className="glass-card p-6 border-orange-500/20 bg-orange-500/5 relative overflow-hidden">
+                    <div className="glass-card p-6 border border-orange-500/20 bg-orange-500/10 dark:bg-orange-500/5 relative overflow-hidden shadow-sm">
                         <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"></div>
-                        <p className="text-xs uppercase tracking-widest text-orange-400 font-bold mb-2">Total You Owe</p>
-                        <p className="text-3xl font-bold font-mono text-orange-300">{currencyFormatter.format(totalYouOwe)}</p>
+                        <p className="text-xs uppercase tracking-widest text-orange-700 dark:text-orange-400 font-bold mb-2">Total You Owe</p>
+                        <p className="text-3xl font-bold font-mono text-orange-800 dark:text-orange-300">{currencyFormatter.format(totalYouOwe)}</p>
                     </div>
                 </div>
 
                 {/* Add Contact Inline Form */}
                 {isAddingContact && (
-                    <div className="mb-8 glass-card p-5 border-emerald-500/30 bg-slate-800/80 flex items-center gap-3 animate-slide-up">
+                    <div className="mb-8 glass-card p-5 border border-emerald-500/30 bg-white dark:bg-slate-800/80 flex items-center gap-3 animate-slide-up shadow-sm">
                         <input 
                             type="text" 
                             placeholder="Friend's Name" 
@@ -239,24 +239,24 @@ export default function Ledger() {
                             onChange={e => setNewContactName(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleAddContact()}
                             autoFocus
-                            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                            className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                         />
                         <button onClick={handleAddContact} disabled={!newContactName.trim()} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all disabled:opacity-50">Save</button>
-                        <button onClick={() => setIsAddingContact(false)} className="p-2.5 text-slate-400 hover:text-white bg-white/5 rounded-xl"><FiX size={20} /></button>
+                        <button onClick={() => setIsAddingContact(false)} className="p-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-white bg-slate-100 dark:bg-white/5 rounded-xl"><FiX size={20} /></button>
                     </div>
                 )}
 
                 {/* Contacts List */}
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-800/50 animate-pulse rounded-2xl border border-white/5"></div>)}
+                        {[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-200 dark:bg-slate-800/50 animate-pulse rounded-2xl border border-slate-200 dark:border-white/5"></div>)}
                     </div>
                 ) : contacts.length === 0 ? (
-                    <div className="text-center py-16 glass-card border-white/5 border-dashed">
-                        <FiUsers className="mx-auto text-4xl text-slate-600 mb-4" />
-                        <h3 className="text-lg font-bold text-white mb-2">No contacts yet</h3>
-                        <p className="text-slate-400 text-sm max-w-sm mx-auto mb-6">Add friends, family, or colleagues to start tracking shared expenses or IOUs.</p>
-                        <button onClick={() => setIsAddingContact(true)} className="px-6 py-2.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white font-medium rounded-xl transition-all border border-emerald-500/20">Add First Contact</button>
+                    <div className="text-center py-16 glass-card bg-white/40 dark:bg-slate-800/20 border-slate-200 dark:border-white/5 border-dashed rounded-2xl">
+                        <FiUsers className="mx-auto text-4xl text-slate-400 dark:text-slate-600 mb-4" />
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No contacts yet</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mx-auto mb-6">Add friends, family, or colleagues to start tracking shared expenses or IOUs.</p>
+                        <button onClick={() => setIsAddingContact(true)} className="px-6 py-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white font-medium rounded-xl transition-all border border-emerald-500/20">Add First Contact</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
@@ -264,29 +264,29 @@ export default function Ledger() {
                             <div 
                                 key={contact.id} 
                                 onClick={() => setSelectedContact(contact)}
-                                className="glass-card p-5 cursor-pointer hover:bg-slate-700/60 transition-all border-white/5 hover:border-emerald-500/30 group"
+                                className="glass-card p-5 cursor-pointer bg-white dark:bg-slate-800/40 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-all border border-slate-200 dark:border-white/5 hover:border-emerald-500/40 shadow-sm group"
                             >
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600/80 to-teal-800/80 flex items-center justify-center text-lg font-bold text-white shadow-inner">
                                         {contact.name.charAt(0).toUpperCase()}
                                     </div>
-                                    <button onClick={(e) => handleDeleteContact(contact.id, e)} className="p-1.5 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg hover:bg-white/5">
+                                    <button onClick={(e) => handleDeleteContact(contact.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg hover:bg-slate-100 dark:hover:bg-white/5">
                                         <FiTrash2 size={15} />
                                     </button>
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-1">{contact.name}</h3>
-                                <div className="mt-4 pt-4 border-t border-white/5">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{contact.name}</h3>
+                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
                                     {contact.net_balance === 0 ? (
-                                        <span className="text-sm font-medium text-slate-400 flex items-center gap-1.5"><FiCheckCircle size={14} className="text-emerald-500" /> Settled up</span>
+                                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><FiCheckCircle size={14} className="text-emerald-500" /> Settled up</span>
                                     ) : contact.net_balance > 0 ? (
                                         <div className="text-sm">
-                                            <span className="text-emerald-400 font-medium text-[11px] uppercase tracking-wider block mb-0.5">Owes you</span>
-                                            <span className="text-emerald-400 font-bold font-mono text-lg">{currencyFormatter.format(contact.net_balance)}</span>
+                                            <span className="text-emerald-700 dark:text-emerald-400 font-medium text-[11px] uppercase tracking-wider block mb-0.5">Owes you</span>
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono text-lg">{currencyFormatter.format(contact.net_balance)}</span>
                                         </div>
                                     ) : (
                                         <div className="text-sm">
-                                            <span className="text-orange-400 font-medium text-[11px] uppercase tracking-wider block mb-0.5">You owe</span>
-                                            <span className="text-orange-400 font-bold font-mono text-lg">{currencyFormatter.format(Math.abs(contact.net_balance))}</span>
+                                            <span className="text-orange-700 dark:text-orange-400 font-medium text-[11px] uppercase tracking-wider block mb-0.5">You owe</span>
+                                            <span className="text-orange-600 dark:text-orange-400 font-bold font-mono text-lg">{currencyFormatter.format(Math.abs(contact.net_balance))}</span>
                                         </div>
                                     )}
                                 </div>
@@ -304,63 +304,63 @@ export default function Ledger() {
                     <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedContact(null)}></div>
                     
                     {/* Drawer */}
-                    <div className="relative w-full md:w-[480px] h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+                    <div className="relative w-full md:w-[480px] h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
                         
                         {/* Drawer Header */}
-                        <div className="p-6 border-b border-white/5 bg-slate-800/30 flex justify-between items-start">
+                        <div className="p-6 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/30 flex justify-between items-start">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center text-xl font-bold text-white shadow-lg">
                                     {selectedContact.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white">{selectedContact.name}</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{selectedContact.name}</h2>
                                     {selectedContact.net_balance === 0 ? (
-                                        <p className="text-sm text-slate-400">Settled up</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">Settled up</p>
                                     ) : selectedContact.net_balance > 0 ? (
-                                        <p className="text-sm text-emerald-400 font-medium">Owes you <span className="font-bold font-mono">{currencyFormatter.format(selectedContact.net_balance)}</span></p>
+                                        <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Owes you <span className="font-bold font-mono">{currencyFormatter.format(selectedContact.net_balance)}</span></p>
                                     ) : (
-                                        <p className="text-sm text-orange-400 font-medium">You owe <span className="font-bold font-mono">{currencyFormatter.format(Math.abs(selectedContact.net_balance))}</span></p>
+                                        <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">You owe <span className="font-bold font-mono">{currencyFormatter.format(Math.abs(selectedContact.net_balance))}</span></p>
                                     )}
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedContact(null)} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-xl"><FiX size={20} /></button>
+                            <button onClick={() => setSelectedContact(null)} className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white bg-slate-100 dark:bg-white/5 rounded-xl"><FiX size={20} /></button>
                         </div>
 
                         {/* Add Transaction Section */}
-                        <div className="p-6 border-b border-white/5 bg-slate-800/10">
+                        <div className="p-6 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-800/10">
                             <form onSubmit={handleAddTransaction} className="space-y-4">
-                                <div className="flex gap-2 p-1 bg-slate-800 rounded-xl border border-white/5">
+                                <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/5">
                                     <button 
                                         type="button" 
                                         onClick={() => setTxType('gave')} 
-                                        className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${txType === 'gave' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
+                                        className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${txType === 'gave' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                                     >
                                         <FiArrowUpRight size={16} /> I Gave
                                     </button>
                                     <button 
                                         type="button" 
                                         onClick={() => setTxType('got')} 
-                                        className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${txType === 'got' ? 'bg-orange-500/20 text-orange-400' : 'text-slate-400 hover:text-white'}`}
+                                        className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${txType === 'got' ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
                                     >
                                         <FiArrowDownLeft size={16} /> I Got
                                     </button>
                                 </div>
                                 <div className="flex gap-3">
                                     <div className="relative flex-1">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                                         <input 
                                             type="number" 
                                             placeholder="Amount" 
                                             value={txAmount} onChange={e => setTxAmount(e.target.value)}
                                             required
-                                            className="w-full pl-8 pr-3 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-500/50"
+                                            className="w-full pl-8 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none focus:border-emerald-500/50"
                                         />
                                     </div>
                                     <input 
-                                        type="date"
+                                        type="date" 
                                         value={txDate} onChange={e => setTxDate(e.target.value)}
                                         style={{ colorScheme: theme }}
-                                        className="w-36 px-3 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500/50"
+                                        className="w-36 px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50"
                                     />
                                 </div>
                                 <div className="flex gap-3">
@@ -368,7 +368,7 @@ export default function Ledger() {
                                         type="text" 
                                         placeholder="What was this for? (optional)" 
                                         value={txNote} onChange={e => setTxNote(e.target.value)}
-                                        className="flex-1 px-4 py-2.5 bg-slate-900 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500/50"
+                                        className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:border-emerald-500/50"
                                     />
                                     <button type="submit" className={`px-6 py-2.5 font-bold rounded-xl text-white shadow-lg transition-all ${txType === 'gave' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20' : 'bg-orange-600 hover:bg-orange-500 shadow-orange-500/20'}`}>
                                         Save
@@ -379,7 +379,7 @@ export default function Ledger() {
                             {selectedContact.net_balance !== 0 && (
                                 <button 
                                     onClick={handleSettleUp}
-                                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 border border-slate-600 text-slate-300 hover:bg-white/5 font-bold rounded-xl text-sm transition-all"
+                                    className="w-full mt-4 py-3 flex items-center justify-center gap-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 font-bold rounded-xl text-sm transition-all"
                                 >
                                     <FiCheckCircle size={16} /> Settle Up Balance
                                 </button>
@@ -392,36 +392,36 @@ export default function Ledger() {
                             
                             {txLoading ? (
                                 <div className="space-y-3">
-                                    {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-800/50 animate-pulse rounded-xl"></div>)}
+                                    {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-xl"></div>)}
                                 </div>
                             ) : contactTransactions.length === 0 ? (
                                 <div className="text-center py-10">
-                                    <FiAlertCircle className="mx-auto text-3xl text-slate-600 mb-2" />
-                                    <p className="text-slate-400 text-sm">No transactions yet.</p>
+                                    <FiAlertCircle className="mx-auto text-3xl text-slate-400 dark:text-slate-600 mb-2" />
+                                    <p className="text-slate-500 dark:text-slate-400 text-sm">No transactions yet.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     {contactTransactions.map(tx => (
-                                        <div key={tx.id} className="group flex items-center justify-between p-4 glass-card border-white/5 hover:bg-slate-800/80 transition-all rounded-xl">
+                                        <div key={tx.id} className="group flex items-center justify-between p-4 glass-card bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all rounded-xl shadow-sm">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                                                    tx.type === 'gave' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                    tx.type === 'got' ? 'bg-orange-500/10 text-orange-400' :
-                                                    'bg-slate-500/10 text-slate-400'
+                                                    tx.type === 'gave' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                                                    tx.type === 'got' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' :
+                                                    'bg-slate-500/10 text-slate-600 dark:text-slate-400'
                                                 }`}>
                                                     {tx.type === 'gave' ? <FiArrowUpRight size={16} /> :
                                                      tx.type === 'got' ? <FiArrowDownLeft size={16} /> :
                                                      <FiCheckCircle size={16} />}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-white">
+                                                    <p className="text-sm font-bold text-slate-900 dark:text-white">
                                                         {tx.type === 'gave' ? 'You Gave' : tx.type === 'got' ? 'You Got' : 'Settled'}
                                                     </p>
-                                                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                                         <span>{formatShortDate(tx.date)}</span>
                                                         {tx.note && (
                                                             <>
-                                                                <span className="w-1 h-1 bg-slate-600 rounded-full"></span>
+                                                                <span className="w-1 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></span>
                                                                 <span className="truncate max-w-[120px]">{tx.note}</span>
                                                             </>
                                                         )}
@@ -430,13 +430,13 @@ export default function Ledger() {
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <span className={`font-mono font-bold ${
-                                                    tx.type === 'gave' ? 'text-emerald-400' :
-                                                    tx.type === 'got' ? 'text-orange-400' :
-                                                    'text-slate-400'
+                                                    tx.type === 'gave' ? 'text-emerald-600 dark:text-emerald-400' :
+                                                    tx.type === 'got' ? 'text-orange-600 dark:text-orange-400' :
+                                                    'text-slate-600 dark:text-slate-400'
                                                 }`}>
                                                     {currencyFormatter.format(Number(tx.amount))}
                                                 </span>
-                                                <button onClick={() => handleDeleteTransaction(tx.id)} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1">
+                                                <button onClick={() => handleDeleteTransaction(tx.id)} className="text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1">
                                                     <FiTrash2 size={14} />
                                                 </button>
                                             </div>

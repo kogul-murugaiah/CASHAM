@@ -312,24 +312,24 @@ const IncomeTracking = () => {
                             <span className="p-2 bg-emerald-500/10 rounded-lg">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>
                             </span>
-                            <h1 className="text-3xl font-bold font-heading text-white">Income Tracking</h1>
+                            <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">Income Tracking</h1>
                         </div>
-                        <p className="text-slate-400">
+                        <p className="text-slate-500 dark:text-slate-400">
                             Detailed earnings history and analysis
                         </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex p-1 bg-slate-700/50 backdrop-blur rounded-xl border border-white/5">
+                        <div className="flex p-1 bg-white dark:bg-slate-700/50 backdrop-blur rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
                             <button
                                 onClick={() => setViewMode("monthly")}
-                                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                             >
                                 Monthly
                             </button>
                             <button
                                 onClick={() => setViewMode("yearly")}
-                                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                             >
                                 Yearly
                             </button>
@@ -341,7 +341,7 @@ const IncomeTracking = () => {
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 style={{ colorScheme: theme }}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
                             />
                         ) : (
                             <input
@@ -350,14 +350,14 @@ const IncomeTracking = () => {
                                 max="2100"
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(e.target.value)}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
                             />
                         )}
                     </div>
                 </div>
 
                 {/* Filters Section */}
-                <div className="mb-6 glass-card p-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-slate-800/40 border-white/5 animate-fade-in z-20 relative">
+                <div className="mb-6 glass-card p-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-white/90 dark:bg-slate-800/40 border border-slate-200 dark:border-white/5 animate-fade-in z-20 relative shadow-sm">
                     <div className="relative flex-1 min-w-[200px] w-full">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -367,7 +367,7 @@ const IncomeTracking = () => {
                             placeholder="Search source or description..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder-slate-500"
+                            className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder-slate-400 dark:placeholder-slate-500"
                         />
                     </div>
                     <div className="flex gap-4 w-full sm:w-auto">
@@ -375,7 +375,7 @@ const IncomeTracking = () => {
                             <select
                                 value={filterAccount}
                                 onChange={(e) => setFilterAccount(e.target.value)}
-                                className="w-full sm:w-40 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                                className="w-full sm:w-40 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
                             >
                                 <option value="All">All Accounts</option>
                                 {accountTypes.map(acc => (
@@ -387,7 +387,7 @@ const IncomeTracking = () => {
                             <select
                                 value={filterSource}
                                 onChange={(e) => setFilterSource(e.target.value)}
-                                className="w-full sm:w-48 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                                className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
                             >
                                 <option value="All">All Sources</option>
                                 {sources.map(s => (
@@ -420,19 +420,19 @@ const IncomeTracking = () => {
                 ) : (
                     <div className="space-y-8 animate-fade-in text-shadow-sm">
                         {records.length === 0 ? (
-                            <div className="glass-card p-12 text-center border-emerald-500/10">
-                                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="glass-card py-16 text-center">
+                                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-2">No Records Found</h3>
-                                <p className="text-slate-400">No income data for the selected period.</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No Records Found</h3>
+                                <p className="text-slate-500 dark:text-slate-400">No income data for the selected period.</p>
                             </div>
                         ) : (
                             <>
-                                <div className="glass-card p-8 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-emerald-500/30 relative overflow-hidden">
+                                <div className="glass-card p-8 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/30 relative overflow-hidden shadow-sm">
                                     <div className="relative z-10">
-                                        <p className="text-sm font-medium text-emerald-200 mb-2 uppercase tracking-widest">Total Earnings</p>
-                                        <div className="text-5xl font-bold text-white font-heading tracking-tight sm:text-6xl drop-shadow-md">
+                                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-2 uppercase tracking-widest">Total Earnings</p>
+                                        <div className="text-5xl font-extrabold text-emerald-950 dark:text-white font-heading tracking-tight sm:text-6xl drop-shadow-sm">
                                             {currencyFormatter.format(grandTotal)}
                                         </div>
                                     </div>
@@ -440,8 +440,8 @@ const IncomeTracking = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="glass-card p-6">
-                                        <h3 className="text-lg font-bold text-white mb-6 font-heading text-shadow-sm">Source Breakdown</h3>
+                                    <div className="glass-card p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-800/40 shadow-sm">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 font-heading">Source Breakdown</h3>
                                         <div className="h-[300px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
@@ -461,8 +461,8 @@ const IncomeTracking = () => {
                                         </div>
                                     </div>
 
-                                    <div className="glass-card p-6">
-                                        <h3 className="text-lg font-bold text-white mb-6 font-heading text-shadow-sm">{viewMode === "monthly" ? "Daily Trend" : "Monthly Trend"}</h3>
+                                    <div className="glass-card p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-800/40 shadow-sm">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 font-heading">{viewMode === "monthly" ? "Daily Trend" : "Monthly Trend"}</h3>
                                         <div className="h-[300px] w-full">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 {viewMode === "monthly" ? (
@@ -487,15 +487,15 @@ const IncomeTracking = () => {
                                     </div>
                                 </div>
 
-                                <div className="glass-card p-0 overflow-hidden">
-                                    <div className="border-b border-white/5 bg-slate-700/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="glass-card p-0 overflow-hidden border border-slate-200 dark:border-white/5 shadow-sm">
+                                    <div className="border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-700/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
-                                            <h2 className="text-lg font-bold text-white font-heading">Income History</h2>
-                                            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                                            <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Income History</h2>
+                                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                                                 {filteredRecords.length} Transactions
                                             </span>
                                         </div>
-                                        <button onClick={handleExport} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5">
+                                        <button onClick={handleExport} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                             Excel Report
                                         </button>
@@ -504,7 +504,7 @@ const IncomeTracking = () => {
                                     <div className="hidden md:block overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                                                <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-100/80 dark:bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
                                                     <th className="px-6 py-4">Date</th>
                                                     <th className="px-6 py-4">Source</th>
                                                     <th className="px-6 py-4">Account</th>
@@ -513,20 +513,20 @@ const IncomeTracking = () => {
                                                     <th className="px-6 py-4 text-center">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-white/5">
+                                            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                                                 {currentRecords.map((rec) => (
-                                                    <tr key={rec.id} className="group hover:bg-white/5 transition-colors">
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{formatShortDate(rec.date)}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{rec.source || rec.income_sources?.name || "Unknown"}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-[10px] text-slate-500 uppercase tracking-tight">{rec.account_type}</td>
-                                                        <td className="px-6 py-4 text-sm text-slate-400 max-w-[200px] truncate" title={rec.description || ""}>
+                                                    <tr key={rec.id} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{formatShortDate(rec.date)}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">{rec.source || rec.income_sources?.name || "Unknown"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-tight">{rec.account_type}</td>
+                                                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 max-w-[200px] truncate" title={rec.description || ""}>
                                                             {rec.description || "-"}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-emerald-400 font-mono">{currencyFormatter.format(rec.amount)}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono">{currencyFormatter.format(rec.amount)}</td>
                                                         <td className="px-6 py-4 text-center">
                                                             <div className="flex items-center justify-center gap-2 transition-all">
-                                                                <button onClick={() => handleEdit(rec)} className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
-                                                                <button onClick={() => handleDelete(rec.id)} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                                                <button onClick={() => handleEdit(rec)} className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+                                                                <button onClick={() => handleDelete(rec.id)} className="p-1.5 rounded-lg bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -536,32 +536,32 @@ const IncomeTracking = () => {
                                     </div>
 
                                     {/* Mobile Cards View */}
-                                    <div className="md:hidden divide-y divide-white/5">
+                                    <div className="md:hidden divide-y divide-slate-100 dark:divide-white/5">
                                         {currentRecords.map((rec) => (
-                                            <div key={rec.id} className="p-4 hover:bg-slate-700/30 transition-colors">
+                                            <div key={rec.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-white mb-1">{rec.source || rec.income_sources?.name || "Unknown"}</h4>
+                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{rec.source || rec.income_sources?.name || "Unknown"}</h4>
                                                         <div className="flex items-center gap-2 text-xs">
-                                                            <span className="text-slate-400">{formatShortDate(rec.date)}</span>
+                                                            <span className="text-slate-500 dark:text-slate-400">{formatShortDate(rec.date)}</span>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-sm font-bold text-emerald-400 font-mono">{currencyFormatter.format(rec.amount)}</div>
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter block mt-0.5">{rec.account_type}</span>
+                                                        <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono">{currencyFormatter.format(rec.amount)}</div>
+                                                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter block mt-0.5">{rec.account_type}</span>
                                                     </div>
                                                 </div>
                                                 {/* Description if present */}
                                                 {(rec.description) && (
-                                                    <div className="text-xs text-slate-500 mb-3 border-l-2 border-emerald-500/20 pl-2">
+                                                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 border-l-2 border-emerald-500/20 pl-2">
                                                         {rec.description}
                                                     </div>
                                                 )}
                                                 <div className="flex items-center justify-end gap-2 pt-3 mt-1">
-                                                    <button onClick={() => handleEdit(rec)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold">
+                                                    <button onClick={() => handleEdit(rec)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> Edit
                                                     </button>
-                                                    <button onClick={() => handleDelete(rec.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all text-xs font-bold">
+                                                    <button onClick={() => handleDelete(rec.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all text-xs font-bold">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete
                                                     </button>
                                                 </div>
@@ -570,11 +570,11 @@ const IncomeTracking = () => {
                                     </div>
 
                                     {totalPages > 1 && (
-                                        <div className="border-t border-white/5 bg-slate-700/40 px-6 py-4 flex items-center justify-between">
-                                            <p className="text-xs font-medium text-slate-500">Page {currentPage} of {totalPages}</p>
+                                        <div className="border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-700/40 px-6 py-4 flex items-center justify-between">
+                                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Page {currentPage} of {totalPages}</p>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Prev</button>
-                                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Next</button>
+                                                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-white dark:bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-white/5 shadow-sm">Prev</button>
+                                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-white dark:bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-white/5 shadow-sm">Next</button>
                                             </div>
                                         </div>
                                     )}

@@ -739,7 +739,7 @@ const Portfolio = () => {
     <div className="pb-24 pt-8 md:pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <header className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-          <div><p className="text-slate-400 text-sm uppercase font-bold tracking-widest">Portfolio</p><h1 className="text-4xl font-bold font-heading text-white">Wealth Tracker</h1></div>
+          <div><p className="text-slate-500 dark:text-slate-400 text-sm uppercase font-bold tracking-widest">Portfolio</p><h1 className="text-4xl font-bold font-heading text-slate-900 dark:text-white">Wealth Tracker</h1></div>
           <div className="flex items-center gap-3">
             <button 
                 onClick={toggleHideBalance}

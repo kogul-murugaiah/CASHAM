@@ -406,9 +406,9 @@ const ExpenseTracking = () => {
                             <span className="p-2 bg-emerald-500/10 rounded-lg">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>
                             </span>
-                            <h1 className="text-3xl font-bold font-heading text-white">Expense Tracking</h1>
+                            <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">Expense Tracking</h1>
                         </div>
-                        <p className="text-slate-400">
+                        <p className="text-slate-500 dark:text-slate-400">
                             Manage and analyze{
                                 viewMode === "daily"   ? " today's" :
                                 viewMode === "weekly"  ? " this week's" :
@@ -418,32 +418,32 @@ const ExpenseTracking = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex p-1 bg-slate-700/50 backdrop-blur rounded-xl border border-white/5">
+                        <div className="flex p-1 bg-white dark:bg-slate-700/50 backdrop-blur rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
                             <button
                                 id="view-mode-daily"
                                 onClick={() => setViewMode("daily")}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "daily" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "daily" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                             >
                                 Daily
                             </button>
                             <button
                                 id="view-mode-weekly"
                                 onClick={() => setViewMode("weekly")}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "weekly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "weekly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                             >
                                 Weekly
                             </button>
                             <button
                                 id="view-mode-monthly"
                                 onClick={() => setViewMode("monthly")}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "monthly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                             >
                                 Monthly
                             </button>
                             <button
                                 id="view-mode-yearly"
                                 onClick={() => setViewMode("yearly")}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-400 hover:text-white"}`}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === "yearly" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
                             >
                                 Yearly
                             </button>
@@ -456,7 +456,7 @@ const ExpenseTracking = () => {
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 style={{ colorScheme: theme }}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
                             />
                         )}
 
@@ -480,7 +480,7 @@ const ExpenseTracking = () => {
                                     setSelectedWeekStart(getLocalDateString(monday));
                                 }}
                                 style={{ colorScheme: theme }}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
                             />
                         )}
 
@@ -491,7 +491,7 @@ const ExpenseTracking = () => {
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 style={{ colorScheme: theme }}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
                             />
                         )}
 
@@ -503,14 +503,14 @@ const ExpenseTracking = () => {
                                 max="2100"
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(e.target.value)}
-                                className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                                className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
                             />
                         )}
                     </div>
                 </div>
 
                 {/* Filters Section */}
-                <div className="mb-6 glass-card p-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-slate-800/40 border-white/5 animate-fade-in z-20 relative">
+                <div className="mb-6 glass-card p-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-white/90 dark:bg-slate-800/40 border border-slate-200 dark:border-white/5 animate-fade-in z-20 relative shadow-sm">
                     <div className="relative flex-1 min-w-[200px] w-full">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -520,7 +520,7 @@ const ExpenseTracking = () => {
                             placeholder="Search item or description..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full rounded-xl border border-white/10 bg-slate-900/50 pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder-slate-500"
+                            className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder-slate-400 dark:placeholder-slate-500"
                         />
                     </div>
                     <div className="flex gap-4 w-full sm:w-auto">
@@ -528,7 +528,7 @@ const ExpenseTracking = () => {
                             <select
                                 value={filterAccount}
                                 onChange={(e) => setFilterAccount(e.target.value)}
-                                className="w-full sm:w-40 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                                className="w-full sm:w-40 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
                             >
                                 <option value="All">All Accounts</option>
                                 {accountTypes.map(acc => (
@@ -540,7 +540,7 @@ const ExpenseTracking = () => {
                             <select
                                 value={filterCategory}
                                 onChange={(e) => setFilterCategory(e.target.value)}
-                                className="w-full sm:w-48 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+                                className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
                             >
                                 <option value="All">All Categories</option>
                                 {categories.map(c => (
@@ -553,7 +553,7 @@ const ExpenseTracking = () => {
                             <select
                                 value={filterPayment}
                                 onChange={(e) => setFilterPayment(e.target.value as any)}
-                                className="w-full sm:w-48 rounded-xl border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 appearance-none cursor-pointer"
+                                className="w-full sm:w-48 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/50 px-4 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
                             >
                                 <option value="All">All Payments</option>
                                 <option value="Direct">Direct Account Only</option>
@@ -564,7 +564,7 @@ const ExpenseTracking = () => {
                         </div>
                         <Link
                             to="/credit-cards"
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-xs font-bold text-purple-300 hover:bg-purple-500/25 transition-all whitespace-nowrap"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-500/10 border border-teal-500/30 text-xs font-bold text-teal-700 dark:text-teal-300 hover:bg-teal-500/20 transition-all whitespace-nowrap"
                         >
                             <FiCreditCard size={14} />
                             Credit Cards Hub
@@ -594,18 +594,18 @@ const ExpenseTracking = () => {
                     <div className="space-y-8 animate-fade-in">
                         {expenses.length === 0 ? (
                             <div className="glass-card p-12 text-center border-emerald-500/10">
-                                <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><line x1="18" x2="18" y1="20" y2="10" /><line x1="12" x2="12" y1="20" y2="4" /><line x1="6" x2="6" y1="20" y2="14" /></svg>
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-2">No Expenses Found</h3>
-                                <p className="text-slate-400">No data for the selected period.</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">No Expenses Found</h3>
+                                <p className="text-slate-500 dark:text-slate-400">No data for the selected period.</p>
                             </div>
                         ) : (
                             <>
-                                <div className="glass-card p-8 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-emerald-500/30 relative overflow-hidden">
+                                <div className="glass-card p-8 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/30 relative overflow-hidden shadow-sm">
                                     <div className="relative z-10">
-                                        <p className="text-sm font-medium text-emerald-200 mb-2 uppercase tracking-widest text-shadow-sm">Total Spendings</p>
-                                        <div className="text-5xl font-bold text-white font-heading tracking-tight sm:text-6xl drop-shadow-lg">
+                                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-2 uppercase tracking-widest text-shadow-sm">Total Spendings</p>
+                                        <div className="text-5xl font-extrabold text-emerald-950 dark:text-white font-heading tracking-tight sm:text-6xl drop-shadow-sm">
                                             {currencyFormatter.format(grandTotal)}
                                         </div>
                                     </div>
@@ -614,13 +614,13 @@ const ExpenseTracking = () => {
 
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Daily Trend — NAV Style */}
-                                    <div className="glass-card p-8 bg-slate-800/10 border-white/5 relative overflow-hidden group">
+                                    <div className="glass-card p-8 bg-white dark:bg-slate-800/10 border border-slate-200 dark:border-white/5 relative overflow-hidden group shadow-sm">
                                         <div className="flex justify-between items-start mb-8">
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Daily Spend Tracker</p>
-                                                <h3 className="text-2xl font-bold text-white font-heading">Financial Trend</h3>
+                                                <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Daily Spend Tracker</p>
+                                                <h3 className="text-2xl font-bold font-heading text-slate-900 dark:text-white">Financial Trend</h3>
                                             </div>
-                                            <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black border border-emerald-500/20 uppercase">
+                                            <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black border border-emerald-500/20 uppercase">
                                                 NAV Style
                                             </div>
                                         </div>
@@ -664,13 +664,13 @@ const ExpenseTracking = () => {
                                     </div>
 
                                     {/* Weekly Comparison */}
-                                    <div className="glass-card p-8 bg-slate-800/10 border-white/5 relative overflow-hidden group">
+                                    <div className="glass-card p-8 bg-white dark:bg-slate-800/10 border border-slate-200 dark:border-white/5 relative overflow-hidden group shadow-sm">
                                         <div className="flex justify-between items-start mb-8">
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Weekly Tracker</p>
-                                                <h3 className="text-2xl font-bold text-white font-heading">Spend Intensity</h3>
+                                                <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Weekly Tracker</p>
+                                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Spend Intensity</h3>
                                             </div>
-                                            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-500">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 20v-6M6 20V10M18 20V4"/></svg>
                                             </div>
                                         </div>
@@ -703,10 +703,10 @@ const ExpenseTracking = () => {
                                 </div>
 
                                 {/* Category Intensity (Pie) */}
-                                <div className="glass-card p-6 bg-slate-800/10 border-white/5">
+                                <div className="glass-card p-6 bg-white dark:bg-slate-800/10 border border-slate-200 dark:border-white/5 shadow-sm">
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className="w-2 h-8 bg-emerald-500 rounded-full" />
-                                        <h3 className="text-lg font-bold text-white font-heading uppercase tracking-widest">Category Distribution</h3>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading uppercase tracking-widest">Category Distribution</h3>
                                     </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
                                         <div className="lg:col-span-1 h-[250px]">
@@ -742,15 +742,15 @@ const ExpenseTracking = () => {
                                     </div>
                                 </div>
 
-                                <div className="glass-card p-0 overflow-hidden">
-                                    <div className="border-b border-white/5 bg-slate-700/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="glass-card p-0 overflow-hidden border border-slate-200 dark:border-white/5 shadow-sm">
+                                    <div className="border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-700/40 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
-                                            <h2 className="text-lg font-bold text-white font-heading">Expense History</h2>
-                                            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                                            <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Expense History</h2>
+                                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                                                 {filteredExpenses.length} Records
                                             </span>
                                         </div>
-                                        <button onClick={handleExport} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5">
+                                        <button onClick={handleExport} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 px-5 py-2.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/5">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                             Download Excel
                                         </button>
@@ -759,7 +759,7 @@ const ExpenseTracking = () => {
                                     <div className="hidden md:block overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="border-b border-white/5 bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                                                <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-100/80 dark:bg-slate-700/40 text-[11px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">
                                                     <th className="px-6 py-4">Date</th>
                                                     <th className="px-6 py-4">Item</th>
                                                     <th className="px-6 py-4">Category</th>
@@ -769,24 +769,24 @@ const ExpenseTracking = () => {
                                                     <th className="px-6 py-4 text-center">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-white/5">
+                                            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                                                 {currentExpenses.map((exp) => (
-                                                    <tr key={exp.id} className="group hover:bg-white/5 transition-colors">
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{formatShortDate(exp.date)}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{exp.item}</td>
+                                                    <tr key={exp.id} className="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{formatShortDate(exp.date)}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900 dark:text-white">{exp.item}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className="inline-flex px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 uppercase">
+                                                            <span className="inline-flex px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 uppercase">
                                                                 {exp.categories?.name || "Uncategorized"}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-xs">
                                                             <div className="flex flex-col gap-1">
-                                                                <span className="text-slate-300 font-semibold uppercase">{exp.account_type}</span>
+                                                                <span className="text-slate-700 dark:text-slate-300 font-semibold uppercase">{exp.account_type}</span>
                                                                 {exp.paid_via_credit_card && (
                                                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold w-fit ${
                                                                         exp.cc_bill_settled
-                                                                            ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                                                                            : 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
+                                                                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                                                                            : 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20'
                                                                     }`}>
                                                                         <FiCreditCard size={10} />
                                                                         {exp.credit_card_name || 'Credit Card'}
@@ -795,14 +795,14 @@ const ExpenseTracking = () => {
                                                                 )}
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm text-slate-400 max-w-[150px] truncate" title={exp.description || ""}>
+                                                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 max-w-[150px] truncate" title={exp.description || ""}>
                                                             {exp.description || "-"}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-white font-mono">{currencyFormatter.format(exp.amount)}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-slate-900 dark:text-white font-mono">{currencyFormatter.format(exp.amount)}</td>
                                                         <td className="px-6 py-4 text-center">
                                                             <div className="flex items-center justify-center gap-2 transition-all">
-                                                                <button onClick={() => handleEdit(exp)} className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
-                                                                <button onClick={() => handleDelete(exp.id)} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+                                                                <button onClick={() => handleEdit(exp)} className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+                                                                <button onClick={() => handleDelete(exp.id)} className="p-1.5 rounded-lg bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -812,27 +812,27 @@ const ExpenseTracking = () => {
                                     </div>
 
                                     {/* Mobile Cards View */}
-                                    <div className="md:hidden divide-y divide-white/5">
+                                    <div className="md:hidden divide-y divide-slate-100 dark:divide-white/5">
                                         {currentExpenses.map((exp) => (
-                                            <div key={exp.id} className="p-4 hover:bg-slate-700/30 transition-colors">
+                                            <div key={exp.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-white mb-1">{exp.item}</h4>
+                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{exp.item}</h4>
                                                         <div className="flex items-center gap-2 text-xs">
-                                                            <span className="text-slate-400">{formatShortDate(exp.date)}</span>
-                                                            <span className="text-slate-600">•</span>
-                                                            <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-300 uppercase">
+                                                            <span className="text-slate-500 dark:text-slate-400">{formatShortDate(exp.date)}</span>
+                                                            <span className="text-slate-400">•</span>
+                                                            <span className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 uppercase">
                                                                 {exp.categories?.name || "Uncategorized"}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-sm font-bold text-white font-mono">{currencyFormatter.format(exp.amount)}</div>
+                                                        <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">{currencyFormatter.format(exp.amount)}</div>
                                                         <div className="flex items-center justify-end gap-1 mt-0.5">
-                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{exp.account_type}</span>
+                                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">{exp.account_type}</span>
                                                             {exp.paid_via_credit_card && (
                                                                 <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                                                                    exp.cc_bill_settled ? 'bg-emerald-500/10 text-emerald-300' : 'bg-purple-500/15 text-purple-300'
+                                                                    exp.cc_bill_settled ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-teal-500/10 text-teal-700 dark:text-teal-300'
                                                                 }`}>
                                                                     💳 {exp.credit_card_name || 'CC'}
                                                                 </span>
@@ -842,15 +842,15 @@ const ExpenseTracking = () => {
                                                 </div>
                                                 {/* Description if present */}
                                                 {(exp.description) && (
-                                                    <div className="text-xs text-slate-500 mb-3 border-l-2 border-white/10 pl-2">
+                                                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 border-l-2 border-slate-200 dark:border-white/10 pl-2">
                                                         {exp.description}
                                                     </div>
                                                 )}
                                                 <div className="flex items-center justify-end gap-2 pt-3 mt-1">
-                                                    <button onClick={() => handleEdit(exp)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold">
+                                                    <button onClick={() => handleEdit(exp)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg> Edit
                                                     </button>
-                                                    <button onClick={() => handleDelete(exp.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all text-xs font-bold">
+                                                    <button onClick={() => handleDelete(exp.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all text-xs font-bold">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete
                                                     </button>
                                                 </div>
@@ -859,11 +859,11 @@ const ExpenseTracking = () => {
                                     </div>
 
                                     {totalPages > 1 && (
-                                        <div className="border-t border-white/5 bg-slate-700/40 px-6 py-4 flex items-center justify-between">
-                                            <p className="text-xs font-medium text-slate-500">Page {currentPage} of {totalPages}</p>
+                                        <div className="border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-700/40 px-6 py-4 flex items-center justify-between">
+                                            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Page {currentPage} of {totalPages}</p>
                                             <div className="flex gap-2">
-                                                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Prev</button>
-                                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-300 transition hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed border border-white/5">Next</button>
+                                                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="rounded-lg bg-white dark:bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-white/5 shadow-sm">Prev</button>
+                                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="rounded-lg bg-white dark:bg-slate-700 px-4 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-white/5 shadow-sm">Next</button>
                                             </div>
                                         </div>
                                     )}

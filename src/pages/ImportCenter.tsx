@@ -68,8 +68,8 @@ const ImportCenter = () => {
     <div className="pb-24 pt-8 md:pb-8">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <header className="mb-10 text-center">
-          <h1 className="text-4xl font-bold font-heading text-white">Import Center</h1>
-          <p className="text-slate-400 mt-2">Bulk upload your financial data from CSV or Excel</p>
+          <h1 className="text-4xl font-bold font-heading text-slate-900 dark:text-white">Import Center</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">Bulk upload your financial data from CSV or Excel</p>
         </header>
 
         {success && (

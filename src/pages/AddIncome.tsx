@@ -97,10 +97,10 @@ const AddIncome = () => {
           <div className="inline-flex items-center justify-center p-3 bg-emerald-500/10 rounded-2xl mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>
           </div>
-          <h1 className="text-3xl font-bold font-heading text-white mb-2">
+          <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white mb-2">
             Record Income
           </h1>
-          <p className="text-slate-400">
+          <p className="text-slate-500 dark:text-slate-400">
             Log your earnings to keep your balance updated.
           </p>
         </header>

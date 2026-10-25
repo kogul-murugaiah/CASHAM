@@ -178,8 +178,8 @@ const AddTransfer = () => {
           <div className="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-2xl mb-4">
             <FiArrowRight className="text-blue-400" size={24} strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl font-bold font-heading text-white mb-2">Transfer Funds</h1>
-          <p className="text-slate-400">Move money between your accounts without affecting income or expenses.</p>
+          <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white mb-2">Transfer Funds</h1>
+          <p className="text-slate-500 dark:text-slate-400">Move money between your accounts without affecting income or expenses.</p>
         </header>
 
         {error && (

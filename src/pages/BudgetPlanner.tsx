@@ -371,19 +371,19 @@ export default function BudgetPlanner() {
         <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between animate-fade-in">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className="p-2 bg-emerald-500/10 rounded-lg">
+              <span className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
                 <FiTarget className="text-emerald-500 text-xl" strokeWidth={2.5} />
               </span>
-              <h1 className="text-3xl font-bold font-heading text-white">Budget Planner</h1>
+              <h1 className="text-3xl font-bold font-heading text-slate-900 dark:text-white">Budget Planner</h1>
             </div>
-            <p className="text-slate-400">Allocate income to categories and track projected logic.</p>
+            <p className="text-slate-500 dark:text-slate-400">Allocate income to categories and track projected logic.</p>
           </div>
 
           <div className="flex flex-wrap gap-3 items-center">
             {budgetData.id && (
               <button
                 onClick={() => setShowCopyModal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-200 transition-all shadow-md shadow-emerald-900/20"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 hover:text-emerald-800 dark:hover:text-emerald-200 transition-all shadow-sm"
                 title="Copy this budget as a template to another month"
               >
                 <FiCopy size={15} />
@@ -396,7 +396,7 @@ export default function BudgetPlanner() {
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               style={{ colorScheme: theme }}
-              className="w-full sm:w-auto rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-lg"
+              className="w-full sm:w-auto rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer shadow-sm"
             />
           </div>
         </div>
@@ -415,41 +415,41 @@ export default function BudgetPlanner() {
         />
 
         {error && (
-          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm font-medium">
+          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-500 dark:text-red-300 text-sm font-medium">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300 text-sm font-bold animate-fade-in">
+          <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-600 dark:text-emerald-300 text-sm font-bold animate-fade-in">
             {success}
           </div>
         )}
 
         {loading ? (
           <div className="animate-pulse space-y-6">
-            <div className="h-32 bg-slate-700/50 rounded-3xl" />
-            <div className="h-64 bg-slate-700/50 rounded-3xl" />
+            <div className="h-32 bg-slate-200 dark:bg-slate-700/50 rounded-3xl" />
+            <div className="h-64 bg-slate-200 dark:bg-slate-700/50 rounded-3xl" />
           </div>
         ) : (
           <div className="space-y-8 animate-fade-in">
             {/* Summary Dashboard */}
-            <div className="glass-card p-8 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-emerald-500/30 relative overflow-hidden">
+            <div className="glass-card p-8 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/30 relative overflow-hidden shadow-sm">
               <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/20 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none opacity-50" />
 
               <div className="flex flex-col md:flex-row gap-8 justify-between items-start md:items-center relative z-10">
                 {/* Total Income Setup */}
                 <div className="w-full md:w-1/3">
-                  <p className="text-xs uppercase tracking-widest text-emerald-200 font-bold mb-2">
+                  <p className="text-xs uppercase tracking-widest text-emerald-800 dark:text-emerald-200 font-bold mb-2">
                     Total Monthly Income
                   </p>
                   {!editingIncome ? (
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl font-bold text-white font-heading tracking-tight drop-shadow-md">
+                      <span className="text-4xl font-extrabold text-emerald-950 dark:text-white font-heading tracking-tight drop-shadow-sm">
                         {currencyFormatter.format(parseNum(budgetData.total_income))}
                       </span>
                       <button
                         onClick={() => setEditingIncome(true)}
-                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded border border-white/10 text-white/70 hover:text-white transition-all"
+                        className="p-1.5 bg-emerald-600/10 hover:bg-emerald-600/20 dark:bg-white/10 dark:hover:bg-white/20 rounded border border-emerald-500/20 dark:border-white/10 text-emerald-700 dark:text-white/70 hover:text-emerald-900 dark:hover:text-white transition-all"
                       >
                         <FiEdit2 size={14} />
                       </button>
@@ -457,13 +457,13 @@ export default function BudgetPlanner() {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                         <input
                           type="number"
                           autoFocus
                           value={tempIncome}
                           onChange={(e) => setTempIncome(e.target.value)}
-                          className="w-full pl-7 pr-3 py-2 bg-slate-700/50 border border-emerald-500/50 rounded-lg text-white font-bold font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                          className="w-full pl-7 pr-3 py-2 bg-white dark:bg-slate-700/50 border border-emerald-500/50 rounded-lg text-slate-900 dark:text-white font-bold font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-sm"
                         />
                       </div>
                       <button
@@ -477,7 +477,7 @@ export default function BudgetPlanner() {
                           setEditingIncome(false);
                           setTempIncome(String(budgetData.total_income));
                         }}
-                        className="px-3 py-2 bg-white/10 text-white rounded-lg text-sm font-medium"
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-lg text-sm font-medium transition-all"
                       >
                         Cancel
                       </button>
@@ -487,31 +487,31 @@ export default function BudgetPlanner() {
 
                 {/* Balances */}
                 <div className="w-full md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="glass-card p-4 border-emerald-500/20 bg-slate-700/40">
-                    <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">
+                  <div className="glass-card p-4 border border-slate-200 dark:border-emerald-500/20 bg-white dark:bg-slate-700/40 shadow-sm">
+                    <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-1">
                       In-Hand Actual Balance
                     </p>
                     <p
                       className={`text-2xl font-bold font-mono tracking-tight ${
-                        currentInHand < 0 ? "text-red-400" : "text-emerald-400"
+                        currentInHand < 0 ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
                       }`}
                     >
                       {currencyFormatter.format(currentInHand)}
                     </p>
-                    <p className="text-[10px] text-slate-500 mt-1">Income - Total Paid</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Income - Total Paid</p>
                   </div>
-                  <div className="glass-card p-4 border-white/5 bg-slate-700/40">
-                    <p className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-1">
+                  <div className="glass-card p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-700/40 shadow-sm">
+                    <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold mb-1">
                       Projected Forecast
                     </p>
                     <p
                       className={`text-2xl font-bold font-mono tracking-tight ${
-                        projectedRemaining < 0 ? "text-orange-400" : "text-amber-400"
+                        projectedRemaining < 0 ? "text-orange-500 dark:text-orange-400" : "text-amber-600 dark:text-amber-400"
                       }`}
                     >
                       {currencyFormatter.format(projectedRemaining)}
                     </p>
-                    <p className="text-[10px] text-slate-500 mt-1">Income - (Paid + Planned)</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Income - (Paid + Planned)</p>
                   </div>
                 </div>
               </div>
@@ -519,11 +519,11 @@ export default function BudgetPlanner() {
 
             {/* Summary Progress Bar */}
             <div className="px-2">
-              <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 font-mono uppercase tracking-wide">
+              <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 font-mono uppercase tracking-wide">
                 <span>Allocated: {currencyFormatter.format(totalAllocated)}</span>
                 <span>Income: {currencyFormatter.format(parseNum(budgetData.total_income))}</span>
               </div>
-              <div className="h-3 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 relative">
+              <div className="h-3 w-full bg-slate-100 dark:bg-slate-700/40 rounded-full overflow-hidden border border-slate-200 dark:border-white/5 relative">
                 <div
                   className={`h-full absolute left-0 top-0 rounded-full transition-all duration-500 ${
                     totalAllocated > parseNum(budgetData.total_income) ? "bg-red-500" : "bg-emerald-500"
@@ -542,7 +542,7 @@ export default function BudgetPlanner() {
 
             {/* Category List */}
             <div className="space-y-2 pt-4">
-              <h2 className="text-xl font-bold text-white font-heading px-2">Categories</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white font-heading px-2">Categories</h2>
 
               {budgetData.categories.map((cat) => (
                 <BudgetCategoryCard
@@ -569,13 +569,13 @@ export default function BudgetPlanner() {
                 {!isAddingCategory ? (
                   <button
                     onClick={() => setIsAddingCategory(true)}
-                    className="glass-card w-full p-4 border border-dashed border-white/20 text-slate-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all flex items-center justify-center gap-2 font-medium"
+                    className="glass-card w-full p-4 border border-dashed border-slate-300 dark:border-white/20 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/5 bg-white/40 dark:bg-transparent transition-all flex items-center justify-center gap-2 font-medium rounded-2xl shadow-sm"
                   >
                     <FiPlus size={18} /> Add New Budget Category
                   </button>
                 ) : (
-                  <div className="glass-card p-6 border-emerald-500/30 bg-emerald-500/5">
-                    <h4 className="text-sm font-bold text-emerald-400 mb-4 uppercase tracking-widest">
+                  <div className="glass-card p-6 border border-emerald-500/30 bg-white dark:bg-emerald-500/5 shadow-sm rounded-2xl">
+                    <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-4 uppercase tracking-widest">
                       New Category
                     </h4>
                     <div className="flex flex-col gap-3">
@@ -585,7 +585,7 @@ export default function BudgetPlanner() {
                           placeholder="Category Name (e.g. Housing)"
                           value={newCategoryName}
                           onChange={(e) => setNewCategoryName(e.target.value)}
-                          className="flex-1 bg-slate-900 border border-white/10 text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                          className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                           autoFocus
                         />
                         <input
@@ -593,12 +593,12 @@ export default function BudgetPlanner() {
                           placeholder="Allocated Amount"
                           value={newCategoryAmount}
                           onChange={(e) => setNewCategoryAmount(e.target.value)}
-                          className="sm:w-48 bg-slate-900 border border-white/10 text-white font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                          className="sm:w-48 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 font-bold rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                         />
                         <select
                           value={newCategoryAccount}
                           onChange={(e) => setNewCategoryAccount(e.target.value)}
-                          className="sm:w-48 bg-slate-900 border border-white/10 text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                          className="sm:w-48 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
                         >
                           <option value="">Account (optional)</option>
                           {accountTypes.map((acc) => (
@@ -614,7 +614,7 @@ export default function BudgetPlanner() {
                             setIsAddingCategory(false);
                             setNewCategoryAccount("");
                           }}
-                          className="px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all"
+                          className="px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white bg-slate-100 dark:bg-white/5 rounded-xl transition-all"
                         >
                           Cancel
                         </button>
