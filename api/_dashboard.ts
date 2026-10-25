@@ -289,13 +289,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const source = await getCarryoverSource();
       const autoCarryoverEnabled = await getAutoCarryoverEnabled();
 
-      const { data: incomeData, error: incomeError } = await supabaseAdmin
+      const { data: initialIncome, error: incomeError } = await supabaseAdmin
         .from("income")
         .select("id, amount, date, account_type, source_id")
         .eq("user_id", user.id)
         .gte("date", startDate)
         .lt("date", endDate);
       if (incomeError) throw incomeError;
+
+      let incomeData: any[] | null = initialIncome;
 
       const { data: expenseData, error: expenseError } = await supabaseAdmin
         .from("expenses")

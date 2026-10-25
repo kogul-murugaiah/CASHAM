@@ -267,14 +267,14 @@ const Dashboard = () => {
         {/* Header */}
         <header className="mb-8 animate-fade-in flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div className="flex flex-col gap-1">
-            <p className="text-slate-400 font-medium text-sm uppercase tracking-wider">Overview</p>
-            <h1 className="text-4xl font-bold font-heading text-white">
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-sm uppercase tracking-wider">Overview</p>
+            <h1 className="text-4xl font-bold font-heading text-slate-900 dark:text-white">
               {getGreeting()}, <span className="text-gradient">{displayName || (userEmail ? userEmail.split('@')[0] : 'User')}</span>
             </h1>
-            <p className="text-slate-400 mt-1">
-              Financial summary for <span className="text-white font-semibold">{MONTH_NAMES[currentMonth - 1]} {currentYear}</span>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
+              Financial summary for <span className="text-slate-900 dark:text-white font-semibold">{MONTH_NAMES[currentMonth - 1]} {currentYear}</span>
             </p>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-2">
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
               {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
@@ -282,27 +282,27 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
             <button 
                 onClick={toggleHideBalance}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-all text-xs font-bold"
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-slate-200 dark:border-white/5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all text-xs font-bold shadow-sm"
             >
               {hideBalance ? <FiEyeOff size={14} /> : <FiEye size={14} />}
               {hideBalance ? "Reveal Balances" : "Privacy Mode"}
             </button>
 
-            <div className="flex items-center gap-2 bg-slate-700/40 p-1.5 rounded-2xl border border-white/5 backdrop-blur-md self-start md:self-auto">
-              <button onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(y => y - 1); } else setCurrentMonth(m => m - 1); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg></button>
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-700/40 p-1.5 rounded-2xl border border-slate-200 dark:border-white/5 backdrop-blur-md self-start md:self-auto shadow-sm">
+              <button onClick={() => { if (currentMonth === 1) { setCurrentMonth(12); setCurrentYear(y => y - 1); } else setCurrentMonth(m => m - 1); }} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg></button>
               <div className="flex items-center gap-2 px-2">
-                <select value={currentMonth} onChange={(e) => setCurrentMonth(parseInt(e.target.value))} className="bg-transparent text-white font-semibold focus:outline-none appearance-none cursor-pointer hover:text-emerald-400 transition-colors">
-                  {MONTH_NAMES.map((name, i) => <option key={name} value={i + 1} className="bg-slate-900 text-white">{name}</option>)}
+                <select value={currentMonth} onChange={(e) => setCurrentMonth(parseInt(e.target.value))} className="bg-transparent text-slate-900 dark:text-white font-semibold focus:outline-none appearance-none cursor-pointer hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors">
+                  {MONTH_NAMES.map((name, i) => <option key={name} value={i + 1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{name}</option>)}
                 </select>
-                <span className="text-slate-600">/</span>
-                <input type="number" value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value))} className="bg-transparent text-white font-semibold w-16 focus:outline-none hover:text-emerald-400 transition-colors" />
+                <span className="text-slate-400 dark:text-slate-600">/</span>
+                <input type="number" value={currentYear} onChange={(e) => setCurrentYear(parseInt(e.target.value))} className="bg-transparent text-slate-900 dark:text-white font-semibold w-16 focus:outline-none hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors" />
               </div>
-              <button onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(y => y + 1); } else setCurrentMonth(m => m + 1); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></button>
+              <button onClick={() => { if (currentMonth === 12) { setCurrentMonth(1); setCurrentYear(y => y + 1); } else setCurrentMonth(m => m + 1); }} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-colors text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></button>
             </div>
           </div>
         </header>
 
-        {error && <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-6 text-red-300"><p className="font-bold mb-1 font-heading text-lg">System Error</p><p className="text-sm">{error}</p></div>}
+        {error && <div className="mb-6 glass-card border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-6 text-red-700 dark:text-red-300"><p className="font-bold mb-1 font-heading text-lg">System Error</p><p className="text-sm">{error}</p></div>}
 
         <div className="space-y-8 animate-fade-in">
           {/* 💳 Bill Due-Date Alert Banner */}
@@ -364,36 +364,36 @@ const Dashboard = () => {
           )}
 
           {/* Monthly Net Balance Master Card */}
-          <div className="glass-card p-10 relative overflow-hidden group border-emerald-500/10 bg-slate-800/20">
+          <div className="glass-card p-10 relative overflow-hidden group border border-slate-200 dark:border-emerald-500/10 bg-white/90 dark:bg-slate-800/20 shadow-sm">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-all transform group-hover:scale-110"><div className="w-64 h-64 rounded-full bg-emerald-500 blur-3xl" /></div>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
-                <p className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Monthly Net Balance</p>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">THIS MONTH</span>
+                <p className="text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Monthly Net Balance</p>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">THIS MONTH</span>
               </div>
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
-                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter text-center lg:text-left transition-all ${hideBalance ? 'blur-md select-none' : (monthlyBalance >= 0 ? "text-white" : "text-red-400")}`}>
+                <div className={`text-6xl md:text-8xl font-black font-heading tracking-tighter text-center lg:text-left transition-all ${hideBalance ? 'blur-md select-none' : (monthlyBalance >= 0 ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-red-400")}`}>
                   {formatCurrency(monthlyBalance, currencyStyle)}
                 </div>
                 
                 <div className="flex-1 max-w-xl w-full lg:self-end pb-4">
                   <div className="flex justify-between items-end mb-3 font-mono">
                     <div className="flex flex-col">
-                      <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest">Expense</span>
-                      <span className={`text-lg sm:text-xl font-bold text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyExpenses, currencyStyle)}</span>
+                      <span className="text-[10px] sm:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Expense</span>
+                      <span className={`text-lg sm:text-xl font-bold text-rose-600 dark:text-red-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyExpenses, currencyStyle)}</span>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-[10px] sm:text-xs font-black text-slate-500 uppercase tracking-widest">Income</span>
-                      <span className={`text-lg sm:text-xl font-bold text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyIncome, currencyStyle)}</span>
+                      <span className="text-[10px] sm:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Income</span>
+                      <span className={`text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-400 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(monthlyIncome, currencyStyle)}</span>
                     </div>
                   </div>
-                  <div className="h-5 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5 backdrop-blur-sm p-[2px]">
+                  <div className="h-5 w-full bg-slate-100 dark:bg-slate-700/40 rounded-full overflow-hidden border border-slate-200 dark:border-white/5 backdrop-blur-sm p-[2px]">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(16,185,129,0.3)] ${monthlyExpenses > monthlyIncome ? 'bg-red-500' : 'bg-emerald-500'}`}
                       style={{ width: `${Math.min((monthlyExpenses / (monthlyIncome || 1)) * 100, 100)}%` }}
                     />
                   </div>
-                  <div className="mt-2 flex justify-between items-center text-[9px] font-bold uppercase tracking-tighter text-slate-600">
+                  <div className="mt-2 flex justify-between items-center text-[9px] font-bold uppercase tracking-tighter text-slate-500 dark:text-slate-400">
                     <span>Usage: {((monthlyExpenses / (monthlyIncome || 1)) * 100).toFixed(1)}%</span>
                     <span>Remaining: <span className={hideBalance ? 'blur-[2px] select-none' : ''}>{formatCurrency(Math.max(0, monthlyIncome - monthlyExpenses), currencyStyle)}</span></span>
                   </div>
@@ -474,26 +474,26 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base font-bold text-white font-heading">Today's Focus & Habits</h3>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white font-heading">Today's Focus & Habits</h3>
                     {todayTasksTotal > 0 && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         {todayTasksCompleted}/{todayTasksTotal} Done ({todayTasksPct}%)
                       </span>
                     )}
                     {dashboardStreak > 0 && (
-                      <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                         <FiZap size={11} />
                         {dashboardStreak}d Streak
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">Track and complete your daily routines directly</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Track and complete your daily routines directly</p>
                 </div>
               </div>
 
               <Link
                 to="/tasks"
-                className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors w-fit group"
+                className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors w-fit group"
               >
                 <span>Open Task Manager</span>
                 <FiArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
@@ -503,7 +503,7 @@ const Dashboard = () => {
             {/* Progress Bar */}
             {todayTasksTotal > 0 && (
               <div className="mb-4">
-                <div className="h-2 w-full bg-slate-700/40 rounded-full overflow-hidden border border-white/5">
+                <div className="h-2 w-full bg-slate-100 dark:bg-slate-700/40 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
                   <div
                     className="h-full bg-emerald-500 rounded-full transition-all duration-700"
                     style={{ width: `${todayTasksPct}%` }}
@@ -514,11 +514,11 @@ const Dashboard = () => {
 
             {/* Quick-Action Task List */}
             {todayTasksTotal === 0 ? (
-              <div className="py-6 text-center rounded-xl bg-white/[0.02] border border-white/5">
-                <p className="text-xs text-slate-400">No habits or tasks scheduled for today.</p>
+              <div className="py-6 text-center rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
+                <p className="text-xs text-slate-500 dark:text-slate-400">No habits or tasks scheduled for today.</p>
                 <Link
                   to="/tasks"
-                  className="inline-flex items-center gap-1 text-xs text-emerald-400 font-semibold mt-2 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-2 hover:underline"
                 >
                   + Add daily habits in Task Manager
                 </Link>
@@ -532,20 +532,20 @@ const Dashboard = () => {
                     className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none group ${
                       task.completed_today
                         ? "bg-emerald-500/5 border-emerald-500/20 text-slate-400"
-                        : "bg-slate-700/30 hover:bg-slate-700/60 border-white/5 text-slate-200"
+                        : "bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/30 dark:hover:bg-slate-700/60 border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 shadow-sm"
                     }`}
                   >
                     <button
                       type="button"
                       className={`flex-shrink-0 transition-colors ${
-                        task.completed_today ? "text-emerald-400" : "text-slate-500 group-hover:text-emerald-400"
+                        task.completed_today ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500 group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
                       }`}
                     >
                       {task.completed_today ? <FiCheckCircle size={18} /> : <FiCircle size={18} />}
                     </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold truncate ${task.completed_today ? "line-through text-slate-500" : "text-white"}`}>
+                        <span className={`text-xs font-semibold truncate ${task.completed_today ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-white"}`}>
                           {task.title}
                         </span>
                         <span
@@ -567,7 +567,7 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="glass-card p-6">
-              <h3 className="text-lg font-bold text-white mb-6 font-heading">Income vs Expense</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 font-heading">Income vs Expense</h3>
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={[{ name: "Income", value: monthlyIncome, fill: "#10b981" }, { name: "Expense", value: monthlyExpenses, fill: "#ef4444" }]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -584,7 +584,7 @@ const Dashboard = () => {
             </div>
 
             <div className="glass-card p-6">
-              <h3 className="text-lg font-bold text-white mb-6 font-heading">Account Distribution</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 font-heading">Account Distribution</h3>
               <div className="h-64 w-full">
                 {accountDistributionData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
@@ -593,11 +593,11 @@ const Dashboard = () => {
                         {accountDistributionData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0)" />)}
                       </Pie>
                        <Tooltip {...tooltipStyle} formatter={(v: any) => formatCurrency(v, currencyStyle)} />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(v) => <span className="text-slate-400 text-sm ml-1">{v}</span>} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(v) => <span className="text-slate-500 dark:text-slate-400 text-sm ml-1">{v}</span>} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-slate-500 text-sm italic text-center">No cash balances available to chart</div>
+                  <div className="h-full flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm italic text-center">No cash balances available to chart</div>
                 )}
               </div>
             </div>
@@ -607,23 +607,23 @@ const Dashboard = () => {
           {goals.filter(g => !g.is_completed).length > 0 && (
             <div className="glass-card p-6 mb-8">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-white font-heading">Active Savings Goals</h3>
-                <Link to="/goals" className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-wider">View All</Link>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Active Savings Goals</h3>
+                <Link to="/goals" className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors uppercase tracking-wider">View All</Link>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {goals.filter(g => !g.is_completed).slice(0, 3).map(goal => {
                   const pct = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
                   return (
-                    <div key={goal.id} className="rounded-2xl border border-white/5 bg-slate-700/50 p-4 relative overflow-hidden group hover:bg-slate-700/80 transition-colors">
+                    <div key={goal.id} className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-700/50 p-4 relative overflow-hidden group hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-all shadow-sm">
                       <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none opacity-20" style={{ backgroundColor: goal.color }} />
                       <div className="flex items-center gap-3 mb-3 relative z-10">
                         <span className="text-2xl">{goal.icon}</span>
                         <div>
-                          <p className="text-sm font-bold text-white">{goal.name}</p>
-                          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{pct.toFixed(0)}% Saved</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{goal.name}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest">{pct.toFixed(0)}% Saved</p>
                         </div>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden relative z-10">
+                      <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden relative z-10">
                         <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: goal.color }} />
                       </div>
                     </div>
@@ -634,19 +634,19 @@ const Dashboard = () => {
           )}
 
           <div className="glass-card p-6">
-            <h3 className="text-lg font-bold text-white mb-6 font-heading">Account Wallets</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 font-heading">Account Wallets</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" ref={walletPopupRef}>
               {accountBalances.map((acc) => (
                 <div 
                   key={acc.accountType} 
-                  className="relative rounded-2xl border border-white/5 bg-slate-700/50 p-4 hover:bg-slate-700/80 transition-colors cursor-pointer"
+                  className="relative rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700/80 p-4 transition-all shadow-sm hover:shadow-md cursor-pointer"
                   onClick={() => setActiveWalletPopup(activeWalletPopup === acc.accountType ? null : acc.accountType)}
                 >
-                  <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">{acc.accountType}</span><div className={`h-2 w-2 rounded-full ${acc.balance >= 0 ? "bg-green-500" : "bg-red-500"}`} /></div>
-                  <div className={`text-xl font-bold text-white mb-3 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(acc.balance, currencyStyle)}</div>
+                  <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">{acc.accountType}</span><div className={`h-2 w-2 rounded-full ${acc.balance >= 0 ? "bg-green-500" : "bg-red-500"}`} /></div>
+                  <div className={`text-xl font-bold text-slate-900 dark:text-white mb-3 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(acc.balance, currencyStyle)}</div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px]"><span className="text-slate-500">Inbound</span><span className={`text-green-400 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>+{formatCurrency(acc.income, currencyStyle)}</span></div>
-                    <div className="flex justify-between text-[10px]"><span className="text-slate-500">Outbound</span><span className={`text-red-400 ${hideBalance ? 'blur-[2px] select-none' : ''}`}>-{formatCurrency(acc.expenses, currencyStyle)}</span></div>
+                    <div className="flex justify-between text-[10px]"><span className="text-slate-500 dark:text-slate-400">Inbound</span><span className={`text-emerald-600 dark:text-green-400 font-semibold ${hideBalance ? 'blur-[2px] select-none' : ''}`}>+{formatCurrency(acc.income, currencyStyle)}</span></div>
+                    <div className="flex justify-between text-[10px]"><span className="text-slate-500 dark:text-slate-400">Outbound</span><span className={`text-rose-600 dark:text-red-400 font-semibold ${hideBalance ? 'blur-[2px] select-none' : ''}`}>-{formatCurrency(acc.expenses, currencyStyle)}</span></div>
                   </div>
                   
                   {activeWalletPopup === acc.accountType && (
