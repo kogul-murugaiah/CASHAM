@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
+import { useCreditCards } from "../hooks/useCreditCards";
 import { useTheme } from "../contexts/ThemeContext";
 import { FiCreditCard } from "react-icons/fi";
 import { getLocalDateString, formatDate, formatShortDate } from "../lib/formatters";
@@ -73,6 +74,7 @@ const MONTH_NAMES = [
 
 const ExpenseTracking = () => {
     const { accountTypes } = useAccountTypes();
+    const { cards: creditCards } = useCreditCards();
     const { theme } = useTheme();
 
     // ─── Theme-aware chart styles ──────────────────────────────────
@@ -876,14 +878,14 @@ const ExpenseTracking = () => {
 
             {/* Edit Modal */}
             {isModalOpen && editingData && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-700/80 backdrop-blur-sm px-4 animate-fade-in shadow-2xl">
-                    <div className="w-full max-w-xl glass-card p-6 sm:p-8 animate-float-slow transform transition-all shadow-emerald-500/10">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 animate-fade-in shadow-2xl">
+                    <div className="w-full max-w-xl glass-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 p-6 sm:p-8 animate-float-slow transform transition-all shadow-2xl">
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-[10px] uppercase tracking-widest text-emerald-400 mb-1 font-bold">Quick Edit</p>
-                                <h3 className="text-2xl font-bold text-white font-heading">{editingData.item}</h3>
+                                <p className="text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1 font-bold">Quick Edit</p>
+                                <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">{editingData.item}</h3>
                             </div>
-                            <button onClick={handleCancel} className="rounded-full p-2 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all">
+                            <button onClick={handleCancel} className="rounded-full p-2 bg-slate-100 hover:bg-red-500/10 text-slate-400 hover:text-red-500 dark:bg-white/5 dark:hover:bg-red-500/20 dark:hover:text-red-400 transition-all">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
@@ -891,72 +893,101 @@ const ExpenseTracking = () => {
                         <div className="space-y-5">
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date</label>
-                                    <input type="date" value={editingData.date} onChange={(e) => setEditingData({ ...editingData, date: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</label>
+                                    <input type="date" value={editingData.date} onChange={(e) => setEditingData({ ...editingData, date: e.target.value })} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Amount (₹)</label>
-                                    <input type="number" value={editingData.amount} onChange={(e) => setEditingData({ ...editingData, amount: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-mono" />
+                                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Amount (₹)</label>
+                                    <input type="number" value={editingData.amount} onChange={(e) => setEditingData({ ...editingData, amount: e.target.value })} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 font-mono" />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Item Name</label>
-                                <input type="text" value={editingData.item} onChange={(e) => setEditingData({ ...editingData, item: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Item Name</label>
+                                <input type="text" value={editingData.item} onChange={(e) => setEditingData({ ...editingData, item: e.target.value })} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                             </div>
 
                             <div className="grid gap-5 sm:grid-cols-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
-                                    <select value={editingData.category_id} onChange={(e) => setEditingData({ ...editingData, category_id: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
+                                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Category</label>
+                                    <select value={editingData.category_id} onChange={(e) => setEditingData({ ...editingData, category_id: e.target.value })} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
                                         <option value="">Uncategorized</option>
                                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Account</label>
-                                    <select value={editingData.account_type} onChange={(e) => setEditingData({ ...editingData, account_type: e.target.value })} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
+                                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Account</label>
+                                    <select value={editingData.account_type} onChange={(e) => setEditingData({ ...editingData, account_type: e.target.value })} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 appearance-none cursor-pointer">
                                         {accountTypes.map(at => <option key={at} value={at}>{at}</option>)}
                                     </select>
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description</label>
-                                <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none" />
+                                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Description</label>
+                                <textarea value={editingData.description} onChange={(e) => setEditingData({ ...editingData, description: e.target.value })} rows={2} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none" />
                             </div>
 
                             {/* Credit Card Toggle in Edit */}
-                            <div className="rounded-xl border border-white/10 bg-slate-800/50 p-3.5 space-y-3">
-                                <label className="flex items-center justify-between cursor-pointer">
-                                    <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                                        <FiCreditCard className="text-purple-400" />
+                            <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-3">
+                                <label className="flex items-center justify-between cursor-pointer select-none">
+                                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                        <FiCreditCard className="text-emerald-500" />
                                         Paid via Credit Card?
                                     </span>
                                     <input
                                         type="checkbox"
                                         checked={editingData.paid_via_credit_card}
-                                        onChange={(e) => setEditingData({ ...editingData, paid_via_credit_card: e.target.checked })}
-                                        className="w-4 h-4 rounded border-white/20 bg-slate-700 text-purple-600 focus:ring-purple-500/30 cursor-pointer"
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setEditingData({
+                                                ...editingData,
+                                                paid_via_credit_card: checked,
+                                                credit_card_name: checked ? (editingData.credit_card_name || creditCards[0]?.name || "") : ""
+                                            });
+                                        }}
+                                        className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-slate-700 text-emerald-600 focus:ring-emerald-500/30 cursor-pointer"
                                     />
                                 </label>
 
                                 {editingData.paid_via_credit_card && (
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase text-purple-300 mb-1">Card Name</label>
-                                        <input
-                                            type="text"
-                                            placeholder="e.g. HDFC Millennia, Slice Card"
-                                            value={editingData.credit_card_name}
-                                            onChange={(e) => setEditingData({ ...editingData, credit_card_name: e.target.value })}
-                                            className="w-full rounded-lg border border-white/10 bg-slate-700/50 px-3 py-2 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
-                                        />
+                                    <div className="space-y-1.5 pt-3 border-t border-slate-200 dark:border-white/5">
+                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                            Choose Credit Card
+                                        </label>
+                                        {creditCards.length > 0 ? (
+                                            <select
+                                                value={editingData.credit_card_name}
+                                                onChange={(e) => setEditingData({ ...editingData, credit_card_name: e.target.value })}
+                                                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 cursor-pointer shadow-sm"
+                                            >
+                                                <option value="">— Select a Credit Card —</option>
+                                                {creditCards.map(c => (
+                                                    <option key={c.id} value={c.name}>
+                                                        {c.name} {c.card_last4 ? `(••${c.card_last4})` : ''}
+                                                    </option>
+                                                ))}
+                                                {editingData.credit_card_name && !creditCards.some(c => c.name === editingData.credit_card_name) && (
+                                                    <option value={editingData.credit_card_name}>
+                                                        {editingData.credit_card_name}
+                                                    </option>
+                                                )}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. HDFC Millennia, Slice Card"
+                                                value={editingData.credit_card_name}
+                                                onChange={(e) => setEditingData({ ...editingData, credit_card_name: e.target.value })}
+                                                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-sm"
+                                            />
+                                        )}
                                     </div>
                                 )}
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">
-                                <button onClick={handleCancel} disabled={saving} className="rounded-xl px-6 py-2.5 text-xs font-bold text-slate-500 hover:text-white hover:bg-white/5 transition-all">Cancel</button>
+                                <button onClick={handleCancel} disabled={saving} className="rounded-xl px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 transition-all">Cancel</button>
                                 <button onClick={handleSave} disabled={saving} className="rounded-xl bg-emerald-600 px-8 py-2.5 text-xs font-bold text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-500 transition-all disabled:opacity-50">{saving ? "Saving..." : "Apply Changes"}</button>
                             </div>
                         </div>
