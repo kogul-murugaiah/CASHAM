@@ -12,15 +12,26 @@ export function heatColor(count: number, isDark: boolean, customColor?: string):
     return '#16a34a';
 }
 
-// ─── Generate last 52 weeks × 7 days grid ───────────────────────────────────
+// ─── Generate 52 weeks (Monday to Sunday) grid ending on the current week ──────
 export function buildHeatmapGrid(): string[] {
     const today = new Date();
+    // Monday-based week: 0 for Mon, ..., 6 for Sun
+    const dow = today.getDay();
+    const diffToMonday = dow === 0 ? 6 : dow - 1;
+
+    // Current week's Monday
+    const currentMonday = new Date(today);
+    currentMonday.setDate(today.getDate() - diffToMonday);
+
+    // 52 weeks total (51 past weeks + current week), starting 51 weeks before current Monday
+    const startMonday = new Date(currentMonday);
+    startMonday.setDate(currentMonday.getDate() - 51 * 7);
+
+    // 52 weeks * 7 days = 364 days total
     const dates: string[] = [];
-    const startDay = new Date(today);
-    startDay.setDate(today.getDate() - 363 - today.getDay());
-    for (let i = 0; i < 365; i++) {
-        const d = new Date(startDay);
-        d.setDate(startDay.getDate() + i);
+    for (let i = 0; i < 52 * 7; i++) {
+        const d = new Date(startMonday);
+        d.setDate(startMonday.getDate() + i);
         dates.push(getLocalDateStr(d));
     }
     return dates;
@@ -335,6 +346,7 @@ export function ContributionHeatmap({
     isDark: boolean;
     customColor?: string;
 }) {
+    const todayStr = useMemo(() => getLocalDateStr(), []);
     const grid = useMemo(() => buildHeatmapGrid(), []);
     const weeks: string[][] = [];
     for (let i = 0; i < grid.length; i += 7) {
@@ -342,8 +354,9 @@ export function ContributionHeatmap({
     }
     const monthLabels: { label: string; col: number }[] = [];
     weeks.forEach((week, wi) => {
-        const d = new Date(week[0]);
-        if (wi === 0 || d.getDate() <= 7) {
+        const [y, m, dayNum] = week[0].split('-').map(Number);
+        const d = new Date(y, m - 1, dayNum);
+        if (wi === 0 || dayNum <= 7) {
             const label = d.toLocaleDateString('en-US', { month: 'short' });
             if (monthLabels.length === 0 || monthLabels[monthLabels.length - 1].label !== label) {
                 monthLabels.push({ label, col: wi });
@@ -367,11 +380,11 @@ export function ContributionHeatmap({
             </div>
 
             <div className="flex gap-0.5">
-                {/* Day labels */}
+                {/* Day labels: Mon to Sun with M, W, F labeled */}
                 <div className="flex flex-col gap-0.5 mr-1 pt-0">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
                         <div key={i} className={`w-3 h-3 text-[9px] flex items-center justify-center ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                            {i % 2 === 1 ? d : ''}
+                            {i === 0 || i === 2 || i === 4 ? d : ''}
                         </div>
                     ))}
                 </div>
@@ -380,13 +393,23 @@ export function ContributionHeatmap({
                 {weeks.map((week, wi) => (
                     <div key={wi} className="flex flex-col gap-0.5">
                         {week.map(date => {
+                            const isToday = date === todayStr;
+                            const isFuture = date > todayStr;
                             const c = counts[date] || 0;
                             return (
                                 <div
                                     key={date}
-                                    title={`${date}: ${c > 0 ? (customColor ? 'Completed' : `${c} tasks`) : 'No completions'}`}
-                                    className="w-3 h-3 rounded-sm transition-all hover:ring-1 hover:ring-emerald-400 cursor-default"
-                                    style={{ backgroundColor: heatColor(c, isDark, c > 0 ? customColor : undefined) }}
+                                    title={`${date}${isToday ? ' (Today)' : ''}: ${isFuture ? 'Upcoming' : c > 0 ? (customColor ? 'Completed' : `${c} task${c > 1 ? 's' : ''}`) : 'No completions'}`}
+                                    className={`w-3 h-3 rounded-sm transition-all cursor-default ${
+                                        isToday ? 'ring-1 ring-emerald-400 ring-offset-1' : ''
+                                    } ${
+                                        isFuture ? 'opacity-25' : 'hover:ring-1 hover:ring-emerald-400'
+                                    }`}
+                                    style={{
+                                        backgroundColor: isFuture
+                                            ? (isDark ? '#1e293b' : '#f1f5f9')
+                                            : heatColor(c, isDark, c > 0 ? customColor : undefined)
+                                    }}
                                 />
                             );
                         })}
