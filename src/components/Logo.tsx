@@ -7,7 +7,7 @@
  * Description: Casham logo component with different sizes
  */
 
-import cashamLogo from "../assets/casham logo.png";
+import cashamLogo from "../assets/casham logo.webp";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg" | "xl";

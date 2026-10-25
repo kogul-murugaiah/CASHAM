@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
 
             // 1. Fetch budget month
-            let { data: budgetMonth, error: monthError } = await supabaseAdmin
+            const { data: budgetMonth, error: monthError } = await supabaseAdmin
                 .from('budget_months')
                 .select('*')
                 .eq('user_id', user.id)
@@ -89,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // Upsert doesn't work perfectly without unique index on user_id, month, year 
             // but we added it in the schema, so we can use an upsert-like logic
-            let { data: existing } = await supabaseAdmin
+            const { data: existing } = await supabaseAdmin
                 .from('budget_months')
                 .select('id')
                 .eq('user_id', user.id)

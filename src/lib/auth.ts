@@ -8,7 +8,7 @@ export const getCurrentUser = async () => {
   try {
     const data = await api.get('/api/auth/user');
     return data?.user || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };

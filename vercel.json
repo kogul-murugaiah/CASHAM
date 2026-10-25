@@ -8,5 +8,11 @@
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/prices/refresh",
+      "schedule": "30 2 * * *"
+    }
   ]
 }

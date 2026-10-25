@@ -270,14 +270,18 @@ const Portfolio = () => {
         return totalInc - totalExp - totalInv + totalRed;
       });
       setNetWorthCash(balances.reduce((a, b) => a + b, 0));
-    } catch {}
+    } catch {
+      // Ignore cash balance calculation error
+    }
   };
 
   const fetchSummary = async () => {
     try {
       const data = await api.get("/api/investments?summary=true");
       setSummary(data);
-    } catch {}
+    } catch {
+      // Ignore investment summary fetch error
+    }
   };
 
   const fetchRecords = async (type: string) => {
@@ -360,7 +364,9 @@ const Portfolio = () => {
       setRecords(prev => prev.map(r => r.id === id ? { ...r, current_value } : r));
       setAllRecords(prev => prev.map(r => r.id === id ? { ...r, current_value } : r));
       fetchSummary();
-    } catch {}
+    } catch {
+      // Ignore price update error
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -370,7 +376,9 @@ const Portfolio = () => {
       setRecords(prev => prev.filter(r => r.id !== id));
       setAllRecords(prev => prev.filter(r => r.id !== id));
       fetchSummary();
-    } catch {}
+    } catch {
+      // Ignore deletion error
+    }
   };
 
   const pnlColor = (pnl: number) => pnl >= 0 ? "text-emerald-400" : "text-red-400";

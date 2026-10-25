@@ -7,7 +7,7 @@
  * Description: A comprehensive expense tracking application with dark theme UI
  */
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
 import MobileBottomNav from './components/MobileBottomNav';
@@ -16,11 +16,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import AuthCallback from './pages/AuthCallback';
-import { Suspense, lazy } from 'react';
-import Dashboard from './pages/Dashboard';
-import LandingPage from './pages/LandingPage';
+import { Suspense, lazy, useEffect } from 'react';
 
 // Lazy-loaded components for route-based code splitting
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+
 const AddExpense = lazy(() => import('./pages/AddExpense'));
 const AddIncome = lazy(() => import('./pages/AddIncome'));
 const ExpenseTracking = lazy(() => import('./pages/ExpenseTracking'));
@@ -50,10 +51,22 @@ const PageLoader = () => (
   </div>
 );
 
+// Listens for 401 events from the API client and navigates softly (no page reload).
+function UnauthorizedHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handler = () => navigate('/login', { replace: true });
+    window.addEventListener('casham:unauthorized', handler);
+    return () => window.removeEventListener('casham:unauthorized', handler);
+  }, [navigate]);
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
+        <UnauthorizedHandler />
         <div className="min-h-screen relative overflow-hidden bg-slate-900 text-slate-100 font-sans">
           {/* Ambient Background Mesh */}
           <div className="fixed inset-0 z-0 pointer-events-none">
@@ -65,7 +78,7 @@ function App() {
           {/* Content */}
           <div className="relative z-10 w-full min-h-screen flex flex-col">
             <Routes>
-              <Route path="/" element={<LandingPage />} />
+              <Route path="/" element={<Suspense fallback={<PageLoader />}><LandingPage /></Suspense>} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth/callback" element={<AuthCallback />} />

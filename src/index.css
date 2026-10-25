@@ -1,37 +1,81 @@
 /*
- * Expense Tracker App
+ * CASHAM - Expense Tracker App
+ * Fonts (Outfit, Inter) are loaded via <link> in index.html.
  */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-slate-900 text-slate-50 font-sans antialiased selection:bg-emerald-500/30 selection:text-blue-200;
-  }
-
   :root {
     --font-heading: 'Outfit', sans-serif;
+    color-scheme: light;
+    --bg-app: #f8fafc;
+    --bg-card: #ffffff;
+    --border-card: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    --bg-app: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.7);
+    --border-card: rgba(255, 255, 255, 0.08);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    selection-background-color: rgba(16, 185, 129, 0.3);
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-slate-700/40 backdrop-blur-md border border-white/5 shadow-xl rounded-3xl transition-all duration-300 hover:bg-slate-700/50 hover:border-white/10 hover:shadow-2xl hover:shadow-emerald-900/20;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html.dark .glass-card {
+    background-color: rgba(51, 65, 85, 0.4);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(16, 185, 129, 0.3);
   }
 
   .glass-nav {
-    @apply bg-slate-900/70 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 transition-all duration-300;
+    @apply sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300;
+    background-color: var(--bg-card);
+    border-color: var(--border-card);
+  }
+
+  html.dark .glass-nav {
+    background-color: rgba(15, 23, 42, 0.8);
+    border-color: rgba(255, 255, 255, 0.06);
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium px-6 py-2.5 rounded-full shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 bg-[length:200%_200%] animate-gradient;
+    @apply bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium px-6 py-2.5 rounded-full shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 bg-[length:200%_200%];
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-400 to-green-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500;
   }
 }
 
@@ -42,470 +86,154 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
 
-/* ── LIGHT THEME OVERRIDES ────────────────────────────────────────────────── */
-html.dark {
-  color-scheme: dark;
-}
-
-html.light {
-  color-scheme: light;
-}
-
-html.light body {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-/* Page backgrounds */
+/* ── LIGHT THEME UNIFIED SPECIFICATION ───────────────────────────────────────── */
+html.light body,
 html.light .bg-slate-900,
 html.light .min-h-screen {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc;
 }
 
-html.light .bg-slate-900 {
-  background-color: #e2e8f0 !important;
+/* Light Mode Card & Container Overrides */
+html.light .bg-slate-800 {
+  background-color: #ffffff;
 }
 
 html.light .bg-slate-700 {
-  background-color: #cbd5e1 !important;
+  background-color: #f1f5f9;
 }
 
-/* Sidebar */
 html.light aside {
-  background-color: rgba(255, 255, 255, 0.85) !important;
-  border-color: #e2e8f0 !important;
+  background-color: #134e4a;
+  border-color: #134e4a;
 }
 
-html.light aside .border-white\/5 {
-  border-color: #e2e8f0 !important;
+html.light aside nav a,
+html.light aside nav button {
+  color: #99f6e4;
 }
 
-/* Mobile top bar */
-html.light header {
-  background-color: rgba(255, 255, 255, 0.85) !important;
-  border-color: #e2e8f0 !important;
+html.light aside nav a:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Glass cards */
-html.light .glass-card {
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+html.light aside .text-white,
+html.light aside h1,
+html.light aside span.text-slate-200,
+html.light aside span.text-slate-300 {
+  color: #ffffff;
 }
 
-html.light .glass-card:hover {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: #cbd5e1 !important;
+/* Header & Inputs in Light Mode */
+html.light header.bg-slate-700\/80,
+html.light header.bg-slate-800 {
+  background-color: #134e4a;
+  border-color: #134e4a;
 }
 
-/* Text colors */
-html.light .text-white {
-  color: #0f172a !important;
-}
-
-html.light .text-slate-100 {
-  color: #1e293b !important;
-}
-
-html.light .text-slate-200 {
-  color: #334155 !important;
-}
-
-html.light .text-slate-300 {
-  color: #475569 !important;
-}
-
-html.light .text-slate-400 {
-  color: #64748b !important;
-}
-
-html.light .text-slate-500 {
-  color: #94a3b8 !important;
-}
-
-/* Nav links */
-html.light nav a,
-html.light nav button {
-  color: #475569;
-}
-
-html.light nav a:hover {
-  color: #0f172a !important;
-}
-
-html.light nav a.text-emerald-400 {
-  color: #2563eb !important;
-}
-
-/* Active sidebar link */
-html.light .bg-emerald-500\/15 {
-  background-color: rgba(59, 130, 246, 0.15) !important;
-}
-
-html.light .border-emerald-500\/20 {
-  border-color: rgba(59, 130, 246, 0.3) !important;
-}
-
-/* Inputs and form elements */
 html.light input,
 html.light select,
 html.light textarea {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 html.light input::placeholder,
 html.light textarea::placeholder {
-  color: #94a3b8 !important;
+  color: #94a3b8;
 }
 
-/* Tables */
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #10b981;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* Tables in Light Mode */
 html.light table tr {
-  border-color: #e2e8f0 !important;
+  border-color: #e2e8f0;
 }
 
 html.light table thead {
-  background-color: rgba(241, 245, 249, 0.8) !important;
+  background-color: rgba(241, 245, 249, 0.85);
 }
 
 html.light table tbody tr:hover {
-  background-color: rgba(241, 245, 249, 0.5) !important;
+  background-color: rgba(241, 245, 249, 0.5);
 }
 
-/* Buttons with bg-white/5 */
-html.light .bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.05) !important;
-}
-
-html.light .bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-html.light .bg-white\/3 {
-  background-color: rgba(0, 0, 0, 0.03) !important;
-}
-
-html.light .border-white\/5 {
-  border-color: #e2e8f0 !important;
-}
-
-html.light .border-white\/10 {
-  border-color: #cbd5e1 !important;
-}
-
-/* Ambient background glows (hide in light mode) */
-html.light .blur-\[120px\],
-html.light .blur-\[100px\] {
-  opacity: 0.15 !important;
-}
-
-/* Scrollbar */
-html.light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-html.light ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-}
-
-html.light ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Month picker */
-html.light .bg-slate-700\/40 {
-  background-color: rgba(226, 232, 240, 0.6) !important;
-}
-
-/* Dropdown / modal backgrounds */
-html.light .bg-slate-900\/95 {
-  background-color: rgba(255, 255, 255, 0.98) !important;
-}
-
-html.light .bg-slate-900\/80 {
-  background-color: rgba(255, 255, 255, 0.85) !important;
-}
-
-html.light .bg-slate-900\/60 {
-  background-color: rgba(15, 23, 42, 0.4) !important;
-}
-
-html.light .bg-slate-900\/70 {
-  background-color: rgba(15, 23, 42, 0.4) !important;
-}
-
-/* Login / Signup card */
-html.light .bg-slate-900\/80 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-}
-
-html.light .bg-slate-700\/50 {
-  background-color: rgba(226, 232, 240, 0.5) !important;
-}
-
-/* ── LANDING PAGE LIGHT THEME OVERRIDES ─────────────────────────────────── */
+/* Landing Page Light Theme */
 html.light .landing-page,
 html.light .landing-page .bg-slate-900,
 html.light .landing-page section.bg-slate-900 {
-  background-color: #f8fafc !important;
-  background-image: radial-gradient(#cbd5e1 1px, transparent 1px) !important;
-  background-size: 32px 32px !important;
+  background-color: #f8fafc;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 html.light .landing-page .bg-slate-900\/80 {
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  border-bottom-color: #e2e8f0 !important;
-}
-
-html.light .landing-page .from-emerald-900\/20 {
-  background-image: radial-gradient(ellipse at top, #eff6ff 0%, transparent 70%) !important;
-}
-
-/* Show ambient background glows on landing page */
-html.light .landing-page .blur-\[120px\],
-html.light .landing-page .blur-\[100px\] {
-  opacity: 0.6 !important;
-  mix-blend-mode: multiply !important;
-}
-
-html.light .landing-page .bg-emerald-600\/15 {
-  background-color: rgba(37, 99, 235, 0.15) !important;
-}
-
-html.light .landing-page .bg-green-600\/15 {
-  background-color: rgba(147, 51, 234, 0.15) !important;
+  background-color: rgba(255, 255, 255, 0.85);
+  border-bottom-color: #e2e8f0;
 }
 
 html.light .landing-page .from-emerald-400 {
-  --tw-gradient-from: #2563eb !important;
+  --tw-gradient-from: #059669;
 }
 
 html.light .landing-page .via-teal-400 {
-  --tw-gradient-via: #4f46e5 !important;
+  --tw-gradient-via: #0d9488;
 }
 
 html.light .landing-page .to-green-400 {
-  --tw-gradient-to: #9333ea !important;
+  --tw-gradient-to: #0284c7;
 }
 
 html.light .landing-page .bg-emerald-900\/30 {
-  background-color: #dbeafe !important;
-  border-color: #bfdbfe !important;
-  color: #1d4ed8 !important;
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
 }
 
 html.light .landing-page button.bg-slate-700,
 html.light .landing-page a.bg-slate-700 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-html.light .landing-page button.bg-slate-700:hover,
-html.light .landing-page a.bg-slate-700:hover {
-  background-color: #f8fafc !important;
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 html.light .landing-page section.bg-slate-700\/30 {
-  background-color: #f8fafc !important;
-}
-
-html.light .landing-page .bg-slate-700\/50 {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-}
-
-html.light .landing-page .bg-slate-700\/50:hover {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-}
-
-html.light .landing-page section#pricing .bg-slate-900.border {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-}
-
-html.light .landing-page section#pricing .bg-slate-900.border:hover {
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+  background-color: #f8fafc;
 }
 
 html.light .landing-page .border-emerald-500\/30 {
-  border-color: #bfdbfe !important;
-  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.1) !important;
-}
-
-html.light .landing-page h3.text-emerald-400 {
-  color: #2563eb !important;
-}
-
-html.light .landing-page h3.text-teal-400 {
-  color: #4f46e5 !important;
-}
-
-html.light .landing-page svg.text-green-400 {
-  color: #16a34a !important;
-}
-
-html.light .landing-page svg.text-emerald-400 {
-  color: #2563eb !important;
-}
-
-html.light .landing-page svg.text-teal-400 {
-  color: #4f46e5 !important;
+  border-color: #a7f3d0;
+  box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.1);
 }
 
 html.light .landing-page footer.bg-slate-900 {
-  background-color: #f8fafc !important;
-  border-top-color: #e2e8f0 !important;
-}
-
-html.light .landing-page footer .text-slate-100 {
-  color: #0f172a !important;
-}
-
-html.light .landing-page footer p.text-slate-400 {
-  color: #475569 !important;
-}
-
-html.light .landing-page footer a.text-slate-400,
-html.light .landing-page footer button.text-slate-400 {
-  color: #64748b !important;
-}
-
-html.light .landing-page footer a.text-slate-400:hover,
-html.light .landing-page footer button.text-slate-400:hover {
-  color: #2563eb !important;
-}
-
-html.light .landing-page .border-slate-700\/50,
-html.light .landing-page .border-slate-700,
-html.light .landing-page .border-slate-800 {
-  border-color: #e2e8f0 !important;
-}
-
-html.light .landing-page .text-slate-500 {
-  color: #64748b !important;
-}
-
-html.light .landing-page .hover\:bg-slate-700:hover {
-  background-color: #f8fafc !important;
-}
-
-html.light .landing-page .hover\:bg-slate-700:hover {
-  background-color: #f1f5f9 !important;
-}
-
-html.light .landing-page .hover\:border-slate-600:hover {
-  border-color: #cbd5e1 !important;
-}
-
-/* -------------- ENFIX FINTECH LIGHT THEME ---------------- */
-html.light body,
-html.light .bg-slate-\[800\],
-html.light .bg-slate-\[900\],
-html.light .bg-slate-900,
-html.light .min-h-screen {
-  background-color: #f8fafc !important; /* Cool Off-White */
-}
-
-/* Float Cards Exceptionally */
-html.light .glass-card {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  box-shadow: 0 4px 20px rgba(13, 148, 136, 0.08) !important; /* Soft Teal Shadow */
-}
-
-/* Strong Dark Teal Sidebar */
-html.light aside,
-html.light aside.bg-slate-900\/60,
-html.light aside.bg-slate-700\/60 {
-  background-color: #134e4a !important; /* Deep Teal 900 */
-  border-color: #134e4a !important;
-}
-html.light header.bg-slate-700\/80 {
-  background-color: #134e4a !important;
-}
-
-html.light aside .text-slate-400,
-html.light aside .text-slate-500,
-html.light aside nav button,
-html.light aside nav a {
-  color: #99f6e4 !important; /* Teal 200 */
-}
-html.light aside .text-white, 
-html.light aside h1, 
-html.light aside span.text-slate-200, 
-html.light aside span.text-slate-300 {
-  color: #ffffff !important;
-}
-html.light aside nav a:hover {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-}
-html.light aside .bg-emerald-500\/15,
-html.light aside .bg-blue-500\/15 {
-  background-color: rgba(20, 184, 166, 0.3) !important; /* Teal 500 selection */
-}
-html.light aside .border-emerald-500\/20,
-html.light aside .border-blue-500\/20 {
-  border-color: rgba(20, 184, 166, 0.6) !important;
-}
-
-/* Glass Hero Banner in Tracking Pages */
-html.light .from-emerald-600\/20,
-html.light .to-teal-600\/20 {
-  --tw-gradient-from: rgba(255, 255, 255, 0.8) !important;
-  --tw-gradient-to: rgba(255, 255, 255, 0.8) !important;
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  border-color: #cbd5e1 !important;
-}
-
-/* Inputs on Add Transaction pages */
-html.light .bg-slate-\[700\]\/50, 
-html.light .bg-slate-700\/50 {
-  background-color: #ffffff !important;
-  border-color: #cbd5e1 !important;
-}
-html.light .bg-slate-700\/50:focus,
-html.light input:focus,
-html.light select:focus,
-html.light textarea:focus {
-  border-color: #14b8a6 !important;
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1) !important;
-}
-
-/* Text Visibility */
-html.light .text-emerald-200, 
-html.light .text-blue-200,
-html.light .text-emerald-300,
-html.light .text-blue-300 {
-  color: #0f766e !important; /* Teal 700 */
-}
-html.light .text-emerald-400 {
-  color: #0d9488 !important; /* Teal 600 */
-}
-
-/* KPI Badges */
-html.light .bg-emerald-500\/10 {
-  background-color: #f0fdfa !important; /* Teal 50 */
-  border-color: #ccfbf1 !important; /* Teal 100 */
-}
-html.light .bg-red-500\/10 {
-  background-color: #fff1f2 !important; /* Rose 50 */
-  border-color: #ffe4e6 !important; /* Rose 100 */
+  background-color: #f8fafc;
+  border-top-color: #e2e8f0;
 }

@@ -38,19 +38,11 @@ const AddIncome = () => {
   };
 
   const handleAddSource = async (name: string) => {
-    try {
-      await addSource(name);
-    } catch (err: any) {
-      throw err;
-    }
+    await addSource(name);
   };
 
   const handleAddAccountType = async (name: string) => {
-    try {
-      await addAccountType(name);
-    } catch (err: any) {
-      throw err;
-    }
+    await addAccountType(name);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {

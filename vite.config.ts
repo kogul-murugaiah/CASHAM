@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['casham-logo.png'],
+      includeAssets: ['casham-logo.webp'],
       manifest: {
         name: 'CASHAM',
         short_name: 'CASHAM',
@@ -18,15 +18,15 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'casham-logo.png',
+            src: 'casham-logo.webp',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/webp',
             purpose: 'any'
           },
           {
-            src: 'casham-logo.png',
+            src: 'casham-logo.webp',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/webp',
             purpose: 'any maskable'
           }
         ]
@@ -40,6 +40,17 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-icons': ['react-icons'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-xlsx': ['xlsx'],
+        },
+      },
+    },
   },
 });
 

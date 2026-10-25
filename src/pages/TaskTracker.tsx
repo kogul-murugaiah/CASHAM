@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ElementType } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTasks, getLocalDateStr, type Task, type NewTaskPayload } from '../hooks/useTasks';
 import {
@@ -10,1290 +10,31 @@ import {
     type NotificationStatus,
 } from '../lib/notifications';
 import {
-    FiCheckCircle, FiCircle, FiPlus, FiTrash2, FiEdit2,
-    FiZap, FiSun, FiMoon, FiCoffee, FiClock,
-    FiX, FiSave, FiAward, FiTrendingUp, FiActivity,
-    FiSearch, FiFilter, FiPause, FiPlay, FiStopCircle, FiCalendar, FiBarChart2,
-    FiChevronLeft, FiChevronRight, FiBell, FiBellOff, FiRepeat
+    FiCheckCircle, FiPlus, FiBell, FiBellOff,
+    FiZap, FiAward, FiTrendingUp, FiActivity,
+    FiFilter, FiCalendar, FiBarChart2,
+    FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
+import {
+    type Tab,
+    type FrequencyType,
+    CATEGORIES,
+    PRIORITY_WEIGHT,
+    TIME_BLOCKS,
+    formatNiceDate,
+    formatDisplayDate,
+    shiftDateStr,
+} from '../components/tasks/taskConstants';
+import { AddEditTaskModal } from '../components/tasks/TaskModal';
+import { TaskCard } from '../components/tasks/TaskCard';
+import {
+    MonthHeatmap,
+    ContributionHeatmap,
+    WeeklyActivityChart,
+    calcStreaks,
+} from '../components/tasks/TaskHeatmap';
+import { TaskFilterBar } from '../components/tasks/TaskFilterBar';
 
-// ─── Types ──────────────────────────────────────────────────────────────────────
-type Tab = 'today' | 'all' | 'goals' | 'performance';
-type TimeBlock = 'morning' | 'afternoon' | 'evening' | 'anytime';
-type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'one_time' | 'custom';
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const CATEGORIES = ['Personal', 'Health', 'Work', 'Finance', 'Learning', 'Social', 'Fitness', 'Other'];
-const COLORS = [
-    '#10b981', '#6366f1', '#f59e0b', '#ef4444',
-    '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6',
-];
-const PRIORITY_COLORS = { low: 'emerald', medium: 'amber', high: 'red' } as const;
-const TIME_BLOCKS: { key: TimeBlock; label: string; icon: ElementType; range: string }[] = [
-    { key: 'morning', label: 'Morning', icon: FiSun, range: '6 AM – 12 PM' },
-    { key: 'afternoon', label: 'Afternoon', icon: FiCoffee, range: '12 PM – 5 PM' },
-    { key: 'evening', label: 'Evening', icon: FiMoon, range: '5 PM – 10 PM' },
-    { key: 'anytime', label: 'Anytime', icon: FiZap, range: 'No specific time' },
-];
-
-// ─── Date Formatting Helpers ────────────────────────────────────────────────
-function formatNiceDate(dateStr: string): string {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function formatDisplayDate(dateStr: string, todayStr: string, yesterdayStr: string): string {
-    if (dateStr === todayStr) return `Today · ${formatNiceDate(dateStr)}`;
-    if (dateStr === yesterdayStr) return `Yesterday · ${formatNiceDate(dateStr)}`;
-    return formatNiceDate(dateStr);
-}
-
-function shiftDateStr(dateStr: string, daysDelta: number): string {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    date.setDate(date.getDate() + daysDelta);
-    return getLocalDateStr(date);
-}
-
-// ─── Heatmap cell color ──────────────────────────────────────────────────────
-function heatColor(count: number, isDark: boolean, customColor?: string): string {
-    if (count === 0) return isDark ? '#1e293b' : '#f1f5f9';
-    if (customColor) return customColor;
-    if (count === 1) return '#bbf7d0';
-    if (count === 2) return '#4ade80';
-    if (count === 3) return '#22c55e';
-    return '#16a34a';
-}
-
-// ─── Generate last 52 weeks × 7 days grid ───────────────────────────────────
-function buildHeatmapGrid(): string[] {
-    const today = new Date();
-    const dates: string[] = [];
-    const startDay = new Date(today);
-    startDay.setDate(today.getDate() - 363 - today.getDay());
-    for (let i = 0; i < 365; i++) {
-        const d = new Date(startDay);
-        d.setDate(startDay.getDate() + i);
-        dates.push(getLocalDateStr(d));
-    }
-    return dates;
-}
-
-// ─── Streak calculation ──────────────────────────────────────────────────────
-function calcStreaks(counts: Record<string, number | undefined>): { current: number; best: number } {
-    const today = getLocalDateStr();
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = getLocalDateStr(yesterdayDate);
-
-    const dates = buildHeatmapGrid().filter(d => d <= today);
-    let best = 0;
-    let temp = 0;
-    for (const d of dates) {
-        if ((counts[d] || 0) > 0) {
-            temp++;
-            if (temp > best) best = temp;
-        } else {
-            temp = 0;
-        }
-    }
-
-    let current = 0;
-    const hasToday = (counts[today] || 0) > 0;
-    const hasYesterday = (counts[yesterday] || 0) > 0;
-
-    if (hasToday) {
-        const allDates = [...dates].reverse();
-        for (const d of allDates) {
-            if ((counts[d] || 0) > 0) current++;
-            else break;
-        }
-    } else if (hasYesterday) {
-        const allDates = [...dates].filter(d => d <= yesterday).reverse();
-        for (const d of allDates) {
-            if ((counts[d] || 0) > 0) current++;
-            else break;
-        }
-    } else {
-        current = 0;
-    }
-
-    return { current, best };
-}
-
-// ─── AddEditTaskModal ─────────────────────────────────────────────────────────
-interface ModalProps {
-    isDark: boolean;
-    task?: Task;
-    defaultFrequency?: FrequencyType;
-    onClose: () => void;
-    onSave: (payload: NewTaskPayload) => Promise<void>;
-}
-
-function AddEditTaskModal({ isDark, task, defaultFrequency, onClose, onSave }: ModalProps) {
-    const [title, setTitle] = useState(task?.title || '');
-    const [description, setDescription] = useState(task?.description || '');
-    const [category, setCategory] = useState(task?.category || 'Personal');
-    const [color, setColor] = useState(task?.color || '#10b981');
-    const [frequencyType, setFrequencyType] = useState<FrequencyType>(task?.frequency_type || defaultFrequency || 'daily');
-    const [freqDays, setFreqDays] = useState<number[]>(task?.frequency_days || []);
-    const [freqMonthlyDate, setFreqMonthlyDate] = useState(task?.frequency_monthly_date || 1);
-    const [freqXTimes, setFreqXTimes] = useState<number>(task?.frequency_x_times || 2);
-    const [customStartDate, setCustomStartDate] = useState<string>(task?.due_date || getLocalDateStr());
-    const [timeBlock, setTimeBlock] = useState<TimeBlock>(task?.time_block || 'anytime');
-    const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium');
-    const [estimatedMins, setEstimatedMins] = useState(task?.estimated_minutes?.toString() || '');
-    const [dueDate, setDueDate] = useState(task?.due_date || '');
-    const [carryForward, setCarryForward] = useState(task?.carry_forward ?? true);
-    const [endDate, setEndDate] = useState(task?.end_date || '');
-    const [saving, setSaving] = useState(false);
-
-    const card = isDark
-        ? 'bg-slate-800 border-slate-700 text-slate-100'
-        : 'bg-white border-slate-200 text-slate-800';
-    const input = isDark
-        ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500'
-        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400';
-    const label = isDark ? 'text-slate-400' : 'text-slate-500';
-
-    const toggleDay = (d: number) =>
-        setFreqDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]);
-
-    const handleSave = async () => {
-        if (!title.trim()) return;
-        setSaving(true);
-        try {
-            await onSave({
-                title: title.trim(),
-                description: description.trim() || undefined,
-                category,
-                color,
-                frequency_type: frequencyType,
-                frequency_days: frequencyType === 'weekly' ? freqDays : undefined,
-                frequency_monthly_date: frequencyType === 'monthly' ? freqMonthlyDate : undefined,
-                frequency_x_times: frequencyType === 'custom' ? freqXTimes : undefined,
-                time_block: timeBlock,
-                priority,
-                estimated_minutes: estimatedMins ? parseInt(estimatedMins) : undefined,
-                due_date: frequencyType === 'one_time' ? (dueDate || undefined) : frequencyType === 'custom' ? (customStartDate || getLocalDateStr()) : undefined,
-                end_date: frequencyType !== 'one_time' ? (endDate || undefined) : undefined,
-                carry_forward: frequencyType === 'one_time' ? carryForward : false,
-            });
-            onClose();
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 overflow-y-auto p-3 sm:p-4 flex items-start sm:items-center justify-center">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className={`relative w-full max-w-lg my-auto rounded-2xl border shadow-2xl ${card} flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[88vh] overflow-hidden`}>
-                {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b border-inherit flex-shrink-0">
-                    <h2 className="font-bold text-lg">{task ? 'Edit Task' : 'New Task'}</h2>
-                    <button onClick={onClose} className={`p-1.5 rounded-lg hover:bg-slate-700/30 ${label}`}>
-                        <FiX size={18} />
-                    </button>
-                </div>
-
-                <div className="p-5 space-y-4 overflow-y-auto flex-1">
-                    {/* Title */}
-                    <div>
-                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Task Title *</label>
-                        <input
-                            autoFocus
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            placeholder="e.g. Morning workout"
-                            className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                        />
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Description</label>
-                        <textarea
-                            value={description}
-                            onChange={e => setDescription(e.target.value)}
-                            rows={2}
-                            placeholder="Optional notes..."
-                            className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 resize-none ${input}`}
-                        />
-                    </div>
-
-                    {/* Category + Color */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Category</label>
-                            <select
-                                value={category}
-                                onChange={e => setCategory(e.target.value)}
-                                className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                            >
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Color</label>
-                            <div className="mt-1.5 flex flex-wrap gap-2">
-                                {COLORS.map(c => (
-                                    <button
-                                        type="button"
-                                        key={c}
-                                        onClick={() => setColor(c)}
-                                        style={{ backgroundColor: c }}
-                                        className={`w-7 h-7 rounded-full transition-transform ${color === c ? 'ring-2 ring-offset-2 ring-offset-slate-800 ring-white scale-110' : 'hover:scale-105'}`}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Frequency */}
-                    <div>
-                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Frequency</label>
-                        <div className="mt-1.5 grid grid-cols-3 gap-2">
-                            {(['daily', 'weekly', 'monthly', 'one_time', 'custom'] as FrequencyType[]).map(f => (
-                                <button
-                                    type="button"
-                                    key={f}
-                                    onClick={() => setFrequencyType(f)}
-                                    className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${frequencyType === f
-                                        ? 'bg-emerald-500 text-white border-emerald-500'
-                                        : isDark ? 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                                        }`}
-                                >
-                                    {f === 'one_time' ? 'One Time' : f === 'custom' ? 'Custom' : f.charAt(0).toUpperCase() + f.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-
-                        {frequencyType === 'weekly' && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                {DAYS.map((d, i) => (
-                                    <button
-                                        type="button"
-                                        key={d}
-                                        onClick={() => toggleDay(i)}
-                                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${freqDays.includes(i)
-                                            ? 'bg-emerald-500 text-white border-emerald-500'
-                                            : isDark ? 'bg-slate-900 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-600'
-                                            }`}
-                                    >
-                                        {d}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {frequencyType === 'monthly' && (
-                            <input
-                                type="number"
-                                min={1} max={31}
-                                value={freqMonthlyDate}
-                                onChange={e => setFreqMonthlyDate(Number(e.target.value))}
-                                placeholder="Day of month (1-31)"
-                                className={`mt-2 w-full px-3 py-2 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                            />
-                        )}
-
-                        {frequencyType === 'custom' && (
-                            <div className="mt-3 space-y-3 p-3.5 rounded-xl border border-dashed border-emerald-500/30 bg-emerald-500/5">
-                                <div>
-                                    <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>
-                                        Repeat Interval (Every X Days)
-                                    </label>
-                                    <div className="mt-1.5 flex items-center gap-2">
-                                        <span className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Repeat every</span>
-                                        <input
-                                            type="number"
-                                            min={2}
-                                            max={365}
-                                            value={freqXTimes}
-                                            onChange={e => setFreqXTimes(Math.max(2, parseInt(e.target.value) || 2))}
-                                            className={`w-20 px-3 py-1.5 rounded-lg border text-sm text-center font-bold outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                                        />
-                                        <span className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>days</span>
-                                    </div>
-                                    <p className={`text-[11px] mt-1 ${label}`}>
-                                        e.g. 2 for alternate days, 3 for every 3 days, 14 for bi-weekly.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <div className="flex items-center justify-between">
-                                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>
-                                            Starting From Date
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCustomStartDate(getLocalDateStr())}
-                                            className="text-[10px] text-emerald-400 hover:underline"
-                                        >
-                                            Set to today
-                                        </button>
-                                    </div>
-                                    <input
-                                        type="date"
-                                        value={customStartDate}
-                                        onChange={e => setCustomStartDate(e.target.value)}
-                                        className={`mt-1.5 w-full px-3 py-2 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                                    />
-                                    <p className={`text-[11px] mt-1 ${label}`}>
-                                        This task will appear in your focus every {freqXTimes} days starting on {customStartDate || 'today'}.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {frequencyType === 'one_time' && (
-                            <div className="mt-3 space-y-3">
-                                <div>
-                                    <div className="flex items-center justify-between">
-                                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>
-                                            Due Date
-                                        </label>
-                                        {dueDate && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setDueDate('')}
-                                                className="text-[10px] text-slate-400 hover:text-emerald-400 underline"
-                                            >
-                                                Clear date (Long-term goal)
-                                            </button>
-                                        )}
-                                    </div>
-                                    <div className="mt-1.5 flex gap-2">
-                                        <input
-                                            type="date"
-                                            value={dueDate}
-                                            onChange={e => setDueDate(e.target.value)}
-                                            className={`flex-1 px-3 py-2 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setDueDate(getLocalDateStr())}
-                                            className={`px-3 py-2 rounded-xl text-xs font-semibold border ${dueDate === getLocalDateStr() ? 'bg-emerald-500 text-white border-emerald-500' : isDark ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'}`}
-                                        >
-                                            Today
-                                        </button>
-                                    </div>
-                                    <p className={`text-[11px] mt-1.5 ${label}`}>
-                                        {dueDate
-                                            ? "Scheduled for a specific date: Appears in your daily focus on that date."
-                                            : "Long-term goal (No date): Stored safely in Long-Term Goals and will not clutter your daily focus list."
-                                        }
-                                    </p>
-                                </div>
-
-                                {dueDate && (
-                                    <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={carryForward}
-                                            onChange={e => setCarryForward(e.target.checked)}
-                                            className="mt-0.5 rounded text-emerald-500 focus:ring-emerald-400"
-                                        />
-                                        <div>
-                                            <span className={`text-xs font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                                                Carry forward if not completed
-                                            </span>
-                                            <p className={`text-[11px] ${label}`}>
-                                                If you miss this task today, it automatically rolls over to tomorrow's daily focus until completed.
-                                            </p>
-                                        </div>
-                                    </label>
-                                )}
-                            </div>
-                        )}
-
-                        {frequencyType !== 'one_time' && (
-                            <div className="mt-3">
-                                <div className="flex items-center justify-between">
-                                    <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>
-                                        Repeat Until / End Date (Optional)
-                                    </label>
-                                    {endDate && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setEndDate('')}
-                                            className="text-[10px] text-slate-400 hover:text-emerald-400 underline"
-                                        >
-                                            Repeat indefinitely
-                                        </button>
-                                    )}
-                                </div>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={e => setEndDate(e.target.value)}
-                                    className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                                />
-                                <p className={`text-[11px] mt-1 ${label}`}>
-                                    Task recurrence stops automatically after this date. Leave blank to repeat indefinitely.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Time Block */}
-                    <div>
-                        <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Time Block</label>
-                        <div className="mt-1.5 grid grid-cols-2 gap-2">
-                            {TIME_BLOCKS.map(({ key, label: l, icon: Icon }) => (
-                                <button
-                                    type="button"
-                                    key={key}
-                                    onClick={() => setTimeBlock(key)}
-                                    className={`flex items-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${timeBlock === key
-                                        ? 'bg-emerald-500 text-white border-emerald-500'
-                                        : isDark ? 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
-                                        }`}
-                                >
-                                    <Icon size={13} /> {l}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Priority + Estimate */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Priority</label>
-                            <select
-                                value={priority}
-                                onChange={e => setPriority(e.target.value as any)}
-                                className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                            >
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className={`text-xs font-semibold uppercase tracking-wider ${label}`}>Est. Minutes</label>
-                            <input
-                                type="number"
-                                min={1}
-                                value={estimatedMins}
-                                onChange={e => setEstimatedMins(e.target.value)}
-                                placeholder="e.g. 30"
-                                className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex gap-3 p-5 border-t border-inherit flex-shrink-0">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${isDark ? 'border-slate-600 text-slate-400 hover:bg-slate-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={saving || !title.trim()}
-                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                    >
-                        <FiSave size={14} />
-                        {saving ? 'Saving…' : 'Save Task'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ─── TaskCard ─────────────────────────────────────────────────────────────────
-interface TaskCardProps {
-    task: Task;
-    isDark: boolean;
-    onToggle: (id: string) => void;
-    onEdit: (task: Task) => void;
-    onDelete: (id: string) => void;
-    onPause?: (id: string) => void;
-    onResume?: (id: string) => void;
-    onStop?: (id: string) => void;
-    onScheduleToday?: (id: string) => void;
-    showControls?: boolean;
-    hideTypeBadge?: boolean;
-}
-
-function TaskCard({
-    task, isDark, onToggle, onEdit, onDelete,
-    onPause, onResume, onStop, onScheduleToday, showControls = false, hideTypeBadge = false
-}: TaskCardProps) {
-    const done = task.completed_today;
-    const priorityColor = PRIORITY_COLORS[task.priority];
-    const isRepeating = task.frequency_type !== 'one_time';
-
-    return (
-        <div
-            className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all group ${done
-                ? isDark ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'
-                : isDark ? 'bg-slate-800/60 border-slate-700/60 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-slate-300'
-                }`}
-        >
-            {/* Checkbox */}
-            <button
-                type="button"
-                onClick={() => onToggle(task.id)}
-                className={`mt-0.5 flex-shrink-0 transition-all ${done ? 'text-emerald-400' : isDark ? 'text-slate-600 hover:text-emerald-400' : 'text-slate-300 hover:text-emerald-500'}`}
-            >
-                {done ? <FiCheckCircle size={20} /> : <FiCircle size={20} />}
-            </button>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                        className={`text-sm font-semibold transition-all ${done
-                            ? isDark ? 'line-through text-slate-500' : 'line-through text-slate-400'
-                            : isDark ? 'text-slate-100' : 'text-slate-800'
-                            }`}
-                    >
-                        {task.title}
-                    </span>
-                    <span
-                        style={{ backgroundColor: task.color + '22', color: task.color }}
-                        className="px-1.5 py-0.5 rounded-md text-[10px] font-bold"
-                    >
-                        {task.category}
-                    </span>
-                    <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-${priorityColor}-500/10 text-${priorityColor}-400`}>
-                        {task.priority}
-                    </span>
-
-                    {/* Repeating Status Badge */}
-                    {!task.is_active ? (
-                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                            Stopped
-                        </span>
-                    ) : task.is_paused ? (
-                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            Paused
-                        </span>
-                    ) : null}
-
-                    {task.is_carried_forward && (
-                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                            Carried Forward
-                        </span>
-                    )}
-
-                    {!hideTypeBadge && !isRepeating && !task.due_date && (
-                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
-                            Long-Term Goal
-                        </span>
-                    )}
-                </div>
-
-                {task.description && (
-                    <p className={`text-xs mt-0.5 truncate ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{task.description}</p>
-                )}
-
-                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                    {task.estimated_minutes && (
-                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                            <FiClock size={10} />
-                            <span>{task.estimated_minutes} min</span>
-                        </div>
-                    )}
-                    {task.frequency_type === 'custom' && (
-                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-emerald-400/90' : 'text-emerald-600'}`}>
-                            <FiRepeat size={10} />
-                            <span>Every {task.frequency_x_times || 2} days</span>
-                        </div>
-                    )}
-                    {task.end_date && isRepeating && (
-                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-amber-400/80' : 'text-amber-600'}`}>
-                            <FiCalendar size={10} />
-                            <span>Repeat until: {task.end_date}</span>
-                        </div>
-                    )}
-                    {task.due_date && !isRepeating && (
-                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-indigo-400/80' : 'text-indigo-600'}`}>
-                            <FiCalendar size={10} />
-                            <span>Due: {task.due_date}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Actions */}
-            {showControls && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    {/* Pause / Resume button */}
-                    {isRepeating && task.is_active && (
-                        task.is_paused ? (
-                            <button
-                                type="button"
-                                onClick={() => onResume?.(task.id)}
-                                title="Resume repeating task"
-                                className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-all"
-                            >
-                                <FiPlay size={13} />
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => onPause?.(task.id)}
-                                title="Pause repeating task"
-                                className="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition-all"
-                            >
-                                <FiPause size={13} />
-                            </button>
-                        )
-                    )}
-
-                    {/* Stop repeating button */}
-                    {isRepeating && task.is_active && (
-                        <button
-                            type="button"
-                            onClick={() => onStop?.(task.id)}
-                            title="Stop recurrence permanently"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                        >
-                            <FiStopCircle size={13} />
-                        </button>
-                    )}
-
-                    {/* Long term goal "Do Today" button */}
-                    {!isRepeating && !task.due_date && onScheduleToday && (
-                        <button
-                            type="button"
-                            onClick={() => onScheduleToday(task.id)}
-                            title="Schedule this goal for today"
-                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 transition-all flex items-center gap-1"
-                        >
-                            <span>+ Do Today</span>
-                        </button>
-                    )}
-
-                    {/* Edit button */}
-                    <button
-                        type="button"
-                        onClick={() => onEdit(task)}
-                        title="Edit task"
-                        className={`p-1.5 rounded-lg transition-all ${isDark ? 'text-slate-500 hover:text-slate-200 hover:bg-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
-                    >
-                        <FiEdit2 size={13} />
-                    </button>
-
-                    {/* Delete button */}
-                    <button
-                        type="button"
-                        onClick={() => onDelete(task.id)}
-                        title="Delete task and history"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                    >
-                        <FiTrash2 size={13} />
-                    </button>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ─── Month Heatmap Calendar ──────────────────────────────────────────────────
-interface MonthHeatmapProps {
-    counts: Record<string, number | undefined>;
-    isDark: boolean;
-    customColor?: string;
-    year: number;
-    month: number; // 0-indexed: 0 = Jan, 9 = Oct
-    todayStr: string;
-    onPrevMonth: () => void;
-    onNextMonth: () => void;
-    onGoToCurrentMonth: () => void;
-    canGoNext: boolean;
-    onDayClick?: (dateStr: string) => void;
-}
-
-function MonthHeatmap({
-    counts,
-    isDark,
-    customColor,
-    year,
-    month,
-    todayStr,
-    onPrevMonth,
-    onNextMonth,
-    onGoToCurrentMonth,
-    canGoNext,
-    onDayClick,
-}: MonthHeatmapProps) {
-    const monthDate = useMemo(() => new Date(year, month, 1), [year, month]);
-    const monthName = useMemo(() => monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), [monthDate]);
-
-    const items = useMemo(() => {
-        const total = new Date(year, month + 1, 0).getDate();
-        const firstDow = new Date(year, month, 1).getDay(); // 0 = Sun
-        const list: ({ day: number; dateStr: string } | null)[] = [];
-        for (let i = 0; i < firstDow; i++) {
-            list.push(null);
-        }
-        for (let d = 1; d <= total; d++) {
-            const mStr = String(month + 1).padStart(2, '0');
-            const dStr = String(d).padStart(2, '0');
-            list.push({
-                day: d,
-                dateStr: `${year}-${mStr}-${dStr}`,
-            });
-        }
-        return list;
-    }, [year, month]);
-
-    const [nowY, nowM] = useMemo(() => {
-        const d = new Date();
-        return [d.getFullYear(), d.getMonth()];
-    }, []);
-    const isCurrentMonth = year === nowY && month === nowM;
-
-    // Monthly stats
-    const { activeDaysCount, daysPassed, consistencyPct, totalCompletions, bestStreak } = useMemo(() => {
-        const validDates = items.filter(Boolean).map(x => x!.dateStr).filter(d => d <= todayStr);
-        const active = validDates.filter(d => (counts[d] || 0) > 0).length;
-        const total = validDates.reduce((acc, d) => acc + (counts[d] || 0), 0);
-        const pct = validDates.length > 0 ? Math.round((active / validDates.length) * 100) : 0;
-
-        let maxS = 0;
-        let curS = 0;
-        for (const d of validDates) {
-            if ((counts[d] || 0) > 0) {
-                curS++;
-                if (curS > maxS) maxS = curS;
-            } else {
-                curS = 0;
-            }
-        }
-
-        return {
-            activeDaysCount: active,
-            daysPassed: validDates.length,
-            consistencyPct: pct,
-            totalCompletions: total,
-            bestStreak: maxS,
-        };
-    }, [items, counts, todayStr]);
-
-    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const muted = isDark ? 'text-slate-400' : 'text-slate-500';
-
-    return (
-        <div className="space-y-4">
-            {/* ── Month Navigation & Stats Header ── */}
-            <div className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                isDark ? 'bg-slate-800/40 border-slate-700/60' : 'bg-slate-50 border-slate-200'
-            }`}>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={onPrevMonth}
-                        title="Previous Month"
-                        className={`p-1.5 rounded-lg border transition-all ${
-                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-white text-slate-700'
-                        }`}
-                    >
-                        <FiChevronLeft size={16} />
-                    </button>
-
-                    <h4 className="font-bold text-sm tracking-tight px-1">
-                        {monthName}
-                    </h4>
-
-                    <button
-                        type="button"
-                        onClick={onNextMonth}
-                        disabled={!canGoNext}
-                        title="Next Month"
-                        className={`p-1.5 rounded-lg border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-white text-slate-700'
-                        }`}
-                    >
-                        <FiChevronRight size={16} />
-                    </button>
-
-                    {!isCurrentMonth && (
-                        <button
-                            type="button"
-                            onClick={onGoToCurrentMonth}
-                            className="text-xs text-emerald-400 hover:underline font-semibold ml-1.5"
-                        >
-                            Jump to Current Month
-                        </button>
-                    )}
-                </div>
-
-                {/* Quick month metrics */}
-                <div className="flex items-center gap-3 text-xs flex-wrap">
-                    <div className="flex items-center gap-1">
-                        <span className={muted}>Active Days:</span>
-                        <strong className="text-emerald-400">{activeDaysCount}/{daysPassed}d</strong>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <span className={muted}>Consistency:</span>
-                        <strong className="text-emerald-400">{consistencyPct}%</strong>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <span className={muted}>Completions:</span>
-                        <strong className={isDark ? 'text-white' : 'text-slate-900'}>{totalCompletions}</strong>
-                    </div>
-                    {bestStreak > 0 && (
-                        <div className="flex items-center gap-1">
-                            <span className={muted}>Best Streak:</span>
-                            <strong className="text-amber-400">{bestStreak}d</strong>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* ── Calendar Grid ── */}
-            <div>
-                {/* Day of Week Headers */}
-                <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-1.5 text-center">
-                    {dayHeaders.map((dh, i) => (
-                        <div
-                            key={dh}
-                            className={`text-[11px] font-bold py-1 ${
-                                i === 0 || i === 6 ? (isDark ? 'text-slate-500' : 'text-slate-400') : muted
-                            }`}
-                        >
-                            {dh}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Day Cells */}
-                <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                    {items.map((item, idx) => {
-                        if (!item) {
-                            return (
-                                <div
-                                    key={`empty-${idx}`}
-                                    className={`min-h-[56px] sm:min-h-[72px] rounded-xl border border-transparent ${
-                                        isDark ? 'bg-slate-900/20' : 'bg-slate-100/30'
-                                    }`}
-                                />
-                            );
-                        }
-
-                        const { day, dateStr } = item;
-                        const count = counts[dateStr] || 0;
-                        const isToday = dateStr === todayStr;
-                        const isFuture = dateStr > todayStr;
-                        const done = count > 0;
-
-                        return (
-                            <button
-                                type="button"
-                                key={dateStr}
-                                onClick={() => onDayClick?.(dateStr)}
-                                title={`${dateStr}: ${done ? `${count} completed` : 'No completions'}. Click to view focus list.`}
-                                className={`min-h-[56px] sm:min-h-[72px] p-1.5 sm:p-2 rounded-xl border flex flex-col justify-between text-left transition-all relative group hover:scale-[1.02] cursor-pointer ${
-                                    isToday
-                                        ? 'ring-2 ring-emerald-400 ring-offset-1'
-                                        : ''
-                                } ${
-                                    done
-                                        ? customColor
-                                            ? isDark ? 'border-emerald-500/30 hover:border-emerald-500/50' : 'border-emerald-500/30 hover:border-emerald-500/50'
-                                            : isDark ? 'border-emerald-500/30 hover:border-emerald-500/50' : 'border-emerald-200 hover:border-emerald-300'
-                                        : isDark
-                                            ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
-                                            : 'bg-white border-slate-200 hover:border-slate-300'
-                                }`}
-                                style={{
-                                    backgroundColor: done
-                                        ? (customColor ? customColor + '20' : (isDark ? '#064e3b33' : '#dcfce7'))
-                                        : undefined,
-                                }}
-                            >
-                                {/* Top: Day Number + Today Badge */}
-                                <div className="flex items-center justify-between w-full">
-                                    <span className={`text-xs font-bold ${
-                                        isToday
-                                            ? 'text-emerald-400 font-extrabold'
-                                            : isFuture
-                                                ? isDark ? 'text-slate-600' : 'text-slate-400'
-                                                : isDark ? 'text-slate-300' : 'text-slate-700'
-                                    }`}>
-                                        {day}
-                                    </span>
-
-                                    {isToday && (
-                                        <span className="hidden sm:inline-block text-[9px] font-extrabold px-1 py-0.2 rounded bg-emerald-500 text-white leading-none">
-                                            TODAY
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Bottom: Status Indicator */}
-                                <div className="mt-1">
-                                    {done ? (
-                                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold" style={{ color: customColor || '#10b981' }}>
-                                            <FiCheckCircle size={12} className="flex-shrink-0" />
-                                            <span className="truncate">
-                                                {customColor ? 'Done' : `${count} task${count > 1 ? 's' : ''}`}
-                                            </span>
-                                        </div>
-                                    ) : isFuture ? (
-                                        <span className={`text-[9px] sm:text-[10px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                                            Upcoming
-                                        </span>
-                                    ) : (
-                                        <span className={`text-[10px] ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>
-                                            —
-                                        </span>
-                                    )}
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Click tip */}
-            <p className={`text-[11px] text-center pt-1 ${muted}`}>
-                Tip: Click any day in the calendar to jump to its focus list and review or log tasks.
-            </p>
-        </div>
-    );
-}
-
-// ─── Heatmap (52-week horizontal grid) ───────────────────────────────────────
-function ContributionHeatmap({
-    counts,
-    isDark,
-    customColor
-}: {
-    counts: Record<string, number | undefined>;
-    isDark: boolean;
-    customColor?: string;
-}) {
-    const grid = useMemo(() => buildHeatmapGrid(), []);
-    const weeks: string[][] = [];
-    for (let i = 0; i < grid.length; i += 7) {
-        weeks.push(grid.slice(i, i + 7));
-    }
-    const monthLabels: { label: string; col: number }[] = [];
-    weeks.forEach((week, wi) => {
-        const d = new Date(week[0]);
-        if (wi === 0 || d.getDate() <= 7) {
-            const label = d.toLocaleDateString('en-US', { month: 'short' });
-            if (monthLabels.length === 0 || monthLabels[monthLabels.length - 1].label !== label) {
-                monthLabels.push({ label, col: wi });
-            }
-        }
-    });
-
-    return (
-        <div className="overflow-x-auto">
-            {/* Month labels */}
-            <div className="flex mb-1 pl-8">
-                {monthLabels.map(({ label, col }, i) => (
-                    <div
-                        key={i}
-                        className={`text-[10px] font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
-                        style={{ marginLeft: i === 0 ? `${col * 14}px` : `${(col - (monthLabels[i - 1]?.col || 0)) * 14 - 24}px`, minWidth: 24 }}
-                    >
-                        {label}
-                    </div>
-                ))}
-            </div>
-
-            <div className="flex gap-0.5">
-                {/* Day labels */}
-                <div className="flex flex-col gap-0.5 mr-1 pt-0">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                        <div key={i} className={`w-3 h-3 text-[9px] flex items-center justify-center ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                            {i % 2 === 1 ? d : ''}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Grid */}
-                {weeks.map((week, wi) => (
-                    <div key={wi} className="flex flex-col gap-0.5">
-                        {week.map(date => {
-                            const c = counts[date] || 0;
-                            return (
-                                <div
-                                    key={date}
-                                    title={`${date}: ${c > 0 ? (customColor ? 'Completed' : `${c} tasks`) : 'No completions'}`}
-                                    className="w-3 h-3 rounded-sm transition-all hover:ring-1 hover:ring-emerald-400 cursor-default"
-                                    style={{ backgroundColor: heatColor(c, isDark, c > 0 ? customColor : undefined) }}
-                                />
-                            );
-                        })}
-                    </div>
-                ))}
-            </div>
-
-            {/* Legend */}
-            <div className={`flex items-center gap-1.5 mt-2 text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                <span>Less</span>
-                {customColor ? (
-                    <>
-                        <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: heatColor(0, isDark) }} />
-                        <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: customColor }} />
-                    </>
-                ) : (
-                    [0, 1, 2, 3, 5].map(v => (
-                        <div key={v} className="w-3 h-3 rounded-sm" style={{ backgroundColor: heatColor(v, isDark) }} />
-                    ))
-                )}
-                <span>More</span>
-            </div>
-        </div>
-    );
-}
-
-// ─── Weekly Activity Chart (Current Week & Previous Weeks) ───────────────────
-interface WeeklyActivityProps {
-    counts: Record<string, number | undefined>;
-    isDark: boolean;
-    color?: string;
-    todayStr: string;
-    onDayClick?: (dateStr: string) => void;
-}
-
-function WeeklyActivityChart({ counts, isDark, color = '#10b981', todayStr, onDayClick }: WeeklyActivityProps) {
-    const [weekOffset, setWeekOffset] = useState<number>(0); // 0 = current week, -1 = last week, etc.
-
-    const { days, rangeLabel, isCurrentWeek, totalTasksThisWeek, activeDaysCount, elapsedDays, bestDay, maxCountInWeek } = useMemo(() => {
-        const [ty, tm, td] = todayStr.split('-').map(Number);
-        const today = new Date(ty, tm - 1, td);
-
-        // Monday-based week (0 for Mon, ..., 6 for Sun)
-        const dow = today.getDay();
-        const diffToMonday = dow === 0 ? 6 : dow - 1;
-
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - diffToMonday + (weekOffset * 7));
-
-        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const result = [];
-        let maxVal = 1;
-
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(monday);
-            d.setDate(monday.getDate() + i);
-            const dateStr = getLocalDateStr(d);
-            const count = counts[dateStr] || 0;
-            if (count > maxVal) maxVal = count;
-
-            result.push({
-                name: dayNames[i],
-                dateStr,
-                dayNum: d.getDate(),
-                monthShort: d.toLocaleDateString('en-US', { month: 'short' }),
-                count,
-                isToday: dateStr === todayStr,
-                isPast: dateStr < todayStr,
-                isFuture: dateStr > todayStr,
-            });
-        }
-
-        const start = result[0];
-        const end = result[6];
-        const range = `${start.monthShort} ${start.dayNum} – ${end.monthShort} ${end.dayNum}, ${monday.getFullYear()}`;
-
-        // Stats for elapsed days in this week (days <= todayStr)
-        const elapsed = result.filter(d => !d.isFuture);
-        const totalTasks = elapsed.reduce((sum, d) => sum + d.count, 0);
-        const activeDays = elapsed.filter(d => d.count > 0).length;
-
-        let peakDay: { name: string; count: number } | null = null;
-        for (const d of elapsed) {
-            if (d.count > 0 && (!peakDay || d.count > peakDay.count)) {
-                peakDay = { name: d.name, count: d.count };
-            }
-        }
-
-        return {
-            days: result,
-            rangeLabel: range,
-            isCurrentWeek: weekOffset === 0,
-            totalTasksThisWeek: totalTasks,
-            activeDaysCount: activeDays,
-            elapsedDays: elapsed.length,
-            bestDay: peakDay,
-            maxCountInWeek: maxVal,
-        };
-    }, [todayStr, weekOffset, counts]);
-
-    const trackBg = isDark ? 'bg-slate-800' : 'bg-slate-100';
-    const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
-
-    return (
-        <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-bold text-sm sm:text-base flex items-center gap-2">
-                            <FiBarChart2 size={16} className="text-emerald-400" />
-                            {isCurrentWeek ? "This Week's Activity" : "Weekly Activity"}
-                        </h4>
-                        <span className={`text-xs px-2.5 py-0.5 rounded-lg font-semibold border ${
-                            isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
-                        }`}>
-                            {rangeLabel}
-                        </span>
-                    </div>
-                    <p className={`text-xs mt-0.5 ${textMuted}`}>
-                        {isCurrentWeek
-                            ? "Track your daily momentum for the current week (Monday to Sunday)."
-                            : `Daily performance recorded for ${rangeLabel}.`
-                        }
-                    </p>
-                </div>
-
-                {/* Week Navigator */}
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setWeekOffset(w => w - 1)}
-                        title="Previous Week"
-                        className={`p-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1 ${
-                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'
-                        }`}
-                    >
-                        <FiChevronLeft size={14} />
-                        <span>Last Week</span>
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => setWeekOffset(w => Math.min(0, w + 1))}
-                        disabled={isCurrentWeek}
-                        title="Next Week"
-                        className={`p-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed ${
-                            isDark ? 'border-slate-700 hover:bg-slate-800 text-slate-300' : 'border-slate-200 hover:bg-slate-100 text-slate-700'
-                        }`}
-                    >
-                        <span>Next Week</span>
-                        <FiChevronRight size={14} />
-                    </button>
-
-                    {!isCurrentWeek && (
-                        <button
-                            type="button"
-                            onClick={() => setWeekOffset(0)}
-                            className="text-xs text-emerald-400 hover:underline font-semibold ml-1"
-                        >
-                            This Week
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Quick Summary Row */}
-            <div className="flex items-center gap-3 text-xs pt-0.5 flex-wrap">
-                <div className="flex items-center gap-1">
-                    <span className={textMuted}>Tasks Done:</span>
-                    <strong className="text-emerald-400">{totalTasksThisWeek}</strong>
-                </div>
-                <div className="flex items-center gap-1">
-                    <span className={textMuted}>Active Days:</span>
-                    <strong className="text-emerald-400">{activeDaysCount} / {elapsedDays} days</strong>
-                </div>
-                {bestDay && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <span>Best Day:</span>
-                        <span className="font-bold">{bestDay.name} ({bestDay.count} {bestDay.count === 1 ? 'task' : 'tasks'})</span>
-                    </div>
-                )}
-            </div>
-
-            {/* 7 Columns for Monday to Sunday */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-3 pt-2">
-                {days.map((d) => {
-                    const done = d.count > 0;
-                    const barHeightPct = done ? Math.max(18, Math.round((d.count / maxCountInWeek) * 100)) : (d.isToday ? 8 : 4);
-
-                    return (
-                        <button
-                            key={d.dateStr}
-                            type="button"
-                            onClick={() => onDayClick?.(d.dateStr)}
-                            title={`${d.name}, ${d.monthShort} ${d.dayNum}: ${done ? `${d.count} completed` : d.isFuture ? 'Upcoming' : '0 completed'}. Click to view focus.`}
-                            className={`flex flex-col items-center gap-2 group p-2 rounded-xl border transition-all cursor-pointer ${
-                                d.isToday
-                                    ? 'ring-2 ring-emerald-400/80 ring-offset-1 bg-emerald-500/5 border-emerald-500/30'
-                                    : isDark ? 'border-transparent hover:bg-slate-800/40 hover:border-slate-700/50' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'
-                            }`}
-                        >
-                            {/* Top: Actual Task Count (NO meaningless %) */}
-                            <span className={`text-[11px] font-bold transition-transform group-hover:scale-105 ${
-                                done
-                                    ? 'text-emerald-400 font-extrabold'
-                                    : d.isToday
-                                        ? 'text-amber-400 font-semibold'
-                                        : d.isFuture
-                                            ? textMuted + ' opacity-40'
-                                            : textMuted
-                            }`}>
-                                {done
-                                    ? `${d.count} ${d.count === 1 ? 'task' : 'tasks'}`
-                                    : d.isToday
-                                        ? '0 today'
-                                        : d.isFuture
-                                            ? '—'
-                                            : '0'
-                                }
-                            </span>
-
-                            {/* Bar Track */}
-                            <div className={`w-full max-w-[48px] h-28 rounded-xl ${trackBg} p-1 flex flex-col justify-end relative overflow-hidden transition-all group-hover:ring-1 group-hover:ring-emerald-400/40 shadow-inner`}>
-                                <div
-                                    className="w-full rounded-lg transition-all duration-700 relative"
-                                    style={{
-                                        height: `${barHeightPct}%`,
-                                        backgroundColor: color,
-                                        opacity: done ? 1 : (d.isToday ? 0.35 : 0.12),
-                                    }}
-                                />
-                            </div>
-
-                            {/* Bottom: Day name & date */}
-                            <div className="text-center">
-                                <p className={`text-xs font-bold ${
-                                    d.isToday
-                                        ? 'text-emerald-400 font-extrabold'
-                                        : isDark ? 'text-slate-200' : 'text-slate-800'
-                                }`}>
-                                    {d.name}
-                                </p>
-                                <p className={`text-[10px] ${textMuted}`}>
-                                    {d.dayNum}
-                                </p>
-                                {d.isToday && (
-                                    <span className="inline-block mt-0.5 text-[8px] font-black uppercase px-1 rounded bg-emerald-500 text-white leading-tight">
-                                        Today
-                                    </span>
-                                )}
-                            </div>
-                        </button>
-                    );
-                })}
-            </div>
-
-            {/* Click Tip */}
-            <p className={`text-[11px] text-center pt-1 ${textMuted}`}>
-                Tip: Click any day bar to jump to its daily focus list and review or log tasks.
-            </p>
-        </div>
-    );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function TaskTracker() {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
@@ -1367,13 +108,11 @@ export default function TaskTracker() {
     };
 
     // Web Notifications
-    const [notifPermission, setNotifPermission] = useState<NotificationStatus>('default');
+    const [notifPermission, setNotifPermission] = useState<NotificationStatus>(
+        () => getNotificationPermission()
+    );
     const [notifMenuOpen, setNotifMenuOpen] = useState(false);
     const [notifSuccessToast, setNotifSuccessToast] = useState<string | null>(null);
-
-    useEffect(() => {
-        setNotifPermission(getNotificationPermission());
-    }, []);
 
     // Check & dispatch reminders for today's tasks
     useEffect(() => {
@@ -1428,31 +167,20 @@ export default function TaskTracker() {
         localStorage.setItem('casham_selected_streak_task', id);
     };
 
-    // Ensure selected task stays sticky and never resets automatically unless deleted
-    useEffect(() => {
-        if (repeatingTasks.length > 0) {
-            const saved = localStorage.getItem('casham_selected_streak_task');
-            if (saved === 'all') {
-                if (streakTaskId !== 'all') setStreakTaskId('all');
-                return;
-            }
-            if (saved && repeatingTasks.some(t => t.id === saved)) {
-                if (streakTaskId !== saved) setStreakTaskId(saved);
-                return;
-            }
-            if (streakTaskId === 'all' || repeatingTasks.some(t => t.id === streakTaskId)) {
-                return;
-            }
-            // Fallback only if currently selected task was deleted
-            setStreakTaskId('all');
+    // Selected task ID fallback if selected task was deleted or not in repeatingTasks
+    const activeStreakTaskId = useMemo(() => {
+        if (!streakTaskId || streakTaskId === 'all') return 'all';
+        if (repeatingTasks.length > 0 && !repeatingTasks.some(t => t.id === streakTaskId)) {
+            return 'all';
         }
+        return streakTaskId;
     }, [repeatingTasks, streakTaskId]);
 
     // Selected task object
     const selectedTask = useMemo(() => {
-        if (!streakTaskId || streakTaskId === 'all') return null;
-        return repeatingTasks.find(t => t.id === streakTaskId) || null;
-    }, [repeatingTasks, streakTaskId]);
+        if (!activeStreakTaskId || activeStreakTaskId === 'all') return null;
+        return repeatingTasks.find(t => t.id === activeStreakTaskId) || null;
+    }, [repeatingTasks, activeStreakTaskId]);
 
     // Theme classes
     const page = isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-800';
@@ -1465,7 +193,6 @@ export default function TaskTracker() {
         : 'bg-white border-slate-200 text-slate-800 placeholder-slate-400';
 
     // ─── Today's tasks grouped by time block with Smart Sorting
-    const PRIORITY_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };
     const todayGrouped = useMemo(() => {
         return TIME_BLOCKS.map(block => {
             const blockTasks = todayTasks.filter(t => t.time_block === block.key);
@@ -1520,9 +247,9 @@ export default function TaskTracker() {
     // ─── Active heatmap & streaks based on selected task
     const activeHeatmapCounts = useMemo(() => {
         if (!heatmapData) return {};
-        if (streakTaskId === 'all') return heatmapData.counts;
-        return heatmapData.taskCounts?.[streakTaskId] || {};
-    }, [heatmapData, streakTaskId]);
+        if (activeStreakTaskId === 'all') return heatmapData.counts;
+        return heatmapData.taskCounts?.[activeStreakTaskId] || {};
+    }, [heatmapData, activeStreakTaskId]);
 
     const streaks = useMemo(() => {
         if (!heatmapData) return { current: 0, best: 0 };
@@ -1558,7 +285,10 @@ export default function TaskTracker() {
     const handleDelete = async (id: string) => {
         if (!confirm('Delete this task? All completion history will be removed.')) return;
         await deleteTask(id);
-        if (streakTaskId === id) setStreakTaskId('all');
+        if (streakTaskId === id) {
+            setStreakTaskId('all');
+            localStorage.setItem('casham_selected_streak_task', 'all');
+        }
     };
 
     const handleToggle = async (id: string) => {
@@ -1897,64 +627,22 @@ export default function TaskTracker() {
             {/* ══════════════════════════════════════════════════════════════════ */}
             {activeTab === 'all' && (
                 <div className="space-y-4">
-                    {/* Status Pill Tabs */}
-                    <div className="flex flex-wrap gap-1.5 pb-1">
-                        {[
-                            { key: 'all', label: 'All Tasks', count: allTasks.length },
-                            { key: 'active', label: 'Active Routines', count: activeCount },
-                            { key: 'long_term', label: 'Long-Term Goals', count: longTermCount },
-                            { key: 'paused', label: 'Paused', count: pausedCount },
-                            { key: 'stopped', label: 'Stopped', count: stoppedCount },
-                        ].map(({ key, label: l, count }) => (
-                            <button
-                                key={key}
-                                type="button"
-                                onClick={() => setFilterStatus(key as any)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${filterStatus === key
-                                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/20'
-                                    : isDark ? 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                                }`}
-                            >
-                                <span>{l}</span>
-                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${filterStatus === key ? 'bg-white/20 text-white' : isDark ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-500'}`}>
-                                    {count}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Filters row */}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <div className={`flex items-center gap-2 flex-1 px-3 py-2.5 rounded-xl border ${inputCls}`}>
-                            <FiSearch size={14} className={muted} />
-                            <input
-                                value={searchQ}
-                                onChange={e => setSearchQ(e.target.value)}
-                                placeholder="Search tasks…"
-                                className="flex-1 bg-transparent text-sm outline-none"
-                            />
-                        </div>
-                        <select
-                            value={filterCat}
-                            onChange={e => setFilterCat(e.target.value)}
-                            className={`px-3 py-2.5 rounded-xl border text-sm outline-none ${inputCls}`}
-                        >
-                            <option value="">All Categories</option>
-                            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                        <select
-                            value={filterFreq}
-                            onChange={e => setFilterFreq(e.target.value)}
-                            className={`px-3 py-2.5 rounded-xl border text-sm outline-none ${inputCls}`}
-                        >
-                            <option value="">All Frequencies</option>
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="one_time">One-Time</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </div>
+                    <TaskFilterBar
+                        isDark={isDark}
+                        allCount={allTasks.length}
+                        activeCount={activeCount}
+                        longTermCount={longTermCount}
+                        pausedCount={pausedCount}
+                        stoppedCount={stoppedCount}
+                        filterStatus={filterStatus}
+                        onStatusChange={setFilterStatus}
+                        searchQ={searchQ}
+                        onSearchChange={setSearchQ}
+                        filterCat={filterCat}
+                        onCatChange={setFilterCat}
+                        filterFreq={filterFreq}
+                        onFreqChange={setFilterFreq}
+                    />
 
                     {loading && (
                         <div className={`flex items-center justify-center py-16 ${muted}`}>
@@ -2007,10 +695,6 @@ export default function TaskTracker() {
             {/* ══════════════════════════════════════════════════════════════════ */}
             {activeTab === 'goals' && (() => {
                 const allGoals = allTasks.filter(t => t.frequency_type === 'one_time');
-                const openGoals = allGoals.filter(g => !g.completed_today);
-                const completedGoals = allGoals.filter(g => g.completed_today);
-                const scheduledTodayGoals = allGoals.filter(g => g.due_date === todayStr && !g.completed_today);
-
                 const filteredGoals = allGoals.filter(g => {
                     if (goalsFilter === 'open' && g.completed_today) return false;
                     if (goalsFilter === 'completed' && !g.completed_today) return false;
@@ -2059,45 +743,43 @@ export default function TaskTracker() {
                                     <FiAward size={14} />
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Completed</span>
                                 </div>
-                                <p className="text-2xl font-bold">{completedGoals.length}</p>
-                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>
-                                    {allGoals.length > 0 ? `${Math.round((completedGoals.length / allGoals.length) * 100)}% accomplished` : '0%'}
-                                </p>
+                                <p className="text-2xl font-bold">{allGoals.filter(g => g.completed_today).length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>Achieved</p>
                             </div>
 
                             <div className={`rounded-2xl border p-4 ${card}`}>
                                 <div className="flex items-center gap-1.5 mb-1 text-amber-400">
-                                    <FiClock size={14} />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">In Progress</span>
+                                    <FiCalendar size={14} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Today's Focus</span>
                                 </div>
-                                <p className="text-2xl font-bold">{openGoals.length}</p>
-                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>Active aspirations</p>
+                                <p className="text-2xl font-bold">{allGoals.filter(g => g.due_date === todayStr).length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>Scheduled Today</p>
                             </div>
 
                             <div className={`rounded-2xl border p-4 ${card}`}>
                                 <div className="flex items-center gap-1.5 mb-1 text-teal-400">
-                                    <FiZap size={14} />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">Do Today</span>
+                                    <FiTrendingUp size={14} />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">In Progress</span>
                                 </div>
-                                <p className="text-2xl font-bold">{scheduledTodayGoals.length}</p>
-                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>In Today's Focus</p>
+                                <p className="text-2xl font-bold">{allGoals.filter(g => !g.completed_today).length}</p>
+                                <p className={`text-[10px] mt-0.5 truncate ${muted}`}>Active Goals</p>
                             </div>
                         </div>
 
-                        {/* ── Filter Pills & Search ── */}
-                        <div className="space-y-3">
-                            <div className="flex flex-wrap gap-1.5 pb-1">
+                        {/* ── Filters Bar ── */}
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex gap-1 overflow-x-auto pb-1">
                                 {[
-                                    { key: 'all', label: 'All Goals', count: allGoals.length },
-                                    { key: 'open', label: 'In Progress', count: openGoals.length },
-                                    { key: 'completed', label: 'Completed', count: completedGoals.length },
-                                    { key: 'scheduled', label: "In Today's Focus", count: scheduledTodayGoals.length },
+                                    { key: 'all', label: 'All', count: allGoals.length },
+                                    { key: 'open', label: 'Open', count: allGoals.filter(g => !g.completed_today).length },
+                                    { key: 'completed', label: 'Completed', count: allGoals.filter(g => g.completed_today).length },
+                                    { key: 'scheduled', label: "Due Today", count: allGoals.filter(g => g.due_date === todayStr).length },
                                 ].map(({ key, label: l, count }) => (
                                     <button
                                         key={key}
                                         type="button"
                                         onClick={() => setGoalsFilter(key as any)}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${goalsFilter === key
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 flex-shrink-0 ${goalsFilter === key
                                             ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/20'
                                             : isDark ? 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                                         }`}
@@ -2110,28 +792,23 @@ export default function TaskTracker() {
                                 ))}
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-2">
-                                <div className={`flex items-center gap-2 flex-1 px-3 py-2.5 rounded-xl border ${inputCls}`}>
-                                    <FiSearch size={14} className={muted} />
-                                    <input
-                                        value={goalsSearchQ}
-                                        onChange={e => setGoalsSearchQ(e.target.value)}
-                                        placeholder="Search long-term goals…"
-                                        className="flex-1 bg-transparent text-sm outline-none"
-                                    />
-                                </div>
-                                <select
-                                    value={goalsCat}
-                                    onChange={e => setGoalsCat(e.target.value)}
-                                    className={`px-3 py-2.5 rounded-xl border text-sm outline-none ${inputCls}`}
-                                >
-                                    <option value="">All Categories</option>
-                                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
+                            <input
+                                value={goalsSearchQ}
+                                onChange={e => setGoalsSearchQ(e.target.value)}
+                                placeholder="Search goals…"
+                                className={`px-3 py-2 rounded-xl border text-sm outline-none flex-1 ${inputCls}`}
+                            />
+
+                            <select
+                                value={goalsCat}
+                                onChange={e => setGoalsCat(e.target.value)}
+                                className={`px-3 py-2 rounded-xl border text-sm outline-none ${inputCls}`}
+                            >
+                                <option value="">All Categories</option>
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
                         </div>
 
-                        {/* ── Goals Cards List ── */}
                         {loading && (
                             <div className={`flex items-center justify-center py-16 ${muted}`}>
                                 <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
@@ -2140,23 +817,17 @@ export default function TaskTracker() {
 
                         {!loading && filteredGoals.length === 0 && (
                             <div className={`rounded-2xl border p-10 text-center ${card}`}>
-                                <FiAward size={36} className="mx-auto mb-3 text-indigo-400 opacity-80" />
+                                <FiAward size={32} className={`mx-auto mb-3 ${muted}`} />
                                 <p className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                                    {allGoals.length === 0 ? 'No long-term goals yet' : 'No goals match your filters'}
-                                </p>
-                                <p className={`text-xs mt-1 ${muted}`}>
-                                    {allGoals.length === 0
-                                        ? 'Set target dates or open-ended goals you want to accomplish over time.'
-                                        : 'Try clearing your filters or search keywords.'
-                                    }
+                                    {allGoals.length === 0 ? 'No long-term goals configured' : 'No goals match your criteria'}
                                 </p>
                                 {allGoals.length === 0 && (
                                     <button
                                         type="button"
                                         onClick={openAddGoal}
-                                        className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 transition-all"
+                                        className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-all"
                                     >
-                                        + Create your first long-term goal
+                                        + Add a Goal
                                     </button>
                                 )}
                             </div>
@@ -2200,7 +871,7 @@ export default function TaskTracker() {
                                 </p>
                             </div>
                             <select
-                                value={streakTaskId}
+                                value={activeStreakTaskId}
                                 onChange={e => handleSelectStreakTask(e.target.value)}
                                 className={`px-3 py-2.5 rounded-xl border text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/40 min-w-[240px] ${inputCls}`}
                             >

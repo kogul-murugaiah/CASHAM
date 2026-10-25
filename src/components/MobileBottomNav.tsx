@@ -9,7 +9,11 @@ const MobileBottomNav = () => {
   const hubRef = useRef<HTMLDivElement>(null);
 
   // Close hub on route change
-  useEffect(() => { setHubOpen(false); }, [location.pathname]);
+  const [prevPath, setPrevPath] = useState(location.pathname);
+  if (prevPath !== location.pathname) {
+    setPrevPath(location.pathname);
+    setHubOpen(false);
+  }
 
   // Close hub on outside click
   useEffect(() => {

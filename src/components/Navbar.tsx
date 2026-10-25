@@ -38,7 +38,7 @@ const Navbar = () => {
       try {
         const data = await api.get('/api/auth/user');
         setUser(data?.user || null);
-      } catch (error) {
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);

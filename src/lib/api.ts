@@ -22,17 +22,20 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
         try {
             const errorData = await response.json();
             errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (e) {
+        } catch {
             errorMessage = `${response.status} ${response.statusText}`;
             try {
                 const text = await response.text();
                 if (text && text.length < 100) errorMessage += `: ${text}`;
-            } catch (t) { }
+            } catch {
+                // Ignore text extraction error
+            }
         }
 
-        // Redirect to login on 401 if it's not the /auth/user or /auth/login endpoint
+        // Fire a custom event so the SPA router can navigate without a full page reload.
+        // App.tsx (or any listener) can handle 'casham:unauthorized' with useNavigate().
         if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/user')) {
-            window.location.href = '/login';
+            window.dispatchEvent(new CustomEvent('casham:unauthorized'));
         }
 
         throw new ApiError(errorMessage, response.status);

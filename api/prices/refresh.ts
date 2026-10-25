@@ -8,10 +8,11 @@ import { supabaseAdmin } from '../_lib/supabase.js';
  */
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // 1. Authorization — Simplified for cron. Use a secret header if needed.
-    // if (req.headers['x-cron-auth'] !== process.env.CRON_SECRET) {
-    //     return res.status(401).json({ error: 'Unauthorized' });
-    // }
+    // 1. Authorization — only Vercel Cron (or manual callers with the secret) may proceed.
+    const authHeader = req.headers['authorization'];
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     try {
         console.log('--- Starting Price Refresh Job ---');

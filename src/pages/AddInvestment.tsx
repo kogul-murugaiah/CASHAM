@@ -129,7 +129,9 @@ const AddInvestment = () => {
       // Limit=5 at the API level — avoids fetching all records and slicing on frontend
       const data = await api.get("/api/investments?limit=5");
       setRecent(data || []);
-    } catch {}
+    } catch {
+      // Recent transactions are non-critical
+    }
   };
 
   useEffect(() => { fetchRecent(); }, []);

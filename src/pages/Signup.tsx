@@ -1,13 +1,8 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
 import { api } from "../lib/api";
+import { supabase } from "../lib/supabase";
 import Logo from "../components/Logo";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -29,7 +24,7 @@ const Signup = () => {
         if (data?.user) {
           navigate("/dashboard", { replace: true });
         }
-      } catch (err) {
+      } catch {
         // Not authenticated
       }
     };

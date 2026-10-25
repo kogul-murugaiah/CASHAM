@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
-import * as XLSX from 'xlsx';
+
 import { formatDate, formatShortDate } from '../lib/formatters';
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -283,7 +283,7 @@ const IncomeTracking = () => {
         setCurrentPage(1);
     }, [viewMode, selectedMonth, selectedYear, searchTerm, filterAccount, filterSource]);
 
-    const handleExport = () => {
+    const handleExport = async () => {
         const exportData = filteredRecords.map(rec => ({
             Date: formatDate(rec.date),
             Source: rec.source || rec.income_sources?.name || "Unknown",
@@ -292,6 +292,7 @@ const IncomeTracking = () => {
             Description: rec.description || ""
         }));
 
+        const XLSX = await import('xlsx');
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Income");

@@ -18,6 +18,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(400).json({ error: 'category_id and name are required' });
             }
 
+            // Verify the parent category belongs to the requesting user
+            const { data: category, error: categoryError } = await supabaseAdmin
+                .from('budget_categories')
+                .select('id')
+                .eq('id', category_id)
+                .eq('user_id', user.id)
+                .single();
+
+            if (categoryError || !category) {
+                return res.status(403).json({ error: 'Category not found or access denied' });
+            }
+
             const { data, error } = await supabaseAdmin
                 .from('budget_items')
                 .insert([{

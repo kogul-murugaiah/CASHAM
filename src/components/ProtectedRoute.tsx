@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "../lib/supabase";
 import { api } from "../lib/api";
-
-// Client-side Supabase — reads session from localStorage (set by OAuth flow)
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -31,7 +25,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         // Check 2: httpOnly cookie (covers email/password users)
         const data = await api.get('/api/auth/user');
         setAuthenticated(!!data?.user);
-      } catch (error) {
+      } catch {
         setAuthenticated(false);
       } finally {
         setLoading(false);

@@ -60,7 +60,7 @@ const Dashboard = () => {
     if (!hasToday && !hasYesterday) return 0;
 
     let count = 0;
-    let curr = hasToday ? new Date() : yesterdayDate;
+    const curr = hasToday ? new Date() : yesterdayDate;
     while (true) {
       const dStr = getLocalDateStr(curr);
       if ((heatmapData.counts[dStr] || 0) > 0) {

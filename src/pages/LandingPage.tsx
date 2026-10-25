@@ -13,7 +13,7 @@ const LandingPage = () => {
                 if (data?.user) {
                     setIsAuthenticated(true);
                 }
-            } catch (err) {
+            } catch {
                 // Not authenticated
             }
         };

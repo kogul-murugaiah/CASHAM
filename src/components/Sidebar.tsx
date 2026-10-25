@@ -54,48 +54,21 @@ const NAV_GROUPS = [
     },
 ];
 
-const Sidebar = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { theme, toggleTheme } = useTheme();
-    const [collapsed, setCollapsed] = useState(false);
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const [user, setUser] = useState<any>(null);
-    const drawerRef = useRef<HTMLDivElement>(null);
+function getInitials(userValue: any) {
+    if (!userValue) return "?";
+    if (userValue.display_name) return userValue.display_name.charAt(0).toUpperCase();
+    return userValue.email?.charAt(0).toUpperCase() || "?";
+}
 
-    useEffect(() => {
-        api.get("/api/auth/user")
-            .then((d) => setUser(d?.user || null))
-            .catch(() => setUser(null));
-    }, []);
+interface SidebarContentProps {
+    isCollapsed: boolean;
+    theme: string;
+    toggleTheme: () => void;
+    user: any;
+    onLogout: () => void;
+}
 
-    // Close mobile drawer on navigation
-    useEffect(() => { setMobileOpen(false); }, [location.pathname]);
-
-    // Close mobile drawer on outside click
-    useEffect(() => {
-        if (!mobileOpen) return;
-        const handler = (e: MouseEvent) => {
-            if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
-                setMobileOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [mobileOpen]);
-
-    const handleLogout = async () => {
-        try { await api.post("/api/auth/logout"); } catch { /* ignore */ }
-        navigate("/");
-    };
-
-    const getInitials = (userValue: any) => {
-        if (!userValue) return "?";
-        if (userValue.display_name) return userValue.display_name.charAt(0).toUpperCase();
-        return userValue.email?.charAt(0).toUpperCase() || "?";
-    };
-
-    const SidebarContent = ({ isCollapsed }: { isCollapsed: boolean }) => (
+const SidebarContent = ({ isCollapsed, theme, toggleTheme, user, onLogout }: SidebarContentProps) => (
         <div className="flex flex-col h-full">
             {/* Logo */}
             <div className={`flex items-center gap-3 px-4 py-5 border-b border-white/5 ${isCollapsed ? "justify-center" : ""}`}>
@@ -182,7 +155,7 @@ const Sidebar = () => {
                         </div>
                     )}
                     <button
-                        onClick={handleLogout}
+                        onClick={onLogout}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent hover:border-red-500/20 ${isCollapsed ? "justify-center" : ""}`}
                         title={isCollapsed ? "Logout" : undefined}
                     >
@@ -192,7 +165,46 @@ const Sidebar = () => {
                 </div>
             </div>
         </div>
-    );
+);
+
+const Sidebar = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { theme, toggleTheme } = useTheme();
+    const [collapsed, setCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [prevPath, setPrevPath] = useState(location.pathname);
+    const [user, setUser] = useState<any>(null);
+    const drawerRef = useRef<HTMLDivElement>(null);
+
+    // Close mobile drawer on navigation during render
+    if (prevPath !== location.pathname) {
+        setPrevPath(location.pathname);
+        setMobileOpen(false);
+    }
+
+    useEffect(() => {
+        api.get("/api/auth/user")
+            .then((d) => setUser(d?.user || null))
+            .catch(() => setUser(null));
+    }, []);
+
+    // Close mobile drawer on outside click
+    useEffect(() => {
+        if (!mobileOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
+                setMobileOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [mobileOpen]);
+
+    const handleLogout = async () => {
+        try { await api.post("/api/auth/logout"); } catch { /* ignore */ }
+        navigate("/");
+    };
 
     return (
         <>
@@ -201,7 +213,13 @@ const Sidebar = () => {
                 className={`hidden md:flex flex-col fixed top-0 left-0 h-screen z-40 bg-slate-900/60 backdrop-blur-2xl border-r border-white/5 transition-all duration-300 ${collapsed ? "w-[68px]" : "w-[240px]"
                     }`}
             >
-                <SidebarContent isCollapsed={collapsed} />
+                <SidebarContent
+                    isCollapsed={collapsed}
+                    theme={theme}
+                    toggleTheme={toggleTheme}
+                    user={user}
+                    onLogout={handleLogout}
+                />
 
                 {/* Collapse toggle */}
                 <button
@@ -268,7 +286,13 @@ const Sidebar = () => {
                             <FiX size={18} />
                         </button>
 
-                        <SidebarContent isCollapsed={false} />
+                        <SidebarContent
+                            isCollapsed={false}
+                            theme={theme}
+                            toggleTheme={toggleTheme}
+                            user={user}
+                            onLogout={handleLogout}
+                        />
                     </div>
                 </div>
             )}

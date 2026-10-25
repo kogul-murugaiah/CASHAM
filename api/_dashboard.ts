@@ -142,7 +142,8 @@ async function computeAndInsertCarryover(
   if (delErr) throw delErr;
 
   // Read previous month snapshot
-  let { data: snapRows, error: snapErr } = await supabaseAdmin
+  let snapRows: any[] | null = null;
+  const { data: initialSnap, error: snapErr } = await supabaseAdmin
     .from("monthly_wallet_balances")
     .select("account_type, closing_balance")
     .eq("user_id", userId)
@@ -150,6 +151,7 @@ async function computeAndInsertCarryover(
     .eq("month", prevMonth);
 
   if (snapErr) throw snapErr;
+  snapRows = initialSnap;
 
   // Fallback once if snapshot missing
   if (!snapRows || snapRows.length === 0) {
@@ -287,7 +289,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const source = await getCarryoverSource();
       const autoCarryoverEnabled = await getAutoCarryoverEnabled();
 
-      let { data: incomeData, error: incomeError } = await supabaseAdmin
+      const { data: incomeData, error: incomeError } = await supabaseAdmin
         .from("income")
         .select("id, amount, date, account_type, source_id")
         .eq("user_id", user.id)

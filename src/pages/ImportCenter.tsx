@@ -1,5 +1,4 @@
 import { useState } from "react";
-import * as XLSX from "xlsx";
 import { api } from "../lib/api";
 
 type ImportType = "income" | "expense" | "investment";
@@ -25,8 +24,9 @@ const ImportCenter = () => {
     setError(null);
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       const bstr = evt.target?.result;
+      const XLSX = await import('xlsx');
       const wb = XLSX.read(bstr, { type: "binary" });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
@@ -44,6 +44,7 @@ const ImportCenter = () => {
       const reader = new FileReader();
       reader.onload = async (evt) => {
         const bstr = evt.target?.result;
+        const XLSX = await import('xlsx');
         const wb = XLSX.read(bstr, { type: "binary" });
         const wsname = wb.SheetNames[0];
         const data = XLSX.utils.sheet_to_json(wb.Sheets[wsname]);

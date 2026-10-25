@@ -5,7 +5,7 @@ import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useTheme } from "../contexts/ThemeContext";
 import { FiCreditCard } from "react-icons/fi";
 import { getLocalDateString, formatDate, formatShortDate } from "../lib/formatters";
-import * as XLSX from 'xlsx';
+
 import {
     PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -370,7 +370,7 @@ const ExpenseTracking = () => {
         setCurrentPage(1);
     }, [viewMode, selectedMonth, selectedYear, selectedDate, selectedWeekStart, searchTerm, filterAccount, filterCategory, filterPayment]);
 
-    const handleExport = () => {
+    const handleExport = async () => {
         const exportData = filteredExpenses.map(exp => ({
             Date: formatDate(exp.date),
             Item: exp.item,
@@ -382,6 +382,7 @@ const ExpenseTracking = () => {
             Description: exp.description || ""
         }));
 
+        const XLSX = await import('xlsx');
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
