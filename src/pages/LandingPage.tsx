@@ -59,7 +59,7 @@ const LandingPage = () => {
                         {isAuthenticated ? (
                             <Link
                                 to="/dashboard"
-                                className="px-5 py-2.5 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-semibold text-sm transition-all shadow-sm"
+                                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 shadow-sm"
                             >
                                 Dashboard
                             </Link>

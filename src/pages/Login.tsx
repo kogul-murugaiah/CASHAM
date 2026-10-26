@@ -91,19 +91,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col p-4 pb-24 md:pb-4 relative overflow-hidden transition-colors">
       {/* Background Mesh */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-green-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-[100px] pointer-events-none animate-float-slow"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-green-500/10 dark:bg-green-500/20 rounded-full blur-[100px] pointer-events-none animate-float-delayed"></div>
 
       <div className="flex-1 flex items-center justify-center relative z-10">
         <div className="w-full max-w-md">
           {/* Branding */}
           <div className="text-center mb-8 animate-fade-in">
-            <div className="inline-block p-4 rounded-full bg-white/5 backdrop-blur-sm mb-4 border border-white/10 shadow-lg shadow-emerald-500/10">
+            <div className="inline-block p-4 rounded-full bg-white/70 dark:bg-white/5 backdrop-blur-sm mb-4 border border-slate-200 dark:border-white/10 shadow-lg shadow-emerald-500/10">
               <Logo size="xl" className="mx-auto" />
             </div>
-            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-emerald-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
+            <h1 className="text-4xl font-bold font-heading bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-cyan-400 dark:to-teal-400 bg-clip-text text-transparent drop-shadow-sm">
               CASHAM
             </h1>
           </div>
@@ -111,10 +111,10 @@ const Login = () => {
           {/* Login Card */}
           <div className="glass-card p-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <div className="mb-8 text-center">
-              <h2 className="text-2xl font-bold text-white mb-2 font-heading">
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2 font-heading">
                 Welcome back
               </h2>
-              <p className="text-slate-400 text-sm">
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
                 Log in to manage your expenses
               </p>
             </div>
@@ -124,7 +124,7 @@ const Login = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-slate-300"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
                   Email
                 </label>
@@ -135,7 +135,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   autoComplete="username"
-                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
                   required
                   disabled={loading}
                 />
@@ -145,7 +145,7 @@ const Login = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-slate-300"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                 >
                   Password
                 </label>
@@ -157,14 +157,14 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     autoComplete="current-password"
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all pr-12"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 backdrop-blur text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all pr-12"
                     required
                     disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-1"
                     disabled={loading}
                   >
                     {showPassword ? (
@@ -217,7 +217,7 @@ const Login = () => {
                     className="sr-only peer"
                     disabled={loading}
                   />
-                  <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-slate-700/50 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 transition-all flex items-center justify-center">
+                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-slate-700/50 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 transition-all flex items-center justify-center">
                     {rememberMe && (
                       <svg className="w-3 h-3 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -225,14 +225,14 @@ const Login = () => {
                     )}
                   </div>
                 </div>
-                <span className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors">
+                <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-300 transition-colors">
                   Remember my email
                 </span>
               </label>
 
               {/* Error Message */}
               {error && (
-                <div className="glass-card bg-red-500/10 border-red-500/20 p-3 text-red-300 text-sm text-center">
+                <div className="glass-card bg-red-500/10 border-red-500/20 p-3 text-red-600 dark:text-red-300 text-sm text-center">
                   {error}
                 </div>
               )}
@@ -241,16 +241,16 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading || googleLoading}
-                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-emerald-500/20"
+                className="btn-primary w-full py-3.5 text-base font-bold shadow-lg shadow-emerald-500/20 text-white"
               >
                 {loading ? "Logging in..." : "Log In"}
               </button>
 
               {/* Divider */}
               <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-white/10" />
+                <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
                 <span className="text-slate-500 text-xs font-medium tracking-wide">or continue with</span>
-                <div className="flex-1 h-px bg-white/10" />
+                <div className="flex-1 h-px bg-slate-200 dark:bg-white/10" />
               </div>
 
               {/* Google Sign-In */}
@@ -259,7 +259,7 @@ const Login = () => {
                 id="google-signin-btn"
                 onClick={handleGoogleSignIn}
                 disabled={googleLoading || loading}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white text-sm font-semibold transition-all duration-200 hover:border-slate-300 dark:hover:border-white/20 shadow-sm dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {googleLoading ? (
                   <svg className="w-5 h-5 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
@@ -267,22 +267,22 @@ const Login = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
                 )}
-                {googleLoading ? "Redirecting…" : "Continue with Google"}
+                <span>{googleLoading ? "Redirecting…" : "Continue with Google"}</span>
               </button>
 
               {/* Sign Up Link */}
-              <div className="text-center text-sm text-slate-400">
+              <div className="text-center text-sm text-slate-600 dark:text-slate-400">
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors"
+                  className="text-emerald-600 dark:text-emerald-400 font-bold hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
                 >
                   Sign up
                 </Link>
@@ -293,11 +293,11 @@ const Login = () => {
       </div>
 
       {/* Copyright Text */}
-      <div className="text-center space-y-1 pb-4 relative z-10 opacity-50 hover:opacity-100 transition-opacity">
-        <p className="text-xs text-slate-500">
+      <div className="text-center space-y-1 pb-4 relative z-10 opacity-70 hover:opacity-100 transition-opacity">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           Copyright © 2026 CASHAM. All Rights Reserved.
         </p>
-        <p className="text-xs text-slate-600">
+        <p className="text-xs text-slate-500 dark:text-slate-500">
           Developed and maintained by Kogul Murugaiah
         </p>
       </div>

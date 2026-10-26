@@ -758,8 +758,10 @@ const CreditCards = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
+                fetchCards();
                 loadDues();
                 loadSettlements();
+                loadMasterExpenses();
                 fetchAdvances();
               }}
               className={`p-3 rounded-2xl border ${
@@ -771,7 +773,7 @@ const CreditCards = () => {
             >
               <FiRefreshCw
                 size={16}
-                className={loadingDues || loadingHistory || advancesLoading ? "animate-spin" : ""}
+                className={loadingDues || loadingHistory || advancesLoading || loadingMaster ? "animate-spin" : ""}
               />
             </button>
             {cards.length > 0 && (

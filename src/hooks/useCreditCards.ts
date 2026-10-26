@@ -53,7 +53,7 @@ export const useCreditCards = () => {
     fetchCards();
   }, [fetchCards]);
 
-  const addCard = async (cardData: {
+  const addCard = useCallback(async (cardData: {
     name: string;
     bank_name?: string;
     card_last4?: string;
@@ -72,9 +72,9 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to add credit card');
     }
-  };
+  }, []);
 
-  const updateCard = async (cardData: {
+  const updateCard = useCallback(async (cardData: {
     id: string;
     name: string;
     bank_name?: string;
@@ -91,43 +91,43 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to update credit card');
     }
-  };
+  }, []);
 
-  const deleteCard = async (id: string) => {
+  const deleteCard = useCallback(async (id: string) => {
     try {
       await api.delete(`/api/credit-cards?id=${id}`);
       setCards((prev) => prev.filter((c) => c.id !== id));
     } catch (err: any) {
       throw new Error(err.message || 'Failed to delete credit card');
     }
-  };
+  }, []);
 
-  const fetchDues = async () => {
+  const fetchDues = useCallback(async () => {
     try {
       return await api.get('/api/credit-cards?view=dues');
     } catch (err: any) {
       throw new Error(err.message || 'Failed to fetch credit card dues');
     }
-  };
+  }, []);
 
-  const fetchMasterExpenses = async () => {
+  const fetchMasterExpenses = useCallback(async () => {
     try {
       return await api.get('/api/credit-cards?view=master');
     } catch (err: any) {
       throw new Error(err.message || 'Failed to fetch master credit card expenses');
     }
-  };
+  }, []);
 
-  const fetchSettlements = async (): Promise<CreditCardSettlement[]> => {
+  const fetchSettlements = useCallback(async (): Promise<CreditCardSettlement[]> => {
     try {
       const data = await api.get('/api/credit-cards?view=settlements');
       return data || [];
     } catch (err: any) {
       throw new Error(err.message || 'Failed to fetch settlement history');
     }
-  };
+  }, []);
 
-  const settleBill = async (payload: {
+  const settleBill = useCallback(async (payload: {
     credit_card_id?: string | null;
     credit_card_name: string;
     expense_ids: string[];
@@ -141,9 +141,9 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to settle credit card bill');
     }
-  };
+  }, [fetchCards]);
 
-  const unsettleBill = async (settlement_id: string) => {
+  const unsettleBill = useCallback(async (settlement_id: string) => {
     try {
       const res = await api.post('/api/credit-cards?action=unsettle', { settlement_id });
       await fetchCards();
@@ -151,9 +151,9 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to reopen statement');
     }
-  };
+  }, [fetchCards]);
 
-  const toggleFundsSetAside = async (expense_id: string, isSetAside: boolean) => {
+  const toggleFundsSetAside = useCallback(async (expense_id: string, isSetAside: boolean) => {
     try {
       await api.put('/api/expenses', {
         id: expense_id,
@@ -162,9 +162,9 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to update funds status');
     }
-  };
+  }, []);
 
-  const settleAdvances = async (payload: {
+  const settleAdvances = useCallback(async (payload: {
     credit_card_id?: string | null;
     credit_card_name: string;
     advance_ids: string[];
@@ -178,9 +178,9 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to settle advances');
     }
-  };
+  }, [fetchCards]);
 
-  const unsettleAdvances = async (settlement_id: string) => {
+  const unsettleAdvances = useCallback(async (settlement_id: string) => {
     try {
       const res = await api.post('/api/credit-cards?action=unsettle-advances', { settlement_id });
       await fetchCards();
@@ -188,7 +188,7 @@ export const useCreditCards = () => {
     } catch (err: any) {
       throw new Error(err.message || 'Failed to reopen advance settlement');
     }
-  };
+  }, [fetchCards]);
 
   return {
     cards,
