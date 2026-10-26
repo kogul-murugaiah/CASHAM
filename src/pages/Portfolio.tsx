@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { api } from "../lib/api";
 import { xirr, xirrFmt, timeAgo } from "../lib/xirr";
@@ -255,7 +255,7 @@ const Portfolio = () => {
     labelStyle: { color: isDark ? '#94a3b8' : '#64748b', fontSize: '10px' },
   };
 
-  const fetchBankBalances = async () => {
+  const fetchBankBalances = useCallback(async () => {
     try {
       const [exps, incs] = await Promise.all([
         api.get("/api/expenses"),
@@ -273,49 +273,73 @@ const Portfolio = () => {
     } catch {
       // Ignore cash balance calculation error
     }
-  };
+  }, [accountTypes, allRecords]);
 
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const data = await api.get("/api/investments?summary=true");
       setSummary(data);
     } catch {
       // Ignore investment summary fetch error
     }
-  };
+  }, []);
 
-  const fetchRecords = async (type: string) => {
+  const fetchAllRecords = useCallback(async () => {
+    try {
+      const all = await api.get("/api/investments");
+      setAllRecords(all || []);
+    } catch {
+      // Ignore all records fetch error
+    }
+  }, []);
+
+  const fetchRecords = useCallback(async (type: string) => {
     setLoading(true);
     try {
       const data = await api.get(`/api/investments?type=${encodeURIComponent(type)}`);
       setRecords(data || []);
-      // Also fetch ALL for history lookups if not already done
-      if (allRecords.length === 0) {
-        const all = await api.get("/api/investments");
-        setAllRecords(all || []);
-      }
-    } catch { setRecords([]); } finally { setLoading(false); }
-  };
+      // Fetch all records for history lookup if not populated yet
+      setAllRecords(prev => {
+        if (prev.length === 0) {
+          api.get("/api/investments").then(all => setAllRecords(all || [])).catch(() => {});
+        }
+        return prev;
+      });
+    } catch { 
+      setRecords([]); 
+    } finally { 
+      setLoading(false); 
+    }
+  }, []);
 
+  // Initial summary & records fetch on component mount
+  useEffect(() => {
+    fetchSummary();
+    fetchAllRecords();
+  }, [fetchSummary, fetchAllRecords]);
+
+  // Tab-specific records fetch
   useEffect(() => {
     if (tab !== "overview" && tab !== "analysis") {
         fetchRecords(TYPE_MAP[tab as Tab]);
     } else {
         setLoading(false);
     }
-  }, [tab]);
+  }, [tab, fetchRecords]);
 
+  // Compute bank cash balances when accounts or records are ready
   useEffect(() => {
-    if (accountTypes.length > 0 && (summary || allRecords.length > 0)) {
+    if (accountTypes.length > 0) {
         fetchBankBalances();
     }
-  }, [accountTypes, summary, allRecords]);
+  }, [accountTypes, fetchBankBalances]);
 
   const handleRefreshPrices = async () => {
     setRefreshing(true);
     try {
       await api.get("/api/prices/refresh");
       await fetchSummary();
+      await fetchAllRecords();
       if (tab !== "overview" && tab !== "analysis") await fetchRecords(TYPE_MAP[tab]);
     } catch (err) {
       console.error("Refresh failed:", err);
@@ -324,7 +348,7 @@ const Portfolio = () => {
     }
   };
 
-  const fetchSnapshots = async () => {
+  const fetchSnapshots = useCallback(async () => {
     setTimelineLoading(true);
     try {
         const data = await api.get("/api/investments?snapshots=true");
@@ -334,13 +358,13 @@ const Portfolio = () => {
     } finally {
         setTimelineLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (mainView === "timeline") {
         fetchSnapshots();
     }
-  }, [mainView]);
+  }, [mainView, fetchSnapshots]);
 
   const captureSnapshot = async () => {
     setCapturing(true);
