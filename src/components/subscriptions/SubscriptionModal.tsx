@@ -99,7 +99,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         billing_cycle: billingCycle,
         start_date: startDate,
         next_billing_date: nextBillingDate || startDate,
-        category_id: categoryId || null,
+        category_id: categoryId ? Number(categoryId) : null,
         category_name: selectedCat?.name || null,
         payment_type: paymentType,
         credit_card_id: paymentType === "credit_card" ? (selectedCC?.id || null) : null,

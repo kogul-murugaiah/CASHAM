@@ -171,7 +171,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     billing_cycle,
                     start_date,
                     next_billing_date: next_billing_date || start_date,
-                    category_id: category_id || null,
+                    category_id: category_id ? Number(category_id) : null,
                     category_name: category_name || null,
                     payment_type,
                     credit_card_id: payment_type === 'credit_card' ? (credit_card_id || null) : null,
@@ -200,6 +200,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // If updating next_billing_date or amount, ensure numeric types
             if (updates.amount) updates.amount = Number(updates.amount);
+            if (updates.category_id !== undefined) {
+                updates.category_id = updates.category_id ? Number(updates.category_id) : null;
+            }
             updates.updated_at = new Date().toISOString();
 
             const { data, error } = await supabaseAdmin

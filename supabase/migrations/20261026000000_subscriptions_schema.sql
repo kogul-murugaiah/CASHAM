@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     billing_cycle TEXT NOT NULL CHECK (billing_cycle IN ('monthly', 'quarterly', 'semi_annual', 'yearly')),
     start_date DATE NOT NULL,
     next_billing_date DATE NOT NULL,
-    category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
+    category_id INTEGER REFERENCES public.categories(id) ON DELETE SET NULL,
     category_name TEXT,
     payment_type TEXT NOT NULL CHECK (payment_type IN ('credit_card', 'account')),
     credit_card_id UUID REFERENCES public.credit_cards(id) ON DELETE SET NULL,

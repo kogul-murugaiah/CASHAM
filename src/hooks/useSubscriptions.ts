@@ -12,7 +12,7 @@ export interface Subscription {
     billing_cycle: BillingCycle;
     start_date: string;
     next_billing_date: string;
-    category_id: string | null;
+    category_id: number | null;
     category_name: string | null;
     payment_type: PaymentType;
     credit_card_id: string | null;
@@ -31,7 +31,7 @@ export interface SubscriptionFormData {
     billing_cycle: BillingCycle;
     start_date: string;
     next_billing_date?: string;
-    category_id?: string | null;
+    category_id?: number | string | null;
     category_name?: string | null;
     payment_type: PaymentType;
     credit_card_id?: string | null;
