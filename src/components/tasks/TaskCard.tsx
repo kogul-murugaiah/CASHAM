@@ -2,7 +2,7 @@ import { type Task } from '../../hooks/useTasks';
 import { PRIORITY_COLORS } from './taskConstants';
 import {
     FiCheckCircle, FiCircle, FiPlay, FiPause, FiStopCircle,
-    FiEdit2, FiTrash2, FiClock, FiRepeat, FiCalendar
+    FiEdit2, FiTrash2, FiClock, FiRepeat, FiCalendar, FiArrowRight
 } from 'react-icons/fi';
 
 export interface TaskCardProps {
@@ -15,13 +15,14 @@ export interface TaskCardProps {
     onResume?: (id: string) => void;
     onStop?: (id: string) => void;
     onScheduleToday?: (id: string) => void;
+    onMoveToTomorrow?: (id: string) => void;
     showControls?: boolean;
     hideTypeBadge?: boolean;
 }
 
 export function TaskCard({
     task, isDark, onToggle, onEdit, onDelete,
-    onPause, onResume, onStop, onScheduleToday, showControls = false, hideTypeBadge = false
+    onPause, onResume, onStop, onScheduleToday, onMoveToTomorrow, showControls = false, hideTypeBadge = false
 }: TaskCardProps) {
     const done = task.completed_today;
     const priorityColor = PRIORITY_COLORS[task.priority];
@@ -167,6 +168,23 @@ export function TaskCard({
                             className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 transition-all flex items-center gap-1"
                         >
                             <span>+ Do Today</span>
+                        </button>
+                    )}
+
+                    {/* Move / Carry forward to Tomorrow button */}
+                    {!done && !isRepeating && onMoveToTomorrow && (
+                        <button
+                            type="button"
+                            onClick={() => onMoveToTomorrow(task.id)}
+                            title="Carry forward / Move to tomorrow"
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 ${
+                                isDark
+                                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/25'
+                                    : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200'
+                            }`}
+                        >
+                            <FiArrowRight size={11} />
+                            <span>Tomorrow</span>
                         </button>
                     )}
 

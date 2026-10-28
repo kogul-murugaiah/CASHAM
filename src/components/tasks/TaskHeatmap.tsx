@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { FiCheckCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { getLocalDateStr } from '../../hooks/useTasks';
+import { SchedulableTask, isTaskScheduledOnDate } from './taskConstants';
 
 // ─── Heatmap cell color ──────────────────────────────────────────────────────
 export function heatColor(count: number, isDark: boolean, customColor?: string): string {
@@ -38,46 +39,120 @@ export function buildHeatmapGrid(): string[] {
 }
 
 // ─── Streak calculation ──────────────────────────────────────────────────────
-export function calcStreaks(counts: Record<string, number | undefined>): { current: number; best: number } {
+export function calcStreaks(
+    counts: Record<string, number | undefined>,
+    task?: SchedulableTask | null
+): { current: number; best: number } {
     const today = getLocalDateStr();
     const yesterdayDate = new Date();
     yesterdayDate.setDate(yesterdayDate.getDate() - 1);
     const yesterday = getLocalDateStr(yesterdayDate);
 
     const dates = buildHeatmapGrid().filter(d => d <= today);
+
+    // If no specific task is provided, use the standard calendar-day streak (all repeating habits combined)
+    if (!task) {
+        let best = 0;
+        let temp = 0;
+        for (const d of dates) {
+            if ((counts[d] || 0) > 0) {
+                temp++;
+                if (temp > best) best = temp;
+            } else {
+                temp = 0;
+            }
+        }
+
+        let current = 0;
+        const hasToday = (counts[today] || 0) > 0;
+        const hasYesterday = (counts[yesterday] || 0) > 0;
+
+        if (hasToday) {
+            const allDates = [...dates].reverse();
+            for (const d of allDates) {
+                if ((counts[d] || 0) > 0) current++;
+                else break;
+            }
+        } else if (hasYesterday) {
+            const allDates = [...dates].filter(d => d <= yesterday).reverse();
+            for (const d of allDates) {
+                if ((counts[d] || 0) > 0) current++;
+                else break;
+            }
+        } else {
+            current = 0;
+        }
+
+        return { current, best };
+    }
+
+    // Task-specific streak calculation: evaluates scheduled days + bonus completions without breaking flow
+    // A date is considered an evaluation checkpoint if:
+    // 1. It is a scheduled day for the task, OR
+    // 2. The user completed the task on that day (bonus completion on rest day - preserves/advances flow)
+    const relevantDates = dates.filter(d => isTaskScheduledOnDate(task, d) || (counts[d] || 0) > 0);
+
+    if (relevantDates.length === 0) {
+        return { current: 0, best: 0 };
+    }
+
+    // 1. Best Streak (consecutive completed scheduled/bonus sessions)
     let best = 0;
     let temp = 0;
-    for (const d of dates) {
+    for (const d of relevantDates) {
         if ((counts[d] || 0) > 0) {
             temp++;
             if (temp > best) best = temp;
         } else {
-            temp = 0;
+            // Only reset if date is in the past; if it's today and pending, don't reset ongoing streak
+            if (d < today) {
+                temp = 0;
+            }
         }
     }
 
+    // 2. Current Streak
     let current = 0;
+    const isTodayScheduled = isTaskScheduledOnDate(task, today);
     const hasToday = (counts[today] || 0) > 0;
-    const hasYesterday = (counts[yesterday] || 0) > 0;
+
+    const pastRelevant = relevantDates.filter(d => d < today).reverse();
+    const lastPastDate = pastRelevant[0];
 
     if (hasToday) {
-        const allDates = [...dates].reverse();
-        for (const d of allDates) {
+        // Completed today! Count backwards including today
+        const rev = [...relevantDates].reverse();
+        for (const d of rev) {
             if ((counts[d] || 0) > 0) current++;
             else break;
         }
-    } else if (hasYesterday) {
-        const allDates = [...dates].filter(d => d <= yesterday).reverse();
-        for (const d of allDates) {
-            if ((counts[d] || 0) > 0) current++;
-            else break;
+    } else if (isTodayScheduled) {
+        // Today is scheduled but not completed yet. Day is ongoing.
+        // Check if the previous session was completed:
+        if (lastPastDate && (counts[lastPastDate] || 0) > 0) {
+            for (const d of pastRelevant) {
+                if ((counts[d] || 0) > 0) current++;
+                else break;
+            }
+        } else {
+            current = 0;
         }
     } else {
-        current = 0;
+        // Today is a REST DAY (not scheduled, not completed today)
+        // Check if the previous scheduled session was completed:
+        if (lastPastDate && (counts[lastPastDate] || 0) > 0) {
+            for (const d of pastRelevant) {
+                if ((counts[d] || 0) > 0) current++;
+                else break;
+            }
+        } else {
+            current = 0;
+        }
     }
 
     return { current, best };
 }
+
 
 // ─── Month Heatmap Calendar ──────────────────────────────────────────────────
 export interface MonthHeatmapProps {
@@ -92,6 +167,7 @@ export interface MonthHeatmapProps {
     onGoToCurrentMonth: () => void;
     canGoNext: boolean;
     onDayClick?: (dateStr: string) => void;
+    task?: SchedulableTask | null;
 }
 
 export function MonthHeatmap({
@@ -106,6 +182,7 @@ export function MonthHeatmap({
     onGoToCurrentMonth,
     canGoNext,
     onDayClick,
+    task,
 }: MonthHeatmapProps) {
     const monthDate = useMemo(() => new Date(year, month, 1), [year, month]);
     const monthName = useMemo(() => monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), [monthDate]);
@@ -137,8 +214,40 @@ export function MonthHeatmap({
     // Monthly stats
     const { activeDaysCount, daysPassed, consistencyPct, totalCompletions, bestStreak } = useMemo(() => {
         const validDates = items.filter(Boolean).map(x => x!.dateStr).filter(d => d <= todayStr);
-        const active = validDates.filter(d => (counts[d] || 0) > 0).length;
         const total = validDates.reduce((acc, d) => acc + (counts[d] || 0), 0);
+
+        if (task) {
+            // Task-specific monthly stats
+            const scheduledPastOrToday = validDates.filter(d => isTaskScheduledOnDate(task, d));
+            const activeScheduled = scheduledPastOrToday.filter(d => (counts[d] || 0) > 0).length;
+            const bonusCompleted = validDates.filter(d => !isTaskScheduledOnDate(task, d) && (counts[d] || 0) > 0).length;
+            const active = activeScheduled + bonusCompleted;
+            const scheduledTarget = scheduledPastOrToday.length;
+            const pct = scheduledTarget > 0 ? Math.min(100, Math.round((activeScheduled / scheduledTarget) * 100)) : (active > 0 ? 100 : 0);
+
+            // Month best streak for this task
+            const relevantMonthDates = validDates.filter(d => isTaskScheduledOnDate(task, d) || (counts[d] || 0) > 0);
+            let maxS = 0;
+            let curS = 0;
+            for (const d of relevantMonthDates) {
+                if ((counts[d] || 0) > 0) {
+                    curS++;
+                    if (curS > maxS) maxS = curS;
+                } else if (d < todayStr) {
+                    curS = 0;
+                }
+            }
+
+            return {
+                activeDaysCount: active,
+                daysPassed: scheduledTarget,
+                consistencyPct: pct,
+                totalCompletions: total,
+                bestStreak: maxS,
+            };
+        }
+
+        const active = validDates.filter(d => (counts[d] || 0) > 0).length;
         const pct = validDates.length > 0 ? Math.round((active / validDates.length) * 100) : 0;
 
         let maxS = 0;
@@ -159,7 +268,8 @@ export function MonthHeatmap({
             totalCompletions: total,
             bestStreak: maxS,
         };
-    }, [items, counts, todayStr]);
+    }, [items, counts, todayStr, task]);
+
 
     const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const muted = isDark ? 'text-slate-400' : 'text-slate-500';
@@ -212,8 +322,8 @@ export function MonthHeatmap({
                 {/* Quick month metrics */}
                 <div className="flex items-center gap-3 text-xs flex-wrap">
                     <div className="flex items-center gap-1">
-                        <span className={muted}>Active Days:</span>
-                        <strong className="text-emerald-400">{activeDaysCount}/{daysPassed}d</strong>
+                        <span className={muted}>{task ? 'Scheduled Done:' : 'Active Days:'}</span>
+                        <strong className="text-emerald-400">{activeDaysCount}/{daysPassed}{task ? ' sessions' : 'd'}</strong>
                     </div>
                     <div className="flex items-center gap-1">
                         <span className={muted}>Consistency:</span>
@@ -262,6 +372,7 @@ export function MonthHeatmap({
                         const done = count > 0;
                         const isToday = dateStr === todayStr;
                         const isFuture = dateStr > todayStr;
+                        const isScheduled = task ? isTaskScheduledOnDate(task, dateStr) : true;
 
                         let bgCls = '';
                         let borderCls = '';
@@ -271,10 +382,22 @@ export function MonthHeatmap({
                         } else if (isFuture) {
                             bgCls = isDark ? 'bg-slate-900/30 opacity-40' : 'bg-slate-50/50 opacity-40';
                             borderCls = isDark ? 'border-slate-800' : 'border-slate-200';
+                        } else if (task && !isScheduled) {
+                            // Rest day in the past or today
+                            bgCls = isDark ? 'bg-slate-900/20' : 'bg-slate-50/50';
+                            borderCls = isDark ? 'border-slate-800/60' : 'border-slate-100';
                         } else {
                             bgCls = isDark ? 'bg-slate-900/40' : 'bg-slate-50';
                             borderCls = isDark ? 'border-slate-800 hover:border-slate-700' : 'border-slate-200 hover:border-slate-300';
                         }
+
+                        const dayTooltip = `${dateStr}: ${
+                            done
+                                ? `${count} completed${task && !isScheduled ? ' (Bonus)' : ''}`
+                                : isFuture
+                                    ? (task && !isScheduled ? 'Rest day' : 'Upcoming')
+                                    : (task && !isScheduled ? 'Rest day (not scheduled)' : 'None completed')
+                        }`;
 
                         return (
                             <button
@@ -282,7 +405,7 @@ export function MonthHeatmap({
                                 type="button"
                                 disabled={isFuture}
                                 onClick={() => onDayClick?.(dateStr)}
-                                title={`${dateStr}: ${done ? `${count} completed` : isFuture ? 'Upcoming' : 'None completed'}`}
+                                title={dayTooltip}
                                 className={`h-14 sm:h-16 p-1.5 sm:p-2 rounded-xl border flex flex-col justify-between text-left transition-all ${bgCls} ${borderCls} ${
                                     isToday ? 'ring-2 ring-emerald-400 ring-offset-1' : ''
                                 } ${isFuture ? 'cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02]'}`}
@@ -309,12 +432,16 @@ export function MonthHeatmap({
                                         <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold" style={{ color: customColor || '#10b981' }}>
                                             <FiCheckCircle size={12} className="flex-shrink-0" />
                                             <span className="truncate">
-                                                {customColor ? 'Done' : `${count} task${count > 1 ? 's' : ''}`}
+                                                {customColor ? (task && !isScheduled ? 'Bonus' : 'Done') : `${count} task${count > 1 ? 's' : ''}`}
                                             </span>
                                         </div>
                                     ) : isFuture ? (
                                         <span className={`text-[9px] sm:text-[10px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                                            Upcoming
+                                            {task && !isScheduled ? 'Rest' : 'Upcoming'}
+                                        </span>
+                                    ) : task && !isScheduled ? (
+                                        <span className={`text-[9px] font-semibold italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                            Rest
                                         </span>
                                     ) : (
                                         <span className={`text-[10px] ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>
@@ -443,12 +570,13 @@ export interface WeeklyActivityProps {
     color?: string;
     todayStr: string;
     onDayClick?: (dateStr: string) => void;
+    task?: SchedulableTask | null;
 }
 
-export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todayStr, onDayClick }: WeeklyActivityProps) {
+export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todayStr, onDayClick, task }: WeeklyActivityProps) {
     const [weekOffset, setWeekOffset] = useState<number>(0);
 
-    const { days, rangeLabel, isCurrentWeek, totalTasksThisWeek, activeDaysCount, elapsedDays, bestDay, maxCountInWeek } = useMemo(() => {
+    const { days, rangeLabel, isCurrentWeek, totalTasksThisWeek, activeDaysCount, elapsedDays, bestDay, maxCountInWeek, scheduledActiveCount, scheduledElapsedCount } = useMemo(() => {
         const [ty, tm, td] = todayStr.split('-').map(Number);
         const today = new Date(ty, tm - 1, td);
 
@@ -469,6 +597,7 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
             isToday: boolean;
             isPast: boolean;
             isFuture: boolean;
+            isScheduled: boolean;
         };
         const result: DayActivity[] = [];
         let maxVal = 1;
@@ -489,6 +618,7 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
                 isToday: dateStr === todayStr,
                 isPast: dateStr < todayStr,
                 isFuture: dateStr > todayStr,
+                isScheduled: task ? isTaskScheduledOnDate(task, dateStr) : true,
             });
         }
 
@@ -500,6 +630,10 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
         const totalThisWeek = result.reduce((s, d) => s + d.count, 0);
         const activeDays = result.filter(d => d.count > 0).length;
         const elapsed = weekOffset === 0 ? Math.min(7, (dow === 0 ? 7 : dow)) : 7;
+
+        const schedActive = result.filter(d => d.count > 0 && d.isScheduled).length;
+        const bonusActive = result.filter(d => d.count > 0 && !d.isScheduled).length;
+        const schedElapsed = result.filter(d => d.isScheduled && !d.isFuture).length;
 
         const bDay = result.reduce<{ name: string; count: number } | null>((acc, d) => {
             if (d.count > 0 && (!acc || d.count > acc.count)) {
@@ -517,8 +651,11 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
             elapsedDays: elapsed,
             bestDay: bDay,
             maxCountInWeek: maxVal,
+            scheduledActiveCount: schedActive + bonusActive,
+            scheduledElapsedCount: schedElapsed,
         };
-    }, [counts, todayStr, weekOffset]);
+    }, [counts, todayStr, weekOffset, task]);
+
 
     const trackBg = isDark ? 'bg-slate-900/80 border border-slate-700/60' : 'bg-slate-100 border border-slate-200';
     const textMuted = isDark ? 'text-slate-400' : 'text-slate-500';
@@ -594,8 +731,12 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
                     <strong className="text-emerald-400">{totalTasksThisWeek}</strong>
                 </div>
                 <div className="flex items-center gap-1">
-                    <span className={textMuted}>Active Days:</span>
-                    <strong className="text-emerald-400">{activeDaysCount} / {elapsedDays} days</strong>
+                    <span className={textMuted}>{task ? 'Target Sessions:' : 'Active Days:'}</span>
+                    <strong className="text-emerald-400">
+                        {task
+                            ? `${scheduledActiveCount} / ${scheduledElapsedCount} sessions`
+                            : `${activeDaysCount} / ${elapsedDays} days`}
+                    </strong>
                 </div>
                 {bestDay && (
                     <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -616,7 +757,13 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
                             key={d.dateStr}
                             type="button"
                             onClick={() => onDayClick?.(d.dateStr)}
-                            title={`${d.name}, ${d.monthShort} ${d.dayNum}: ${done ? `${d.count} completed` : d.isFuture ? 'Upcoming' : '0 completed'}. Click to view focus.`}
+                            title={`${d.name}, ${d.monthShort} ${d.dayNum}: ${
+                                done
+                                    ? `${d.count} completed${task && !d.isScheduled ? ' (Bonus)' : ''}`
+                                    : d.isFuture
+                                        ? (task && !d.isScheduled ? 'Rest day' : 'Upcoming')
+                                        : (task && !d.isScheduled ? 'Rest day' : '0 completed')
+                            }. Click to view focus.`}
                             className={`flex flex-col items-center gap-2 group p-2 rounded-xl border transition-all cursor-pointer ${
                                 d.isToday
                                     ? 'ring-2 ring-emerald-400/80 ring-offset-1 bg-emerald-500/5 border-emerald-500/30'
@@ -628,18 +775,18 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
                                 done
                                     ? 'text-emerald-400 font-extrabold'
                                     : d.isToday
-                                        ? 'text-amber-400 font-semibold'
+                                        ? (task && !d.isScheduled ? 'text-slate-400 font-medium' : 'text-amber-400 font-semibold')
                                         : d.isFuture
                                             ? textMuted + ' opacity-40'
                                             : textMuted
                             }`}>
                                 {done
-                                    ? `${d.count} ${d.count === 1 ? 'task' : 'tasks'}`
+                                    ? (task && !d.isScheduled ? 'Bonus 1' : `${d.count} ${d.count === 1 ? 'task' : 'tasks'}`)
                                     : d.isToday
-                                        ? '0 today'
+                                        ? (task && !d.isScheduled ? 'Rest' : '0 today')
                                         : d.isFuture
-                                            ? '—'
-                                            : '0'
+                                            ? (task && !d.isScheduled ? 'Rest' : '—')
+                                            : (task && !d.isScheduled ? 'Rest' : '0')
                                 }
                             </span>
 

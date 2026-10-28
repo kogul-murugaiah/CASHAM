@@ -13,7 +13,7 @@ import {
     FiCheckCircle, FiPlus, FiBell, FiBellOff,
     FiZap, FiAward, FiTrendingUp, FiActivity,
     FiFilter, FiCalendar, FiBarChart2,
-    FiChevronLeft, FiChevronRight
+    FiChevronLeft, FiChevronRight, FiArrowRight
 } from 'react-icons/fi';
 import {
     type Tab,
@@ -24,6 +24,7 @@ import {
     formatNiceDate,
     formatDisplayDate,
     shiftDateStr,
+    isTaskScheduledOnDate,
 } from '../components/tasks/taskConstants';
 import { AddEditTaskModal } from '../components/tasks/TaskModal';
 import { TaskCard } from '../components/tasks/TaskCard';
@@ -113,6 +114,7 @@ export default function TaskTracker() {
     );
     const [notifMenuOpen, setNotifMenuOpen] = useState(false);
     const [notifSuccessToast, setNotifSuccessToast] = useState<string | null>(null);
+    const [actionToast, setActionToast] = useState<string | null>(null);
 
     // Check & dispatch reminders for today's tasks
     useEffect(() => {
@@ -253,8 +255,8 @@ export default function TaskTracker() {
 
     const streaks = useMemo(() => {
         if (!heatmapData) return { current: 0, best: 0 };
-        return calcStreaks(activeHeatmapCounts);
-    }, [heatmapData, activeHeatmapCounts]);
+        return calcStreaks(activeHeatmapCounts, selectedTask);
+    }, [heatmapData, activeHeatmapCounts, selectedTask]);
 
     // Total completion count for selected task
     const selectedTaskTotalCompletions = useMemo(() => {
@@ -314,6 +316,16 @@ export default function TaskTracker() {
 
     const handleScheduleToday = async (id: string) => {
         await updateTask(id, { due_date: todayStr, carry_forward: true });
+        fetchAllTasks();
+        fetchTodayTasks(selectedDate);
+    };
+
+    const handleMoveToTomorrow = async (id: string) => {
+        const baseDate = selectedDate || todayStr;
+        const tomorrowStr = shiftDateStr(baseDate, 1);
+        await updateTask(id, { due_date: tomorrowStr, carry_forward: true });
+        setActionToast('Task carried forward to tomorrow!');
+        setTimeout(() => setActionToast(null), 3000);
         fetchAllTasks();
         fetchTodayTasks(selectedDate);
     };
@@ -416,6 +428,14 @@ export default function TaskTracker() {
                 <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold shadow-xl flex items-center gap-2 animate-bounce">
                     <FiBell size={14} />
                     <span>{notifSuccessToast}</span>
+                </div>
+            )}
+
+            {/* Action Feedback Toast */}
+            {actionToast && (
+                <div className="fixed bottom-5 left-1/2 -translate-x-1/2 md:left-auto md:right-5 md:translate-x-0 z-50 px-4 py-2.5 rounded-xl bg-amber-600 text-white text-xs font-semibold shadow-xl flex items-center gap-2 animate-fade-in">
+                    <FiArrowRight size={14} />
+                    <span>{actionToast}</span>
                 </div>
             )}
 
@@ -612,6 +632,7 @@ export default function TaskTracker() {
                                             onPause={handlePause}
                                             onResume={handleResume}
                                             onStop={handleStop}
+                                            onMoveToTomorrow={handleMoveToTomorrow}
                                             showControls
                                         />
                                     ))}
@@ -682,6 +703,7 @@ export default function TaskTracker() {
                                     onResume={handleResume}
                                     onStop={handleStop}
                                     onScheduleToday={handleScheduleToday}
+                                    onMoveToTomorrow={handleMoveToTomorrow}
                                     showControls
                                 />
                             ))}
@@ -935,7 +957,9 @@ export default function TaskTracker() {
                             </div>
                             <p className="text-2xl font-bold">{streaks.current}d</p>
                             <p className={`text-[10px] mt-0.5 truncate ${muted}`}>
-                                {selectedTask ? 'Consecutive days' : 'Any task'}
+                                {selectedTask
+                                    ? (selectedTask.frequency_type === 'weekly' ? 'Scheduled sessions' : 'Consecutive sessions')
+                                    : 'Consecutive days'}
                             </p>
                         </div>
 
@@ -961,24 +985,32 @@ export default function TaskTracker() {
                                 {selectedTask ? selectedTaskTotalCompletions : allTasks.length}
                             </p>
                             <p className={`text-[10px] mt-0.5 truncate ${muted}`}>
-                                {selectedTask ? 'Days logged' : 'Configured'}
+                                {selectedTask ? 'Sessions logged' : 'Configured'}
                             </p>
                         </div>
 
                         <div className={`rounded-2xl border p-4 ${card}`}>
                             <div className="flex items-center gap-1.5 mb-1 text-teal-400">
                                 <FiTrendingUp size={14} />
-                                <span className="text-[10px] font-bold uppercase tracking-wider">Done Today</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider">
+                                    {selectedTask && !isTaskScheduledOnDate(selectedTask, todayStr) ? 'Today Status' : 'Done Today'}
+                                </span>
                             </div>
                             <p className="text-2xl font-bold">
                                 {selectedTask
-                                    ? (activeHeatmapCounts[todayStr] ? '1/1' : '0/1')
+                                    ? (isTaskScheduledOnDate(selectedTask, todayStr)
+                                        ? (activeHeatmapCounts[todayStr] ? '1/1' : '0/1')
+                                        : (activeHeatmapCounts[todayStr] ? 'Bonus 1' : 'Rest Day')
+                                      )
                                     : `${todayCompleted}/${todayTotal}`
                                 }
                             </p>
                             <p className={`text-[10px] mt-0.5 truncate ${muted}`}>
                                 {selectedTask
-                                    ? (activeHeatmapCounts[todayStr] ? 'Completed today' : 'Pending today')
+                                    ? (isTaskScheduledOnDate(selectedTask, todayStr)
+                                        ? (activeHeatmapCounts[todayStr] ? 'Completed today' : 'Scheduled for today')
+                                        : (activeHeatmapCounts[todayStr] ? 'Extra session logged' : 'Not scheduled today')
+                                      )
                                     : 'All today tasks'
                                 }
                             </p>
@@ -993,6 +1025,7 @@ export default function TaskTracker() {
                             color={selectedTask?.color || '#10b981'}
                             todayStr={todayStr}
                             onDayClick={handleDayClickFromHeatmap}
+                            task={selectedTask}
                         />
                     </div>
 
@@ -1061,6 +1094,7 @@ export default function TaskTracker() {
                                 onGoToCurrentMonth={handleGoToCurrentHeatmapMonth}
                                 canGoNext={!(heatmapYear === new Date().getFullYear() && heatmapMonth >= new Date().getMonth())}
                                 onDayClick={handleDayClickFromHeatmap}
+                                task={selectedTask}
                             />
                         )}
 
