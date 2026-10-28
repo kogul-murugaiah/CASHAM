@@ -56,12 +56,12 @@ export const CustomDropdown = ({
           value={newItemName}
           onChange={(e) => setNewItemName(e.target.value)}
           placeholder="Enter new item name"
-          className={`w-full rounded-xl border-0 bg-slate-700/50 px-4 py-3 text-slate-200 shadow-sm ring-1 ring-inset ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 ${className}`}
+          className={`w-full rounded-xl border border-slate-200 dark:border-0 bg-white dark:bg-slate-700/50 px-4 py-3 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 shadow-sm ring-1 ring-inset ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 ${className}`}
           disabled={isAdding}
           autoFocus
         />
         {error && (
-          <p className="text-xs text-red-400">{error}</p>
+          <p className="text-xs text-red-500 dark:text-red-400">{error}</p>
         )}
         <div className="flex gap-2">
           <button
@@ -76,7 +76,7 @@ export const CustomDropdown = ({
             type="button"
             onClick={handleCancel}
             disabled={isAdding}
-            className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700/50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>
@@ -96,17 +96,17 @@ export const CustomDropdown = ({
             onChange(e.target.value);
           }
         }}
-        className={`w-full rounded-xl border-0 bg-slate-700/50 px-4 py-3 text-slate-200 shadow-sm ring-1 ring-inset ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 ${className}`}
+        className={`w-full rounded-xl border border-slate-200 dark:border-0 bg-white dark:bg-slate-700/50 px-4 py-3 text-slate-900 dark:text-slate-200 shadow-sm ring-1 ring-inset ring-slate-200 dark:ring-slate-700 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:text-sm sm:leading-6 ${className}`}
         disabled={disabled}
       >
-        <option value="" className="text-slate-900">{placeholder}</option>
+        <option value="" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">{placeholder}</option>
         {options.map((option) => (
-          <option key={option.value} value={option.value} className="text-slate-900">
+          <option key={option.value} value={option.value} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
             {option.label}
           </option>
         ))}
         {onAddNew && (
-          <option value="add-new" className="text-slate-900">{addNewLabel}</option>
+          <option value="add-new" className="bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-semibold">{addNewLabel}</option>
         )}
       </select>
     </div>

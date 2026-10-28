@@ -106,13 +106,13 @@ const AddIncome = () => {
         </header>
 
         {error && (
-          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm text-center">
+          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-600 dark:text-red-300 text-sm text-center">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300 text-sm text-center">
+          <div className="mb-6 glass-card border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-700 dark:text-emerald-300 text-sm text-center">
             {success}
           </div>
         )}
@@ -126,12 +126,12 @@ const AddIncome = () => {
 
           <div className="grid gap-6 sm:grid-cols-2 relative z-10">
             <div className="space-y-2">
-              <label htmlFor="amount" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Amount
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <span className="text-slate-400">₹</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-bold text-xs">₹</span>
                 </div>
                 <input
                   type="number"
@@ -139,7 +139,7 @@ const AddIncome = () => {
                   id="amount"
                   value={form.amount}
                   onChange={handleChange}
-                  className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
+                  className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur pl-10 pr-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -148,7 +148,7 @@ const AddIncome = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="date" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Date
               </label>
               <input
@@ -157,13 +157,13 @@ const AddIncome = () => {
                 id="date"
                 value={form.date}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
+                className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-3 text-slate-900 dark:text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="source" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="source" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Source
               </label>
               <CustomDropdown
@@ -178,7 +178,7 @@ const AddIncome = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="accountType" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="accountType" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Account Type
               </label>
               <CustomDropdown
@@ -194,7 +194,7 @@ const AddIncome = () => {
           </div>
 
           <div className="space-y-2 relative z-10">
-            <label htmlFor="description" className="block text-sm font-medium text-slate-300">
+            <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Description (Optional)
             </label>
             <textarea
@@ -204,7 +204,7 @@ const AddIncome = () => {
               onChange={handleChange}
               maxLength={300}
               rows={3}
-              className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none resize-none"
+              className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none resize-none"
               placeholder="Details..."
             />
           </div>
@@ -217,7 +217,7 @@ const AddIncome = () => {
                 setError("");
                 setSuccess("");
               }}
-              className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+              className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5 transition-all"
             >
               Clear
             </button>

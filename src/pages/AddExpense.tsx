@@ -322,8 +322,8 @@ const AddExpense = () => {
 
           <div className="flex flex-wrap items-center justify-center gap-4">
             <div className="bg-red-500/10 border border-red-500/20 px-6 py-3 rounded-2xl backdrop-blur-sm shadow-xl shadow-red-500/5 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Today's Spend</p>
-              <p className="text-3xl font-bold text-red-400 font-heading">
+              <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">Today's Spend</p>
+              <p className="text-3xl font-bold text-red-600 dark:text-red-400 font-heading">
                 {formatCurrency(todayExpenses, currencyStyle)}
               </p>
             </div>
@@ -333,16 +333,16 @@ const AddExpense = () => {
               <button
                 type="button"
                 onClick={() => { setShowTemplatePicker(!showTemplatePicker); setManageMode(false); }}
-                className={`flex items-center gap-2 px-5 py-3 rounded-2xl border text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 px-5 py-3 rounded-2xl border text-sm font-bold transition-all shadow-sm dark:shadow-none ${
                   showTemplatePicker
-                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                    : 'bg-slate-700/50 border-white/10 text-slate-300 hover:bg-slate-700 hover:text-white'
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-white dark:bg-slate-700/50 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <FiRepeat size={16} />
                 Repeating Expense
                 {templates.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 text-[10px] font-black bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/20">
+                  <span className="ml-1 px-1.5 py-0.5 text-[10px] font-black bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-full border border-emerald-500/20">
                     {templates.length}
                   </span>
                 )}
@@ -350,21 +350,21 @@ const AddExpense = () => {
 
               {/* Template Picker Dropdown */}
               {showTemplatePicker && (
-                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-80 sm:w-96 glass-card border border-white/10 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-fade-in">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-slate-700/40">
-                    <h4 className="text-sm font-bold text-white">
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-80 sm:w-96 glass-card border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 z-50 overflow-hidden animate-fade-in">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-700/40">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                       {manageMode ? 'Manage Templates' : 'Your Templates'}
                     </h4>
                     <div className="flex items-center gap-2">
                       {!manageMode && templates.length > 0 && (
                         <button
                           onClick={() => setManageMode(true)}
-                          className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-wider"
+                          className="text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors uppercase tracking-wider"
                         >
                           Manage
                         </button>
                       )}
-                      <button onClick={() => { setShowTemplatePicker(false); setManageMode(false); }} className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+                      <button onClick={() => { setShowTemplatePicker(false); setManageMode(false); }} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all">
                         <FiX size={14} />
                       </button>
                     </div>
@@ -373,39 +373,39 @@ const AddExpense = () => {
                   <div className="max-h-64 overflow-y-auto">
                     {templates.length === 0 ? (
                       <div className="p-6 text-center">
-                        <p className="text-slate-500 text-sm mb-1">No templates yet</p>
-                        <p className="text-slate-600 text-xs">Add an expense and check "Save as template" to create one.</p>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">No templates yet</p>
+                        <p className="text-slate-500 dark:text-slate-500 text-xs">Add an expense and check "Save as template" to create one.</p>
                       </div>
                     ) : (
                       templates.map((t) => (
                         <div
                           key={t.id}
-                          className={`flex items-center justify-between px-4 py-3 border-b border-white/5 last:border-0 transition-colors ${
-                            manageMode ? 'bg-transparent' : 'hover:bg-white/5 cursor-pointer'
+                          className={`flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/5 last:border-0 transition-colors ${
+                            manageMode ? 'bg-transparent' : 'hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer'
                           }`}
                           onClick={() => !manageMode && handleFillFromTemplate(t)}
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-white truncate flex items-center gap-1.5">
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                               {t.item}
                               {t.paid_via_credit_card && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-normal">
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-700 dark:text-purple-300 font-normal border border-purple-500/20">
                                   💳 {t.credit_card_name || 'CC'}
                                 </span>
                               )}
                             </p>
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">
                               {t.categories?.name || 'Uncategorized'} · {t.account_type}
                             </p>
                           </div>
                           <div className="flex items-center gap-3 ml-3">
-                            <span className="text-sm font-bold text-red-400 font-mono whitespace-nowrap">
+                            <span className="text-sm font-bold text-red-600 dark:text-red-400 font-mono whitespace-nowrap">
                               {formatCurrency(t.amount, currencyStyle)}
                             </span>
                             {manageMode && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(t.id); }}
-                                className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white transition-all"
+                                className="p-1.5 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all"
                               >
                                 <FiTrash2 size={12} />
                               </button>
@@ -422,13 +422,13 @@ const AddExpense = () => {
         </header>
 
         {error && (
-          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-300 text-sm text-center">
+          <div className="mb-6 glass-card border-red-500/20 bg-red-500/10 p-4 text-red-600 dark:text-red-300 text-sm text-center">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-6 glass-card border-green-500/20 bg-green-500/10 p-4 text-green-300 text-sm text-center">
+          <div className="mb-6 glass-card border-green-500/20 bg-green-500/10 p-4 text-green-700 dark:text-green-300 text-sm text-center">
             {success}
           </div>
         )}
@@ -442,7 +442,7 @@ const AddExpense = () => {
 
           <div className="grid gap-6 sm:grid-cols-2 relative z-10">
             <div className="space-y-2">
-              <label htmlFor="item" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="item" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Item Name
               </label>
               <input
@@ -451,19 +451,19 @@ const AddExpense = () => {
                 id="item"
                 value={form.item}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
+                className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                 placeholder="e.g., Petrol, Tea, Groceries"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="amount" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Amount
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                  <span className="text-slate-400 font-bold text-xs">{currencyStyle === 'symbol' ? '₹' : 'Rs.'}</span>
+                  <span className="text-slate-500 dark:text-slate-400 font-bold text-xs">{currencyStyle === 'symbol' ? '₹' : 'Rs.'}</span>
                 </div>
                 <input
                   type="number"
@@ -471,7 +471,7 @@ const AddExpense = () => {
                   id="amount"
                   value={form.amount}
                   onChange={handleChange}
-                  className={`block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur ${currencyStyle === 'symbol' ? 'pl-10' : 'pl-12'} pr-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none`}
+                  className={`block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur ${currencyStyle === 'symbol' ? 'pl-10' : 'pl-12'} pr-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none`}
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -480,7 +480,7 @@ const AddExpense = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="date" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="date" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Date
               </label>
               <input
@@ -489,17 +489,17 @@ const AddExpense = () => {
                 id="date"
                 value={form.date}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
+                className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-3 text-slate-900 dark:text-white focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none cursor-pointer"
                 required
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="accountType" className="block text-sm font-medium text-slate-300">
+                <label htmlFor="accountType" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                   Budget Account (To Deduct From)
                 </label>
-                <span className="text-[11px] text-slate-400 font-normal">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">
                   Reduces immediately
                 </span>
               </div>
@@ -517,7 +517,7 @@ const AddExpense = () => {
 
           <div className="grid gap-6 sm:grid-cols-2 relative z-10">
             <div className="space-y-2">
-              <label htmlFor="category_id" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="category_id" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Category
               </label>
               <CustomDropdown
@@ -532,7 +532,7 @@ const AddExpense = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="description" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="description" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                 Description (Optional)
               </label>
               <input
@@ -541,30 +541,30 @@ const AddExpense = () => {
                 id="description"
                 value={form.description}
                 onChange={handleChange}
-                className="block w-full rounded-xl border border-white/10 bg-slate-700/50 backdrop-blur px-4 py-3 text-white placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
+                className="block w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 backdrop-blur px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none"
                 placeholder="Details or notes..."
               />
             </div>
           </div>
 
           {/* ── Credit Card Payment Option ── */}
-          <div className="rounded-2xl border border-white/10 bg-slate-800/40 p-5 space-y-4 relative z-10">
+          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-slate-800/40 p-5 space-y-4 relative z-10 shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl transition-all ${form.paidViaCreditCard ? 'bg-purple-500/20 text-purple-400 ring-1 ring-purple-500/40' : 'bg-slate-700/50 text-slate-400'}`}>
+                <div className={`p-2.5 rounded-xl transition-all ${form.paidViaCreditCard ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 ring-1 ring-purple-500/40' : 'bg-slate-200 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400'}`}>
                   <FiCreditCard size={20} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white flex items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     Paid via Credit Card?
                     {form.paidViaCreditCard && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                         ACTIVE
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-slate-400">
-                    Reduces {form.accountType ? <strong className="text-slate-300">{form.accountType}</strong> : 'account'} immediately and tracks bill dues for settlement.
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Reduces {form.accountType ? <strong className="text-slate-900 dark:text-slate-300">{form.accountType}</strong> : 'account'} immediately and tracks bill dues for settlement.
                   </p>
                 </div>
               </div>
@@ -583,28 +583,28 @@ const AddExpense = () => {
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-12 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                <div className="w-12 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
               </label>
             </div>
 
             {form.paidViaCreditCard && (
-              <div className="pt-3 border-t border-white/5 grid gap-4 sm:grid-cols-2 animate-fade-in">
+              <div className="pt-3 border-t border-slate-200 dark:border-white/5 grid gap-4 sm:grid-cols-2 animate-fade-in">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-purple-300 uppercase tracking-wider">
+                    <label className="block text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
                       Select Credit Card
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowNewCardModal(true)}
-                      className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                      className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 flex items-center gap-1 transition-colors"
                     >
                       <FiPlus size={12} /> Add Card
                     </button>
                   </div>
 
                   {creditCards.length === 0 ? (
-                    <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-700 dark:text-purple-300 flex items-center justify-between">
                       <span>No credit cards added yet.</span>
                       <button
                         type="button"
@@ -636,12 +636,12 @@ const AddExpense = () => {
                   )}
                 </div>
 
-                <div className="flex flex-col justify-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200">
-                  <p className="font-semibold text-white mb-0.5">
+                <div className="flex flex-col justify-center p-3.5 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-200">
+                  <p className="font-semibold text-purple-950 dark:text-white mb-0.5">
                     💡 Smart Envelope Budgeting
                   </p>
-                  <p className="text-purple-300/90 leading-relaxed">
-                    This ₹{form.amount || '0'} will immediately deduct from <span className="font-bold text-white">{form.accountType || 'selected account'}</span> balance. When your credit card bill arrives, you can collect this amount from {form.accountType || 'this account'} and mark the bill settled.
+                  <p className="text-purple-800 dark:text-purple-300/90 leading-relaxed">
+                    This ₹{form.amount || '0'} will immediately deduct from <span className="font-bold text-purple-950 dark:text-white">{form.accountType || 'selected account'}</span> balance. When your credit card bill arrives, you can collect this amount from {form.accountType || 'this account'} and mark the bill settled.
                   </p>
                 </div>
               </div>
@@ -654,9 +654,9 @@ const AddExpense = () => {
                 type="checkbox"
                 checked={saveAsTemplate}
                 onChange={(e) => setSaveAsTemplate(e.target.checked)}
-                className="w-4 h-4 rounded border-white/20 bg-slate-700/50 text-emerald-500 focus:ring-emerald-500/30 focus:ring-offset-0 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-slate-700/50 text-emerald-500 focus:ring-emerald-500/30 focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300 transition-colors">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-300 transition-colors">
                 <FiRepeat className="inline mr-1" size={12} />
                 Save as repeating template
               </span>
@@ -670,7 +670,7 @@ const AddExpense = () => {
                   setSuccess("");
                   setSaveAsTemplate(false);
                 }}
-                className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5 transition-all"
               >
                 Clear
               </button>
@@ -688,14 +688,14 @@ const AddExpense = () => {
         {/* Recent Expenses List */}
         {recentExpenses.length > 0 && (
           <div className="mt-12 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <h2 className="text-xl font-bold font-heading text-white mb-6 px-2">
+            <h2 className="text-xl font-bold font-heading text-slate-900 dark:text-white mb-6 px-2">
               Recent Activity
             </h2>
             <div className="glass-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-white/5 bg-slate-700/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-100/90 dark:bg-slate-700/40 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                       <th className="px-6 py-4">Date</th>
                       <th className="px-6 py-4">Item</th>
                       <th className="px-6 py-4">Category</th>
@@ -704,40 +704,40 @@ const AddExpense = () => {
                       <th className="px-6 py-4 text-right">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                     {recentExpenses.map((expense) => (
-                      <tr key={expense.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-4 text-sm text-slate-400 whitespace-nowrap">
+                      <tr key={expense.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+                        <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
                           {formatDate(expense.date)}
                         </td>
-                        <td className="px-6 py-4 text-sm font-medium text-white">
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">
                           {expense.item || "Expense"}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           {expense.categories ? (
-                            <span className="inline-flex items-center rounded-lg bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-300 border border-white/5 group-hover:border-white/10 transition-colors">
+                            <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/5 group-hover:border-slate-300 dark:group-hover:border-white/10 transition-colors">
                               {expense.categories.name}
                             </span>
                           ) : (
-                            <span className="text-slate-600">-</span>
+                            <span className="text-slate-400 dark:text-slate-600">-</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-sm text-slate-300">
+                        <td className="px-6 py-4 text-sm font-medium text-slate-700 dark:text-slate-300">
                           {expense.account_type}
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-nowrap">
                           {expense.paid_via_credit_card ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-purple-500/15 border border-purple-500/30 px-2.5 py-1 text-xs font-semibold text-purple-300">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-purple-50 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/30 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
                               <FiCreditCard size={12} />
                               {expense.credit_card_name || "Credit Card"}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center rounded-lg bg-slate-700/50 px-2 py-0.5 text-xs text-slate-400">
+                            <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-700/50 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
                               Direct
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-sm font-bold text-right text-red-400 font-mono">
+                        <td className="px-6 py-4 text-sm font-bold text-right text-red-600 dark:text-red-400 font-mono">
                           {formatCurrency(expense.amount, currencyStyle)}
                         </td>
                       </tr>
@@ -752,16 +752,16 @@ const AddExpense = () => {
         {/* New Card Modal */}
         {showNewCardModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-            <div className="glass-card max-w-md w-full p-6 space-y-5 border border-white/10 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FiCreditCard className="text-purple-400" />
+            <div className="glass-card max-w-md w-full p-6 space-y-5 border border-slate-200 dark:border-white/10 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FiCreditCard className="text-purple-600 dark:text-purple-400" />
                   Add New Credit Card
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowNewCardModal(false)}
-                  className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white"
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
                 >
                   <FiX size={16} />
                 </button>
@@ -769,7 +769,7 @@ const AddExpense = () => {
 
               <form onSubmit={handleCreateNewCard} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Card Name *
                   </label>
                   <input
@@ -778,13 +778,13 @@ const AddExpense = () => {
                     placeholder="e.g., HDFC Millennia, Slice Card"
                     value={newCardForm.name}
                     onChange={(e) => setNewCardForm({ ...newCardForm, name: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Bank Name
                     </label>
                     <input
@@ -792,12 +792,12 @@ const AddExpense = () => {
                       placeholder="e.g., HDFC, ICICI"
                       value={newCardForm.bank_name}
                       onChange={(e) => setNewCardForm({ ...newCardForm, bank_name: e.target.value })}
-                      className="w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Last 4 Digits
                     </label>
                     <input
@@ -806,13 +806,13 @@ const AddExpense = () => {
                       placeholder="e.g., 4242"
                       value={newCardForm.card_last4}
                       onChange={(e) => setNewCardForm({ ...newCardForm, card_last4: e.target.value })}
-                      className="w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none font-mono"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none font-mono"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Credit Limit (₹)
                   </label>
                   <input
@@ -820,13 +820,13 @@ const AddExpense = () => {
                     placeholder="e.g., 100000"
                     value={newCardForm.credit_limit}
                     onChange={(e) => setNewCardForm({ ...newCardForm, credit_limit: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none font-mono"
+                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none font-mono"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Statement Day (1-31)
                     </label>
                     <input
@@ -835,11 +835,11 @@ const AddExpense = () => {
                       max={31}
                       value={newCardForm.billing_cycle_day}
                       onChange={(e) => setNewCardForm({ ...newCardForm, billing_cycle_day: e.target.value })}
-                      className="w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500/40 outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/40 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                       Due Day (1-31)
                     </label>
                     <input
@@ -848,7 +848,7 @@ const AddExpense = () => {
                       max={31}
                       value={newCardForm.payment_due_day}
                       onChange={(e) => setNewCardForm({ ...newCardForm, payment_due_day: e.target.value })}
-                      className="w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white focus:ring-2 focus:ring-purple-500/40 outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/40 outline-none"
                     />
                   </div>
                 </div>
@@ -857,7 +857,7 @@ const AddExpense = () => {
                   <button
                     type="button"
                     onClick={() => setShowNewCardModal(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 text-sm font-medium hover:bg-white/5"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-100 dark:hover:bg-white/5"
                   >
                     Cancel
                   </button>
