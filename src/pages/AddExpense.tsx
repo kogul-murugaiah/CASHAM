@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEvent } from "react";
+﻿import { useState, useEffect, useRef, type FormEvent } from "react";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -248,10 +248,6 @@ const AddExpense = () => {
 
   const friendTotal = splits.reduce((s, sp) => s + Number(sp.amount || 0), 0);
   const yourShare = splitEnabled && splits.length > 0 ? Number(form.amount || 0) - friendTotal : Number(form.amount || 0);
-  const splitValid =
-    !splitEnabled ||
-    splits.length === 0 ||
-    (splits.every((s) => s.person_name.trim() && Number(s.amount) > 0) && friendTotal < Number(form.amount || 0));
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

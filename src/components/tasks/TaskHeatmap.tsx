@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { FiCheckCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { getLocalDateStr } from '../../hooks/useTasks';
-import { SchedulableTask, isTaskScheduledOnDate } from './taskConstants';
+import { type SchedulableTask, isTaskScheduledOnDate } from './taskConstants';
 
-// ─── Heatmap cell color ──────────────────────────────────────────────────────
+// â”€â”€â”€ Heatmap cell color â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function heatColor(count: number, isDark: boolean, customColor?: string): string {
     if (count === 0) return isDark ? '#1e293b' : '#f1f5f9';
     if (customColor) return customColor;
@@ -13,7 +13,7 @@ export function heatColor(count: number, isDark: boolean, customColor?: string):
     return '#16a34a';
 }
 
-// ─── Generate 52 weeks (Monday to Sunday) grid ending on the current week ──────
+// â”€â”€â”€ Generate 52 weeks (Monday to Sunday) grid ending on the current week â”€â”€â”€â”€â”€â”€
 export function buildHeatmapGrid(): string[] {
     const today = new Date();
     // Monday-based week: 0 for Mon, ..., 6 for Sun
@@ -38,7 +38,7 @@ export function buildHeatmapGrid(): string[] {
     return dates;
 }
 
-// ─── Streak calculation ──────────────────────────────────────────────────────
+// â”€â”€â”€ Streak calculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function calcStreaks(
     counts: Record<string, number | undefined>,
     task?: SchedulableTask | null
@@ -154,7 +154,7 @@ export function calcStreaks(
 }
 
 
-// ─── Month Heatmap Calendar ──────────────────────────────────────────────────
+// â”€â”€â”€ Month Heatmap Calendar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface MonthHeatmapProps {
     counts: Record<string, number | undefined>;
     isDark: boolean;
@@ -276,7 +276,7 @@ export function MonthHeatmap({
 
     return (
         <div className="space-y-4">
-            {/* ── Month Navigation & Stats Header ── */}
+            {/* â”€â”€ Month Navigation & Stats Header â”€â”€ */}
             <div className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                 isDark ? 'bg-slate-800/40 border-slate-700/60' : 'bg-slate-50 border-slate-200'
             }`}>
@@ -336,13 +336,13 @@ export function MonthHeatmap({
                     {bestStreak > 0 && (
                         <div className="flex items-center gap-1">
                             <span className={muted}>Best Streak:</span>
-                            <strong className="text-amber-400">🔥 {bestStreak}d</strong>
+                            <strong className="text-amber-400">ðŸ”¥ {bestStreak}d</strong>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* ── Calendar Grid ── */}
+            {/* â”€â”€ Calendar Grid â”€â”€ */}
             <div className={`p-4 rounded-2xl border ${isDark ? 'bg-slate-800/20 border-slate-700/60' : 'bg-white border-slate-200'}`}>
                 {/* Day of Week Headers */}
                 <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2">
@@ -445,7 +445,7 @@ export function MonthHeatmap({
                                         </span>
                                     ) : (
                                         <span className={`text-[10px] ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>
-                                            —
+                                            â€”
                                         </span>
                                     )}
                                 </div>
@@ -463,7 +463,7 @@ export function MonthHeatmap({
     );
 }
 
-// ─── Heatmap (52-week horizontal grid) ───────────────────────────────────────
+// â”€â”€â”€ Heatmap (52-week horizontal grid) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function ContributionHeatmap({
     counts,
     isDark,
@@ -563,7 +563,7 @@ export function ContributionHeatmap({
     );
 }
 
-// ─── Weekly Activity Chart (Current Week & Previous Weeks) ───────────────────
+// â”€â”€â”€ Weekly Activity Chart (Current Week & Previous Weeks) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface WeeklyActivityProps {
     counts: Record<string, number | undefined>;
     isDark: boolean;
@@ -625,7 +625,7 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
 
-        const rLabel = `${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        const rLabel = `${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} â€“ ${sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
         const totalThisWeek = result.reduce((s, d) => s + d.count, 0);
         const activeDays = result.filter(d => d.count > 0).length;
@@ -785,7 +785,7 @@ export function WeeklyActivityChart({ counts, isDark, color = '#10b981', todaySt
                                     : d.isToday
                                         ? (task && !d.isScheduled ? 'Rest' : '0 today')
                                         : d.isFuture
-                                            ? (task && !d.isScheduled ? 'Rest' : '—')
+                                            ? (task && !d.isScheduled ? 'Rest' : 'â€”')
                                             : (task && !d.isScheduled ? 'Rest' : '0')
                                 }
                             </span>
