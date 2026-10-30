@@ -204,17 +204,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     else if (method === 'POST') {
         try {
-            const items = Array.isArray(req.body) ? req.body : [req.body];
-            const dataToInsert = items.map(item => ({
-                ...item,
-                user_id: user.id,
-                description: item.description || null,
-                category_id: item.category_id || null,
-                paid_via_credit_card: Boolean(item.paid_via_credit_card),
-                credit_card_id: item.credit_card_id || null,
-                credit_card_name: item.credit_card_name || null,
-                cc_bill_settled: Boolean(item.cc_bill_settled) || false,
-            }));
+            const isBatch = Array.isArray(req.body);
+            const items = isBatch ? req.body : [req.body];
+
+            // Pull splits from single-item requests (batch POSTs don't support splits)
+            const splits: { person_name: string; amount: number }[] =
+                !isBatch && Array.isArray(req.body.splits) ? req.body.splits : [];
+
+            const totalAmount = !isBatch ? Number(req.body.amount || 0) : 0;
+            const friendTotal = splits.reduce((s: number, sp: { amount: number }) => s + Number(sp.amount || 0), 0);
+
+            if (!isBatch && splits.length > 0 && friendTotal >= totalAmount) {
+                return res.status(400).json({ error: 'Friend share total must be less than the total amount' });
+            }
+
+            // Your share = total minus what friends owe
+            const yourShare = !isBatch && splits.length > 0 ? totalAmount - friendTotal : totalAmount;
+
+            const dataToInsert = items.map((item: any, idx: number) => {
+                const { splits: _splits, ...rest } = item; // strip client-only field
+                return {
+                    ...rest,
+                    amount: !isBatch && splits.length > 0 && idx === 0 ? yourShare : item.amount,
+                    user_id: user.id,
+                    description: item.description || null,
+                    category_id: item.category_id || null,
+                    paid_via_credit_card: Boolean(item.paid_via_credit_card),
+                    credit_card_id: item.credit_card_id || null,
+                    credit_card_name: item.credit_card_name || null,
+                    cc_bill_settled: Boolean(item.cc_bill_settled) || false,
+                };
+            });
 
             const { data, error } = await supabaseAdmin
                 .from('expenses')
@@ -222,7 +242,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 .select();
 
             if (error) throw error;
-            return res.status(201).json(Array.isArray(req.body) ? data : data[0]);
+
+            // Auto-create a CC advance for every friend split
+            if (splits.length > 0 && data && data[0]) {
+                const expense = data[0];
+                const advancesToInsert = splits.map((sp: { person_name: string; amount: number }) => ({
+                    user_id: user.id,
+                    person_name: sp.person_name.trim(),
+                    amount: Number(sp.amount),
+                    credit_card_id: expense.credit_card_id || null,
+                    credit_card_name: expense.credit_card_name || '',
+                    date: expense.date,
+                    description: `Split: ${expense.item || 'Expense'}`,
+                    cash_received: false,
+                }));
+
+                const { error: advErr } = await supabaseAdmin
+                    .from('cc_advances')
+                    .insert(advancesToInsert);
+
+                if (advErr) throw advErr;
+            }
+
+            return res.status(201).json(isBatch ? data : data[0]);
         } catch (error: any) {
             return res.status(500).json({ error: error.message });
         }

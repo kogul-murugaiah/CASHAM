@@ -6,7 +6,9 @@ import { useCreditCards } from "../hooks/useCreditCards";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency, formatDate, getLocalDateString } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
-import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus } from "react-icons/fi";
+import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus, FiUsers } from "react-icons/fi";
+
+type SplitEntry = { id: string; person_name: string; amount: string };
 
 type ExpenseTemplate = {
   id: string;
@@ -70,6 +72,10 @@ const AddExpense = () => {
     payment_due_day: "20",
   });
   const [cardSaving, setCardSaving] = useState(false);
+
+  // Split with friends state
+  const [splitEnabled, setSplitEnabled] = useState(false);
+  const [splits, setSplits] = useState<SplitEntry[]>([]);
 
   // Auto-populate default account when loaded
   useEffect(() => {
@@ -219,6 +225,34 @@ const AddExpense = () => {
     }
   };
 
+  // ── Split helpers ─────────────────────────────────────────────────────────
+  const addSplitEntry = () => {
+    setSplits((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), person_name: '', amount: '' },
+    ]);
+  };
+
+  const removeSplitEntry = (id: string) => setSplits((prev) => prev.filter((s) => s.id !== id));
+
+  const updateSplitEntry = (id: string, field: 'person_name' | 'amount', value: string) => {
+    setSplits((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+  };
+
+  const handleSplitEquallyClick = () => {
+    const total = Number(form.amount || 0);
+    if (!total || splits.length === 0) return;
+    const perPerson = Math.floor((total / (splits.length + 1)) * 100) / 100;
+    setSplits((prev) => prev.map((s) => ({ ...s, amount: perPerson.toString() })));
+  };
+
+  const friendTotal = splits.reduce((s, sp) => s + Number(sp.amount || 0), 0);
+  const yourShare = splitEnabled && splits.length > 0 ? Number(form.amount || 0) - friendTotal : Number(form.amount || 0);
+  const splitValid =
+    !splitEnabled ||
+    splits.length === 0 ||
+    (splits.every((s) => s.person_name.trim() && Number(s.amount) > 0) && friendTotal < Number(form.amount || 0));
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -244,6 +278,21 @@ const AddExpense = () => {
       return;
     }
 
+    if (splitEnabled && splits.length > 0) {
+      if (!splits.every((s) => s.person_name.trim())) {
+        setError('Please enter a name for each split person');
+        return;
+      }
+      if (!splits.every((s) => Number(s.amount) > 0)) {
+        setError('Please enter a valid amount for each split person');
+        return;
+      }
+      if (friendTotal >= Number(form.amount)) {
+        setError("Friend's total must be less than the expense amount");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -257,6 +306,11 @@ const AddExpense = () => {
         paid_via_credit_card: form.paidViaCreditCard,
         credit_card_id: form.paidViaCreditCard ? form.creditCardId || null : null,
         credit_card_name: form.paidViaCreditCard ? form.creditCardName || null : null,
+        // Send splits only for CC purchases with split enabled
+        splits:
+          form.paidViaCreditCard && splitEnabled && splits.length > 0
+            ? splits.map((s) => ({ person_name: s.person_name.trim(), amount: Number(s.amount) }))
+            : undefined,
       });
 
       // Save as template if checkbox is checked
@@ -278,12 +332,16 @@ const AddExpense = () => {
         }
       }
 
+      const hasSplits = form.paidViaCreditCard && splitEnabled && splits.length > 0;
+      const splitMsg = hasSplits
+        ? ` Split: ₹${yourShare.toFixed(0)} yours + ₹${friendTotal.toFixed(0)} logged for ${splits.map((s) => s.person_name).join(', ')}.`
+        : '';
       setSuccess(
         saveAsTemplate
-          ? "Expense added & saved as template!"
+          ? `Expense added & saved as template!${splitMsg}`
           : form.paidViaCreditCard
-          ? `Expense added! Deducted from ${form.accountType} & recorded for ${form.creditCardName || 'Credit Card'}.`
-          : "Expense added successfully"
+          ? `Expense added! Deducted from ${form.accountType} & recorded for ${form.creditCardName || 'Credit Card'}.${splitMsg}`
+          : 'Expense added successfully'
       );
 
       // Keep user's preferred account & card for quick consecutive entries
@@ -298,6 +356,7 @@ const AddExpense = () => {
       }));
 
       setSaveAsTemplate(false);
+      if (splitEnabled) { setSplitEnabled(false); setSplits([]); }
       fetchRecentExpenses();
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -648,6 +707,116 @@ const AddExpense = () => {
             )}
           </div>
 
+          {/* Split with Friends - only shown for CC purchases */}
+          {form.paidViaCreditCard && (
+            <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-slate-800/40 p-5 space-y-4 relative z-10 shadow-sm dark:shadow-none">
+              {/* Toggle header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={'p-2.5 rounded-xl transition-all ' + (splitEnabled ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 ring-1 ring-blue-500/40' : 'bg-slate-200 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400')}>
+                    <FiUsers size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                      Split with friends?
+                      {splitEnabled && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                          ACTIVE
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Your share is deducted from your account; friends' shares go to CC Advances.
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={splitEnabled}
+                    onChange={(e) => {
+                      setSplitEnabled(e.target.checked);
+                      if (!e.target.checked) setSplits([]);
+                      else if (splits.length === 0) setSplits([{ id: crypto.randomUUID(), person_name: '', amount: '' }]);
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-12 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Split rows */}
+              {splitEnabled && (
+                <div className="pt-3 border-t border-slate-200 dark:border-white/5 space-y-3 animate-fade-in">
+                  {/* Your share preview */}
+                  <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                    <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Your share</span>
+                    <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300 font-mono">
+                      {'\u20B9'}{yourShare > 0 ? yourShare.toFixed(2) : '0.00'}
+                    </span>
+                  </div>
+
+                  {/* Friend entries */}
+                  {splits.map((sp, idx) => (
+                    <div key={sp.id} className="flex gap-2 items-center animate-fade-in">
+                      <input
+                        type="text"
+                        placeholder={'Friend ' + (idx + 1) + ' name'}
+                        value={sp.person_name}
+                        onChange={(e) => updateSplitEntry(sp.id, 'person_name', e.target.value)}
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30 outline-none"
+                      />
+                      <div className="relative w-32">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">{'\u20B9'}</span>
+                        <input
+                          type="number"
+                          placeholder="Amount"
+                          min="1"
+                          value={sp.amount}
+                          onChange={(e) => updateSplitEntry(sp.id, 'amount', e.target.value)}
+                          className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 pl-7 pr-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30 outline-none font-mono"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeSplitEntry(sp.id)}
+                        className="p-2 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all flex-shrink-0"
+                      >
+                        <FiX size={14} />
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Validation error */}
+                  {splits.length > 0 && friendTotal >= Number(form.amount || 0) && (
+                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                      {'\u26A0\uFE0F'} Friend total ({'\u20B9'}{friendTotal.toFixed(2)}) must be less than {'\u20B9'}{Number(form.amount || 0).toFixed(2)}
+                    </p>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={addSplitEntry}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-300 dark:border-blue-500/30 text-xs font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+                    >
+                      <FiPlus size={13} /> Add person
+                    </button>
+                    {splits.length > 0 && Number(form.amount) > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleSplitEquallyClick}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                      >
+                        {'\u00F7'} Split equally
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <div className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
             <label className="flex items-center gap-2 cursor-pointer group select-none">
               <input
