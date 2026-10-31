@@ -511,7 +511,7 @@ export function ContributionHeatmap({
                 <div className="flex flex-col gap-0.5 mr-1 pt-0">
                     {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
                         <div key={i} className={`w-3 h-3 text-[9px] flex items-center justify-center ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                            {i === 0 || i === 2 || i === 4 ? d : ''}
+                            {d}
                         </div>
                     ))}
                 </div>
