@@ -203,7 +203,18 @@ const Dashboard = () => {
     const accExp = expenses.filter((exp) => exp.account_type === accountType).reduce((sum, exp) => sum + exp.amount, 0);
     const accTransferIn = transfers.filter((t) => t.to_account === accountType).reduce((sum, t) => sum + t.amount, 0);
     const accTransferOut = transfers.filter((t) => t.from_account === accountType).reduce((sum, t) => sum + t.amount, 0);
-    return { accountType, balance: accIncome - accExp + accTransferIn - accTransferOut, income: accIncome, expenses: accExp, transferIn: accTransferIn, transferOut: accTransferOut };
+    const totalInbound = accIncome + accTransferIn;
+    const totalOutbound = accExp + accTransferOut;
+    return {
+      accountType,
+      balance: totalInbound - totalOutbound,
+      income: accIncome,
+      expenses: accExp,
+      transferIn: accTransferIn,
+      transferOut: accTransferOut,
+      totalInbound,
+      totalOutbound,
+    };
   });
 
   // Daily Average Limits Logic (Envelope Method)
@@ -645,8 +656,8 @@ const Dashboard = () => {
                   <div className="flex justify-between items-start mb-2"><span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">{acc.accountType}</span><div className={`h-2 w-2 rounded-full ${acc.balance >= 0 ? "bg-green-500" : "bg-red-500"}`} /></div>
                   <div className={`text-xl font-bold text-slate-900 dark:text-white mb-3 ${hideBalance ? 'blur-sm select-none' : ''}`}>{formatCurrency(acc.balance, currencyStyle)}</div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px]"><span className="text-slate-500 dark:text-slate-400">Inbound</span><span className={`text-emerald-600 dark:text-green-400 font-semibold ${hideBalance ? 'blur-[2px] select-none' : ''}`}>+{formatCurrency(acc.income, currencyStyle)}</span></div>
-                    <div className="flex justify-between text-[10px]"><span className="text-slate-500 dark:text-slate-400">Outbound</span><span className={`text-rose-600 dark:text-red-400 font-semibold ${hideBalance ? 'blur-[2px] select-none' : ''}`}>-{formatCurrency(acc.expenses, currencyStyle)}</span></div>
+                    <div className="flex justify-between text-[10px]" title={acc.transferIn > 0 ? `Income: ${formatCurrency(acc.income, currencyStyle)} + Transfers In: ${formatCurrency(acc.transferIn, currencyStyle)}` : undefined}><span className="text-slate-500 dark:text-slate-400">Inbound</span><span className={`text-emerald-600 dark:text-green-400 font-semibold ${hideBalance ? 'blur-[2px] select-none' : ''}`}>+{formatCurrency(acc.totalInbound, currencyStyle)}</span></div>
+                    <div className="flex justify-between text-[10px]" title={acc.transferOut > 0 ? `Expenses: ${formatCurrency(acc.expenses, currencyStyle)} + Transfers Out: ${formatCurrency(acc.transferOut, currencyStyle)}` : undefined}><span className="text-slate-500 dark:text-slate-400">Outbound</span><span className={`text-rose-600 dark:text-red-400 font-semibold ${hideBalance ? 'blur-[2px] select-none' : ''}`}>-{formatCurrency(acc.totalOutbound, currencyStyle)}</span></div>
                   </div>
                   
                   {activeWalletPopup === acc.accountType && (
