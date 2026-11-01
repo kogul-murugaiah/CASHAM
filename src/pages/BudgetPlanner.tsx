@@ -102,16 +102,27 @@ export default function BudgetPlanner() {
 
   // Categories
   const handleAddCategory = async () => {
-    if (!budgetData.id) {
-      setError("Please set Total Income first to initialize the budget month.");
-      return;
+    let currentBudgetId = budgetData.id;
+    if (!currentBudgetId) {
+      try {
+        const initMonth = await api.post(`/api/budgets/month`, {
+          month,
+          year,
+          total_income: Number(tempIncome) || 0,
+        });
+        currentBudgetId = initMonth.id;
+        setBudgetData((prev) => ({ ...prev, id: initMonth.id, total_income: initMonth.total_income }));
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to initialize budget month");
+        return;
+      }
     }
     if (!newCategoryName || !newCategoryAmount) return;
 
     try {
       setError(null);
       const cat = await api.post(`/api/budgets/categories`, {
-        budget_id: budgetData.id,
+        budget_id: currentBudgetId,
         name: newCategoryName,
         allocated_amount: Number(newCategoryAmount),
         account_name: newCategoryAccount || null,

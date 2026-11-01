@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === 'POST') {
         try {
-            const { budget_id, name, allocated_amount } = req.body;
+            const { budget_id, name, allocated_amount, account_name } = req.body;
             
             if (!budget_id || !name) {
                 return res.status(400).json({ error: 'budget_id and name are required' });
@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             // Verify the parent budget belongs to the requesting user
             const { data: budget, error: budgetError } = await supabaseAdmin
-                .from('budgets')
+                .from('budget_months')
                 .select('id')
                 .eq('id', budget_id)
                 .eq('user_id', user.id)
@@ -36,7 +36,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     user_id: user.id,
                     budget_id,
                     name,
-                    allocated_amount: allocated_amount || 0
+                    allocated_amount: allocated_amount || 0,
+                    account_name: account_name || null
                 }])
                 .select()
                 .single();
