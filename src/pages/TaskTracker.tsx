@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTasks, getLocalDateStr, type Task, type NewTaskPayload } from '../hooks/useTasks';
 import {
@@ -48,10 +49,25 @@ export default function TaskTracker() {
         pauseTask, resumeTask, stopTask,
     } = useTasks();
 
+    const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState<Tab>('today');
     const [showModal, setShowModal] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
     const [modalDefaultFreq, setModalDefaultFreq] = useState<FrequencyType | undefined>(undefined);
+
+    // Auto-open add task modal when navigating with ?add=true
+    useEffect(() => {
+        if (searchParams.get('add') === 'true') {
+            setEditingTask(undefined);
+            setModalDefaultFreq(undefined);
+            setShowModal(true);
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                next.delete('add');
+                return next;
+            }, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
     const [searchQ, setSearchQ] = useState('');
     const [filterCat, setFilterCat] = useState('');
     const [filterFreq, setFilterFreq] = useState('');
