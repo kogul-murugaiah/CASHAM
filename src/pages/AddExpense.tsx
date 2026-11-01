@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, type FormEvent } from "react";
+import { useState, useEffect, useRef, useMemo, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
@@ -7,7 +7,7 @@ import { useCreditCards } from "../hooks/useCreditCards";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency, formatDate, getLocalDateString } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
-import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus, FiUsers } from "react-icons/fi";
+import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus, FiUsers, FiSearch } from "react-icons/fi";
 
 type SplitEntry = { id: string; person_name: string; amount: string };
 
@@ -61,7 +61,20 @@ const AddExpense = () => {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [manageMode, setManageMode] = useState(false);
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
   const templatePickerRef = useRef<HTMLDivElement>(null);
+
+  const displayedTemplates = useMemo(() => {
+    if (!templateSearch.trim()) return templates;
+    const q = templateSearch.toLowerCase().trim();
+    return templates.filter((t) =>
+      t.item.toLowerCase().includes(q) ||
+      (t.categories?.name || "").toLowerCase().includes(q) ||
+      t.account_type.toLowerCase().includes(q) ||
+      (t.credit_card_name || "").toLowerCase().includes(q) ||
+      (t.description || "").toLowerCase().includes(q)
+    );
+  }, [templates, templateSearch]);
 
   // New Card Modal State
   const [showNewCardModal, setShowNewCardModal] = useState(false);
@@ -137,6 +150,7 @@ const AddExpense = () => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (templatePickerRef.current && !templatePickerRef.current.contains(e.target as Node)) {
+        setTemplateSearch("");
         setShowTemplatePicker(false);
         setManageMode(false);
       }
@@ -160,6 +174,7 @@ const AddExpense = () => {
     setShowTemplatePicker(false);
     setManageMode(false);
     setError("");
+    setTemplateSearch("");
     setSuccess("Template loaded — edit and submit!");
     setTimeout(() => setSuccess(""), 2500);
   };
@@ -389,7 +404,7 @@ const AddExpense = () => {
             <div className="relative" ref={templatePickerRef}>
               <button
                 type="button"
-                onClick={() => { setShowTemplatePicker(!showTemplatePicker); setManageMode(false); }}
+                onClick={() => { setShowTemplatePicker(!showTemplatePicker); setManageMode(false); setTemplateSearch(""); }}
                 className={`flex items-center gap-2 px-5 py-3 rounded-2xl border text-sm font-bold transition-all shadow-sm dark:shadow-none ${
                   showTemplatePicker
                     ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
@@ -422,11 +437,37 @@ const AddExpense = () => {
                           Manage
                         </button>
                       )}
-                      <button onClick={() => { setShowTemplatePicker(false); setManageMode(false); }} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all">
+                      <button onClick={() => { setShowTemplatePicker(false); setManageMode(false); setTemplateSearch(""); }} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all">
                         <FiX size={14} />
                       </button>
                     </div>
                   </div>
+
+                  {/* Search Filter Bar */}
+                  {templates.length > 0 && (
+                    <div className="p-2 border-b border-slate-200/70 dark:border-white/5 bg-slate-50/80 dark:bg-slate-800/40">
+                      <div className="relative flex items-center">
+                        <FiSearch className="absolute left-2.5 text-slate-400 dark:text-slate-500 pointer-events-none" size={13} />
+                        <input
+                          type="text"
+                          autoFocus
+                          value={templateSearch}
+                          onChange={(e) => setTemplateSearch(e.target.value)}
+                          placeholder="Search presets by name, category, card..."
+                          className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/60 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all"
+                        />
+                        {templateSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setTemplateSearch("")}
+                            className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 rounded transition-colors"
+                          >
+                            <FiX size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="max-h-64 overflow-y-auto">
                     {templates.length === 0 ? (
@@ -434,8 +475,20 @@ const AddExpense = () => {
                         <p className="text-slate-600 dark:text-slate-400 text-sm mb-1">No templates yet</p>
                         <p className="text-slate-500 dark:text-slate-500 text-xs">Add an expense and check "Save as template" to create one.</p>
                       </div>
+                    ) : displayedTemplates.length === 0 ? (
+                      <div className="p-6 text-center">
+                        <p className="text-slate-700 dark:text-slate-300 text-xs font-semibold mb-1">No presets found</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-[11px] mb-2">No template matching &ldquo;{templateSearch}&rdquo;</p>
+                        <button
+                          type="button"
+                          onClick={() => setTemplateSearch("")}
+                          className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                        >
+                          Clear search
+                        </button>
+                      </div>
                     ) : (
-                      templates.map((t) => (
+                      displayedTemplates.map((t) => (
                         <div
                           key={t.id}
                           className={`flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/5 last:border-0 transition-colors ${
@@ -447,7 +500,7 @@ const AddExpense = () => {
                             <p className="text-sm font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                               {t.item}
                               {t.paid_via_credit_card && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-700 dark:text-purple-300 font-normal border border-purple-500/20">
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-normal border border-emerald-500/20">
                                   💳 {t.credit_card_name || 'CC'}
                                 </span>
                               )}
