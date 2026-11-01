@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { api } from "../lib/api";
 import Logo from "./Logo";
@@ -6,8 +6,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard, FiBriefcase, FiCheckSquare,
-    FiCalendar
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard, FiBriefcase, FiCheckSquare
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -33,7 +32,7 @@ const NAV_GROUPS = [
             { to: "/expense-tracking", icon: FiList, label: "Expense Tracker" },
             { to: "/income-tracking", icon: FiBarChart2, label: "Income Tracker" },
             { to: "/credit-cards", icon: FiCreditCard, label: "Credit Cards" },
-            { to: "/subscriptions", icon: FiCalendar, label: "Subscriptions" },
+            { to: "/repeating-expenses", icon: FiRepeat, label: "Repeating Expenses" },
             { to: "/ledger", icon: FiUsers, label: "Ledger (IOU)" },
             { to: "/fund-tracker", icon: FiBriefcase, label: "Independent Funds" },
             { to: "/rent-tracker", icon: FiHome, label: "Rent Tracker" },

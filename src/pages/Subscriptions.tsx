@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+﻿import React, { useState, useMemo, useCallback } from "react";
 import { useSubscriptions, type Subscription, type SubscriptionFormData, type BillingCycle } from "../hooks/useSubscriptions";
 import { useCreditCards } from "../hooks/useCreditCards";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -26,7 +26,8 @@ import {
 type FilterTab = "all" | "credit_card" | "account" | "active" | "paused";
 type SortOption = "date_asc" | "amount_desc" | "name_asc";
 
-const Subscriptions: React.FC = () => {
+export interface SubscriptionsProps { embedded?: boolean; }
+const Subscriptions: React.FC<SubscriptionsProps> = ({ embedded = false }) => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -198,7 +199,7 @@ const Subscriptions: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    <div className={embedded ? "space-y-8" : "w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8"}>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/90 text-white dark:bg-emerald-500/90 dark:text-slate-950 shadow-2xl backdrop-blur-md border border-emerald-500/30 animate-fade-in text-sm font-medium">

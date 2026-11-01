@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Expense Tracker Application
  * Copyright (c) 2026 kogulmurugaiah
  * All rights reserved.
@@ -30,7 +30,7 @@ const AddInvestment = lazy(() => import('./pages/AddInvestment'));
 const BudgetPlanner = lazy(() => import('./pages/BudgetPlanner'));
 const AddTransfer = lazy(() => import('./pages/AddTransfer'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
-const Subscriptions = lazy(() => import('./pages/Subscriptions'));
+const RepeatingExpenses = lazy(() => import('./pages/RepeatingExpenses'));
 const ImportCenter = lazy(() => import('./pages/ImportCenter'));
 const Settings = lazy(() => import('./pages/Settings'));
 const SavingsGoals = lazy(() => import('./pages/SavingsGoals'));
@@ -104,7 +104,8 @@ function App() {
                             <Route path="/expense-tracking" element={<ExpenseTracking />} />
                             <Route path="/income-tracking" element={<IncomeTracking />} />
                             <Route path="/credit-cards" element={<CreditCards />} />
-                            <Route path="/subscriptions" element={<Subscriptions />} />
+                            <Route path="/repeating-expenses" element={<RepeatingExpenses />} />
+                            <Route path="/subscriptions" element={<RepeatingExpenses />} />
                             <Route path="/ledger" element={<Ledger />} />
                             <Route path="/rent-tracker" element={<RentTracker />} />
                             <Route path="/fund-tracker" element={<FundTracker />} />

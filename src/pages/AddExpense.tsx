@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
 import { useExpenseCategories } from "../hooks/useExpenseCategories";
 import { useAccountTypes } from "../hooks/useAccountTypes";
@@ -36,6 +37,7 @@ const initialForm = {
 };
 
 const AddExpense = () => {
+  const navigate = useNavigate();
   const { accountTypes, addAccountType } = useAccountTypes();
   const { categories, loading: categoriesLoading, addCategory } = useExpenseCategories();
   const { cards: creditCards, addCard: addCreditCard } = useCreditCards();
@@ -411,6 +413,7 @@ const AddExpense = () => {
                       {manageMode ? 'Manage Templates' : 'Your Templates'}
                     </h4>
                     <div className="flex items-center gap-2">
+                      <button onClick={() => navigate('/repeating-expenses')} className="text-[10px] font-bold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors uppercase tracking-wider">Open Page &rarr;</button>
                       {!manageMode && templates.length > 0 && (
                         <button
                           onClick={() => setManageMode(true)}
