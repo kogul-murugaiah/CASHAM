@@ -5,25 +5,18 @@ import { FiX, FiAlertCircle, FiCheck } from 'react-icons/fi';
 interface CustomExerciseModalProps {
     onClose: () => void;
     onCreated: (exercise: any) => void;
+    initialName?: string;
+    initialMuscle?: string;
 }
 
 const MUSCLE_OPTIONS = [
     { value: 'chest', label: 'Chest' },
-    { value: 'back', label: 'Back (Upper/Mid)' },
-    { value: 'lats', label: 'Lats' },
-    { value: 'shoulders', label: 'Shoulders (Delts)' },
-    { value: 'traps', label: 'Traps' },
+    { value: 'back', label: 'Back & Lats' },
+    { value: 'shoulders', label: 'Shoulders & Delts' },
     { value: 'biceps', label: 'Biceps' },
     { value: 'triceps', label: 'Triceps' },
-    { value: 'forearms', label: 'Forearms' },
-    { value: 'quads', label: 'Quads' },
-    { value: 'hamstrings', label: 'Hamstrings' },
-    { value: 'glutes', label: 'Glutes' },
-    { value: 'calves', label: 'Calves' },
-    { value: 'abs', label: 'Abs / Core' },
-    { value: 'obliques', label: 'Obliques' },
-    { value: 'cardio', label: 'Cardio' },
-    { value: 'full_body', label: 'Full Body' },
+    { value: 'legs', label: 'Legs & Calves' },
+    { value: 'core', label: 'Core / Abs' },
 ];
 
 const EQUIPMENT_OPTIONS = [
@@ -32,18 +25,17 @@ const EQUIPMENT_OPTIONS = [
     { value: 'cable', label: 'Cable' },
     { value: 'machine', label: 'Machine' },
     { value: 'bodyweight', label: 'Bodyweight' },
-    { value: 'smith_machine', label: 'Smith Machine' },
-    { value: 'bands', label: 'Resistance Bands' },
-    { value: 'kettlebell', label: 'Kettlebell' },
     { value: 'other', label: 'Other' },
 ];
 
 export const CustomExerciseModal: React.FC<CustomExerciseModalProps> = ({
     onClose,
     onCreated,
+    initialName = '',
+    initialMuscle = 'chest',
 }) => {
-    const [name, setName] = useState('');
-    const [targetMuscle, setTargetMuscle] = useState('chest');
+    const [name, setName] = useState(initialName);
+    const [targetMuscle, setTargetMuscle] = useState(initialMuscle);
     const [equipment, setEquipment] = useState('dumbbell');
     const [selectedSecondary, setSelectedSecondary] = useState<string[]>([]);
     const [description, setDescription] = useState('');

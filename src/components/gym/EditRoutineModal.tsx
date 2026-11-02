@@ -4,6 +4,7 @@ import {
     FiX, FiPlus, FiTrash2, FiArrowUp, FiArrowDown,
     FiCheck, FiAlertCircle, FiRotateCcw
 } from 'react-icons/fi';
+import { CustomExerciseModal } from './CustomExerciseModal';
 
 interface Exercise {
     id: string;
@@ -85,6 +86,7 @@ export const EditRoutineModal: React.FC<EditRoutineModalProps> = ({
     // Exercise search modal
     const [showExPicker, setShowExPicker] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showCustomModal, setShowCustomModal] = useState(false);
 
     const [saving, setSaving] = useState(false);
     const [resetting, setResetting] = useState(false);
@@ -534,27 +536,65 @@ export const EditRoutineModal: React.FC<EditRoutineModalProps> = ({
                         </div>
 
                         <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
-                            {filteredExercises.map((ex) => (
-                                <button
-                                    key={ex.id}
-                                    type="button"
-                                    onClick={() => addExercise(ex)}
-                                    className="w-full p-2.5 rounded-xl bg-slate-800/80 hover:bg-emerald-500/10 border border-slate-700/60 hover:border-emerald-500/30 text-left flex items-center justify-between transition-colors group"
-                                >
-                                    <div>
-                                        <p className="text-xs font-bold text-white group-hover:text-emerald-400">
-                                            {ex.name}
-                                        </p>
-                                        <p className="text-[10px] text-slate-400 capitalize">
-                                            {ex.target_muscle} • {ex.equipment}
-                                        </p>
-                                    </div>
-                                    <span className="text-xs font-bold text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        + Add
-                                    </span>
-                                </button>
-                            ))}
+                            {filteredExercises.length === 0 ? (
+                                <div className="py-8 text-center flex flex-col items-center justify-center space-y-3">
+                                    <p className="text-sm text-slate-400">
+                                        No movement matching "<span className="text-white font-semibold">{searchQuery}</span>"
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCustomModal(true)}
+                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5"
+                                    >
+                                        <FiPlus size={14} /> Add "{searchQuery || 'Custom Movement'}"
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    {filteredExercises.map((ex) => (
+                                        <button
+                                            key={ex.id}
+                                            type="button"
+                                            onClick={() => addExercise(ex)}
+                                            className="w-full p-2.5 rounded-xl bg-slate-800/80 hover:bg-emerald-500/10 border border-slate-700/60 hover:border-emerald-500/30 text-left flex items-center justify-between transition-colors group"
+                                        >
+                                            <div>
+                                                <p className="text-xs font-bold text-white group-hover:text-emerald-400">
+                                                    {ex.name}
+                                                </p>
+                                                <p className="text-[10px] text-slate-400 capitalize">
+                                                    {ex.target_muscle} • {ex.equipment}
+                                                </p>
+                                            </div>
+                                            <span className="text-xs font-bold text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                + Add
+                                            </span>
+                                        </button>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCustomModal(true)}
+                                        className="w-full mt-2 py-2 border border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors flex items-center justify-center gap-1.5"
+                                    >
+                                        <FiPlus size={13} /> Can't find it? Add custom exercise
+                                    </button>
+                                </>
+                            )}
                         </div>
+
+                        {/* Custom Exercise Creator Modal */}
+                        {showCustomModal && (
+                            <CustomExerciseModal
+                                initialName={searchQuery.trim()}
+                                onClose={() => setShowCustomModal(false)}
+                                onCreated={(newEx) => {
+                                    setShowCustomModal(false);
+                                    setShowExPicker(false);
+                                    setSearchQuery('');
+                                    addExercise(newEx);
+                                }}
+                            />
+                        )}
                     </div>
                 )}
             </div>

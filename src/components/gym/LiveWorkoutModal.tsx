@@ -5,6 +5,7 @@ import {
     FiX, FiMinimize2, FiAward,
     FiPlusCircle, FiCheckCircle
 } from 'react-icons/fi';
+import { CustomExerciseModal } from './CustomExerciseModal';
 
 interface LiveWorkoutModalProps {
     workoutId: string;
@@ -56,6 +57,7 @@ export const LiveWorkoutModal: React.FC<LiveWorkoutModalProps> = ({
     // Add Exercise Dropdown in live session
     const [showAddExModal, setShowAddExModal] = useState(false);
     const [searchEx, setSearchEx] = useState('');
+    const [showCustomModal, setShowCustomModal] = useState(false);
 
     // 1. Fetch workout details & sets
     useEffect(() => {
@@ -591,22 +593,60 @@ export const LiveWorkoutModal: React.FC<LiveWorkoutModalProps> = ({
                         />
 
                         <div className="flex-1 overflow-y-auto space-y-1.5 divide-y divide-slate-100 dark:divide-white/5">
-                            {allExercises
-                                .filter(e => e.name.toLowerCase().includes(searchEx.toLowerCase()))
-                                .map(e => (
-                                    <div
-                                        key={e.id}
-                                        onClick={() => handleAddExerciseToWorkout(e)}
-                                        className="pt-2 pb-2 px-2 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+                            {allExercises.filter(e => e.name.toLowerCase().includes(searchEx.toLowerCase())).length === 0 ? (
+                                <div className="py-8 text-center flex flex-col items-center justify-center space-y-3">
+                                    <p className="text-sm text-slate-400">
+                                        No movement matching "<span className="text-white font-semibold">{searchEx}</span>"
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCustomModal(true)}
+                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5"
                                     >
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-900 dark:text-white">{e.name}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{e.target_muscle} · {e.equipment}</p>
-                                        </div>
-                                        <FiPlus className="text-emerald-500" size={15} />
-                                    </div>
-                                ))}
+                                        <FiPlus size={14} /> Add "{searchEx || 'Custom Exercise'}"
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    {allExercises
+                                        .filter(e => e.name.toLowerCase().includes(searchEx.toLowerCase()))
+                                        .map(e => (
+                                            <div
+                                                key={e.id}
+                                                onClick={() => handleAddExerciseToWorkout(e)}
+                                                className="pt-2 pb-2 px-2 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg cursor-pointer transition-colors"
+                                            >
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-900 dark:text-white">{e.name}</p>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{e.target_muscle} · {e.equipment}</p>
+                                                </div>
+                                                <FiPlus className="text-emerald-500" size={15} />
+                                            </div>
+                                        ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCustomModal(true)}
+                                        className="w-full mt-2 py-2 border border-dashed border-slate-300 dark:border-white/10 hover:border-emerald-500/50 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors flex items-center justify-center gap-1.5"
+                                    >
+                                        <FiPlus size={13} /> Can't find it? Add custom exercise
+                                    </button>
+                                </>
+                            )}
                         </div>
+
+                        {/* Custom Exercise Creator Sub-Modal */}
+                        {showCustomModal && (
+                            <CustomExerciseModal
+                                initialName={searchEx.trim()}
+                                onClose={() => setShowCustomModal(false)}
+                                onCreated={(newEx) => {
+                                    setShowCustomModal(false);
+                                    setShowAddExModal(false);
+                                    setSearchEx('');
+                                    handleAddExerciseToWorkout(newEx);
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
             )}
