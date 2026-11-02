@@ -120,7 +120,7 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
                             </span>
                         )}
                         <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                            {fullRoutine.target_muscle}
+                            {fullRoutine.target_muscle?.replace(/_/g, ' ') || 'SPLIT'}
                         </span>
                         {fullRoutine.is_preset ? (
                             <span className="text-[10px] font-semibold text-slate-400">

@@ -389,7 +389,7 @@ export const GymTracker: React.FC = () => {
                                         </span>
                                         <div className="flex items-center gap-1">
                                             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                                {routine.target_muscle}
+                                                {routine.target_muscle?.replace(/_/g, ' ') || 'SPLIT'}
                                             </span>
                                             <button
                                                 type="button"

@@ -39,6 +39,14 @@ const MUSCLE_OPTIONS = [
     { value: 'legs', label: 'Legs & Calves' },
     { value: 'core', label: 'Core / Abs' },
     { value: 'cardio', label: 'Cardio' },
+    { value: 'chest_triceps', label: 'Chest & Triceps' },
+    { value: 'back_biceps', label: 'Back & Biceps' },
+    { value: 'shoulders_arms', label: 'Shoulders & Arms' },
+    { value: 'legs_core', label: 'Legs & Core' },
+    { value: 'push', label: 'Push (Chest/Delts/Tri)' },
+    { value: 'pull', label: 'Pull (Back/Biceps)' },
+    { value: 'upper_body', label: 'Upper Body' },
+    { value: 'lower_body', label: 'Lower Body' },
     { value: 'full_body', label: 'Full Body' },
 ];
 
