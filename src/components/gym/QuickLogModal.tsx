@@ -290,6 +290,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
             // 2. Batch save sets with automated PR calculation
             const setsPayload = {
                 workout_id: createdWorkout.id,
+                batch: flattenedSets,
                 sets: flattenedSets,
             };
 

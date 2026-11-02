@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // POST /api/gym/sets (Log a single set or batch of sets)
     if (method === 'POST') {
         try {
-            const { workout_id, exercise_id, set_number, weight_kg, reps, is_warmup, is_completed, notes, batch } = req.body;
+            const { workout_id, exercise_id, set_number, weight_kg, reps, is_warmup, is_completed, notes, batch, sets } = req.body;
 
             if (!workout_id) {
                 return res.status(400).json({ error: 'workout_id is required' });
@@ -70,9 +70,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
 
             // Batch logging (e.g. from Quick Past Log)
-            if (Array.isArray(batch) && batch.length > 0) {
+            const batchList = Array.isArray(batch) ? batch : (Array.isArray(sets) ? sets : null);
+            if (batchList && batchList.length > 0) {
                 const insertedSets = [];
-                for (const item of batch) {
+                const newPrs: any[] = [];
+
+                for (const item of batchList) {
+                    if (!item.exercise_id) continue;
+
                     const isDone = item.is_completed !== undefined ? Boolean(item.is_completed) : true;
                     const isWarm = Boolean(item.is_warmup);
                     const weight = Math.max(0, Number(item.weight_kg) || 0);
@@ -97,9 +102,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
                     if (!setErr && setRecord) {
                         insertedSets.push(setRecord);
+
+                        // PR Evaluation for completed working set
+                        if (isDone && !isWarm && weight > 0) {
+                            const prResult = await evaluatePR(item.exercise_id, weight, setRecord.id);
+                            if (prResult.is_new_pr) {
+                                newPrs.push({
+                                    exercise_id: item.exercise_id,
+                                    weight_kg: weight,
+                                    reps: repetitions,
+                                    ...prResult
+                                });
+                            }
+                        }
                     }
                 }
-                return res.status(201).json({ sets: insertedSets });
+                return res.status(201).json({ sets: insertedSets, new_prs: newPrs });
             }
 
             // Single set logging (e.g. from Live Workout session)
