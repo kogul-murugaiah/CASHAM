@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import {
-    FiX, FiPlay, FiCalendar, FiClock
+    FiX, FiPlay, FiCalendar, FiClock, FiEdit3
 } from 'react-icons/fi';
 
 interface RoutineExercise {
@@ -25,6 +25,7 @@ interface Routine {
     description?: string;
     is_preset?: boolean;
     exercises?: RoutineExercise[];
+    gym_routine_exercises?: any[];
 }
 
 interface RoutineDetailsModalProps {
@@ -32,6 +33,7 @@ interface RoutineDetailsModalProps {
     onClose: () => void;
     onStartLive: (routine: Routine) => void;
     onQuickLog: (routine: Routine) => void;
+    onEdit: (routine: Routine) => void;
 }
 
 export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
@@ -39,6 +41,7 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
     onClose,
     onStartLive,
     onQuickLog,
+    onEdit,
 }) => {
     const [fullRoutine, setFullRoutine] = useState<Routine>(routine);
     const [loading, setLoading] = useState(false);
@@ -51,14 +54,15 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
                 setLoading(true);
                 const data = await api.get<any>(`/api/gym/routines?id=${routine.id}`);
                 if (isMounted && data) {
+                    const rawList = data.gym_routine_exercises || data.exercises || [];
                     setFullRoutine({
                         ...routine,
                         ...data,
-                        exercises: (data.exercises || []).map((rx: any) => ({
+                        exercises: rawList.map((rx: any) => ({
                             id: rx.id,
                             exercise_id: rx.exercise_id,
-                            exercise_name: rx.exercise_name || (rx.gym_exercises ? rx.gym_exercises.name : 'Exercise'),
-                            target_muscle: rx.target_muscle || (rx.gym_exercises ? rx.gym_exercises.target_muscle : 'chest'),
+                            exercise_name: rx.exercise_name || rx.gym_exercises?.name || 'Exercise',
+                            target_muscle: rx.target_muscle || rx.gym_exercises?.target_muscle || 'chest',
                             equipment: rx.gym_exercises?.equipment,
                             target_sets: rx.target_sets || 3,
                             target_reps: rx.target_reps || '8-12',
@@ -92,12 +96,22 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
             <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent relative">
-                    <button
-                        onClick={onClose}
-                        className="absolute right-5 top-5 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg transition-colors"
-                    >
-                        <FiX size={20} />
-                    </button>
+                    <div className="absolute right-5 top-5 flex items-center gap-1.5">
+                        <button
+                            onClick={() => onEdit(fullRoutine)}
+                            className="p-2 text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold"
+                            title="Edit this Split"
+                        >
+                            <FiEdit3 size={16} />
+                            <span className="hidden sm:inline">Edit Split</span>
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg transition-colors"
+                        >
+                            <FiX size={20} />
+                        </button>
+                    </div>
 
                     <div className="flex items-center gap-2 mb-2">
                         {dayLabel && (
@@ -108,9 +122,13 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
                         <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             {fullRoutine.target_muscle}
                         </span>
-                        {fullRoutine.is_preset && (
+                        {fullRoutine.is_preset ? (
                             <span className="text-[10px] font-semibold text-slate-400">
                                 Bro Split Preset
+                            </span>
+                        ) : (
+                            <span className="text-[10px] font-semibold text-emerald-400">
+                                Custom Split
                             </span>
                         )}
                     </div>
@@ -176,18 +194,26 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
 
                 {/* Footer Action Buttons */}
                 <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <button
-                        onClick={() => onQuickLog(fullRoutine)}
-                        className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
-                    >
-                        <FiCalendar size={15} /> Log as Past Workout
-                    </button>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                            onClick={() => onEdit(fullRoutine)}
+                            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-emerald-500/50 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                            <FiEdit3 size={14} /> Edit Split
+                        </button>
+                        <button
+                            onClick={() => onQuickLog(fullRoutine)}
+                            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                            <FiCalendar size={14} /> Log Past
+                        </button>
+                    </div>
 
                     <button
                         onClick={() => onStartLive(fullRoutine)}
                         className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all"
                     >
-                        <FiPlay size={15} /> Start Live Workout Now
+                        <FiPlay size={15} /> Start Live Workout
                     </button>
                 </div>
             </div>

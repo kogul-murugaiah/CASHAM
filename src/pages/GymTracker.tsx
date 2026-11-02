@@ -4,7 +4,7 @@ import {
     FiActivity, FiPlus, FiCalendar, FiPlay,
     FiAward, FiChevronRight,
     FiTrendingUp, FiLayers, FiTrash2, FiRefreshCw,
-    FiChevronDown, FiChevronUp
+    FiChevronDown, FiChevronUp, FiEdit3
 } from 'react-icons/fi';
 
 import { GymHeatmap } from '../components/gym/GymHeatmap';
@@ -13,6 +13,7 @@ import { LiveWorkoutModal } from '../components/gym/LiveWorkoutModal';
 import { QuickLogModal } from '../components/gym/QuickLogModal';
 import { RoutineDetailsModal } from '../components/gym/RoutineDetailsModal';
 import { CustomExerciseModal } from '../components/gym/CustomExerciseModal';
+import { EditRoutineModal } from '../components/gym/EditRoutineModal';
 
 interface GymStats {
     month: string;
@@ -49,6 +50,7 @@ export const GymTracker: React.FC = () => {
     const [showQuickLogModal, setShowQuickLogModal] = useState(false);
     const [quickLogRoutine, setQuickLogRoutine] = useState<any | null>(null);
     const [selectedRoutineForDetails, setSelectedRoutineForDetails] = useState<any | null>(null);
+    const [selectedRoutineForEdit, setSelectedRoutineForEdit] = useState<any | null>(null);
     const [showCustomExModal, setShowCustomExModal] = useState(false);
 
     // Today's day of week: 0 = Sunday, 1 = Monday, 2 = Tuesday, etc.
@@ -385,9 +387,22 @@ export const GymTracker: React.FC = () => {
                                         <span className="text-[11px] font-black tracking-widest text-slate-400">
                                             {dayInitials}
                                         </span>
-                                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                            {routine.target_muscle}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                                {routine.target_muscle}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedRoutineForEdit(routine);
+                                                }}
+                                                className="p-1 rounded-md text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                                                title="Edit / Customize Split"
+                                            >
+                                                <FiEdit3 size={12} />
+                                            </button>
+                                        </div>
                                     </div>
                                     <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">
                                         {routine.name.replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*-\s*/, '')}
@@ -685,10 +700,27 @@ export const GymTracker: React.FC = () => {
                     onClose={() => setSelectedRoutineForDetails(null)}
                     onStartLive={(r) => handleStartLiveWorkout(r)}
                     onQuickLog={(r) => handleTriggerQuickLog(r)}
+                    onEdit={(r) => {
+                        setSelectedRoutineForDetails(null);
+                        setSelectedRoutineForEdit(r);
+                    }}
                 />
             )}
 
-            {/* 4. Custom Exercise Modal */}
+            {/* 4. Edit Routine Modal */}
+            {selectedRoutineForEdit && (
+                <EditRoutineModal
+                    routine={selectedRoutineForEdit}
+                    allExercises={allExercises}
+                    onClose={() => setSelectedRoutineForEdit(null)}
+                    onSaved={() => {
+                        setSelectedRoutineForEdit(null);
+                        loadDashboardData(true);
+                    }}
+                />
+            )}
+
+            {/* 5. Custom Exercise Modal */}
             {showCustomExModal && (
                 <CustomExerciseModal
                     onClose={() => setShowCustomExModal(false)}

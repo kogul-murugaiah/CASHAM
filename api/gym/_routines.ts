@@ -63,12 +63,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const { data, error } = await query;
             if (error) throw error;
 
-            const routines = (data || []).map((routine: any) => {
+            // Prioritize user's custom routine over preset for the same day_of_week
+            const routineMapByDay = new Map<number, any>();
+            const otherRoutines: any[] = [];
+
+            for (const routine of (data || [])) {
                 if (routine.gym_routine_exercises) {
                     routine.gym_routine_exercises.sort((a: any, b: any) => a.order_index - b.order_index);
                 }
-                return routine;
-            });
+
+                if (routine.day_of_week !== null && routine.day_of_week !== undefined) {
+                    const existing = routineMapByDay.get(routine.day_of_week);
+                    if (!existing || (!routine.is_preset && existing.is_preset)) {
+                        routineMapByDay.set(routine.day_of_week, routine);
+                    }
+                } else {
+                    otherRoutines.push(routine);
+                }
+            }
+
+            const routines = [...Array.from(routineMapByDay.values()), ...otherRoutines];
+            routines.sort((a, b) => (a.day_of_week ?? 99) - (b.day_of_week ?? 99));
 
             return res.status(200).json(routines);
         } catch (error: any) {
@@ -84,6 +99,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (!name) {
                 return res.status(400).json({ error: 'Routine name is required' });
+            }
+
+            // Archive any older custom routine on the same day
+            if (day_of_week !== null && day_of_week !== undefined) {
+                await supabaseAdmin
+                    .from('gym_routines')
+                    .update({ is_active: false })
+                    .eq('user_id', user.id)
+                    .eq('day_of_week', parseInt(day_of_week))
+                    .eq('is_preset', false);
             }
 
             // Create routine
