@@ -51,7 +51,9 @@ interface QuickLogModalProps {
 }
 
 const cleanRoutineName = (name?: string) =>
-    (name || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-—–]\s*/i, '');
+    (name || '')
+        .replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[\u2013\u2014\-]\s*/i, '')
+        .trim();
 
 export const QuickLogModal: React.FC<QuickLogModalProps> = ({
     onClose,
@@ -490,7 +492,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                             {exerciseBlocks.length === 0 ? (
                                 <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
                                     <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
-                                        No exercises added yet. Pick a Bro Split routine or add exercises manually.
+                                        No exercises added yet. Pick a routine or add exercises manually.
                                     </p>
                                     <button
                                         type="button"

@@ -27,14 +27,18 @@ interface GymStats {
         chest: number;
         back: number;
         shoulders: number;
-        arms: number;
+        biceps: number;
+        triceps: number;
+        arms?: number;
         legs: number;
         core: number;
     };
 }
 
 const cleanRoutineName = (name?: string) =>
-    (name || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-—–]\s*/i, '');
+    (name || '')
+        .replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[\u2013\u2014\-]\s*/i, '')
+        .trim();
 
 export const GymTracker: React.FC = () => {
     // Core data state
@@ -161,7 +165,7 @@ export const GymTracker: React.FC = () => {
             <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
                 <p className="text-sm font-medium text-slate-400 animate-pulse">
-                    Loading your Gym Tracker & Bro Split data...
+                    Loading your Gym Tracker data...
                 </p>
             </div>
         );
@@ -183,7 +187,7 @@ export const GymTracker: React.FC = () => {
                         Gym Tracker
                     </h1>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                        Bro Split routine consistency, set overload & PR trophy wall
+                        Targeted muscle splits, set overload & PR trophy wall
                     </p>
                 </div>
 
@@ -342,7 +346,7 @@ export const GymTracker: React.FC = () => {
                             <span className="text-xs text-slate-400 font-semibold">/ 5 days</span>
                         </div>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                            Bro Split target pace
+                            Flexible weekly target
                         </p>
                     </div>
                 </div>
@@ -361,7 +365,7 @@ export const GymTracker: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {routines.map((routine) => {
                         return (
                             <div
@@ -429,37 +433,43 @@ export const GymTracker: React.FC = () => {
                             </div>
 
                             <div className="space-y-3 pt-2">
-                                {[
-                                    { key: 'chest', label: 'Chest', sets: stats.muscle_volume.chest, color: 'bg-emerald-500' },
-                                    { key: 'back', label: 'Back & Lats', sets: stats.muscle_volume.back, color: 'bg-teal-500' },
-                                    { key: 'shoulders', label: 'Shoulders & Traps', sets: stats.muscle_volume.shoulders, color: 'bg-cyan-500' },
-                                    { key: 'arms', label: 'Arms (Biceps/Triceps)', sets: stats.muscle_volume.arms, color: 'bg-amber-500' },
-                                    { key: 'legs', label: 'Legs & Calves', sets: stats.muscle_volume.legs, color: 'bg-blue-500' },
-                                    { key: 'core', label: 'Core & Cardio', sets: stats.muscle_volume.core, color: 'bg-emerald-400' },
-                                ].map((item) => {
-                                    const pct = stats.total_sets > 0
-                                        ? Math.round((item.sets / stats.total_sets) * 100)
-                                        : 0;
+                                {(() => {
+                                    const volumeItems = [
+                                        { key: 'chest', label: 'Chest', sets: stats.muscle_volume.chest || 0, color: 'bg-emerald-500' },
+                                        { key: 'back', label: 'Back & Lats', sets: stats.muscle_volume.back || 0, color: 'bg-teal-500' },
+                                        { key: 'shoulders', label: 'Shoulders & Traps', sets: stats.muscle_volume.shoulders || 0, color: 'bg-cyan-500' },
+                                        { key: 'biceps', label: 'Biceps', sets: stats.muscle_volume.biceps || 0, color: 'bg-amber-500' },
+                                        { key: 'triceps', label: 'Triceps', sets: stats.muscle_volume.triceps || 0, color: 'bg-orange-500' },
+                                        { key: 'legs', label: 'Legs & Calves', sets: stats.muscle_volume.legs || 0, color: 'bg-blue-500' },
+                                        { key: 'core', label: 'Core & Abs', sets: stats.muscle_volume.core || 0, color: 'bg-emerald-400' },
+                                    ];
+                                    const totalCalculatedSets = volumeItems.reduce((acc, curr) => acc + curr.sets, 0);
 
-                                    return (
-                                        <div key={item.key} className="space-y-1">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="font-bold text-slate-700 dark:text-slate-300">
-                                                    {item.label}
-                                                </span>
-                                                <span className="font-semibold text-slate-400">
-                                                    {item.sets} sets ({pct}%)
-                                                </span>
+                                    return volumeItems.map((item) => {
+                                        const pct = totalCalculatedSets > 0
+                                            ? Math.round((item.sets / totalCalculatedSets) * 100)
+                                            : 0;
+
+                                        return (
+                                            <div key={item.key} className="space-y-1">
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                                                        {item.label}
+                                                    </span>
+                                                    <span className="font-semibold text-slate-400">
+                                                        {item.sets} sets ({pct}%)
+                                                    </span>
+                                                </div>
+                                                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                                    <div
+                                                        className={`h-full ${item.color} rounded-full transition-all duration-500`}
+                                                        style={{ width: `${Math.min(pct, 100)}%` }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                                                <div
-                                                    className={`h-full ${item.color} rounded-full transition-all duration-500`}
-                                                    style={{ width: `${Math.min(pct, 100)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    });
+                                })()}
                             </div>
                         </div>
                     )}

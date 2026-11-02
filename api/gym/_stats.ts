@@ -132,6 +132,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             workouts_this_month: thisMonthWorkouts.length,
             total_working_sets: totalWorkingSets,
             muscle_distribution: muscleDistribution,
+            muscle_volume: {
+                chest: muscleCounts.chest,
+                back: muscleCounts.back,
+                shoulders: muscleCounts.shoulders,
+                biceps: muscleCounts.biceps,
+                triceps: muscleCounts.triceps,
+                arms: muscleCounts.biceps + muscleCounts.triceps,
+                legs: muscleCounts.legs,
+                core: muscleCounts.core
+            },
             recent_workouts: recentWorkouts
         });
     } catch (error: any) {

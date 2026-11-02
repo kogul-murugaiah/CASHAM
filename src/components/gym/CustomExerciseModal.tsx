@@ -98,7 +98,7 @@ export const CustomExerciseModal: React.FC<CustomExerciseModalProps> = ({
                             Create Custom Exercise
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Add a custom movement to your Bro Split library
+                            Add a custom movement to your exercise library
                         </p>
                     </div>
                     <button

@@ -209,9 +209,9 @@ export const EditRoutineModal: React.FC<EditRoutineModalProps> = ({
         }
     };
 
-    // Reset custom routine back to default Bro Split preset
+    // Reset custom routine back to default preset
     const handleResetToDefault = async () => {
-        if (!confirm('Reset this day back to the default Bro Split preset? Your custom changes will be removed.')) {
+        if (!confirm('Reset this routine back to the default preset? Your custom changes will be removed.')) {
             return;
         }
 
@@ -241,7 +241,7 @@ export const EditRoutineModal: React.FC<EditRoutineModalProps> = ({
                     <div>
                         <div className="flex items-center gap-2">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                                {routine.is_preset ? 'Customize Bro Split' : 'Edit Routine'}
+                                {routine.is_preset ? 'Customize Routine' : 'Edit Routine'}
                             </h2>
                             {routine.is_preset ? (
                                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-500">
@@ -285,20 +285,21 @@ export const EditRoutineModal: React.FC<EditRoutineModalProps> = ({
                                 required
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="e.g. Monday - Chest Power"
+                                placeholder="e.g. Chest Hypertrophy, Back & Biceps, or Upper Power"
                                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
 
                         <div>
                             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                                Day of Week
+                                Preferred Day (Optional)
                             </label>
                             <select
                                 value={dayOfWeek !== null ? dayOfWeek : ''}
-                                onChange={(e) => setDayOfWeek(e.target.value ? Number(e.target.value) : null)}
+                                onChange={(e) => setDayOfWeek(e.target.value !== '' ? Number(e.target.value) : null)}
                                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
+                                <option value="">Flexible (Any Day)</option>
                                 {DAYS_OF_WEEK.map((d) => (
                                     <option key={d.value} value={d.value}>
                                         {d.label}
@@ -482,7 +483,7 @@ export const EditRoutineModal: React.FC<EditRoutineModalProps> = ({
                                 className="px-3.5 py-2 rounded-xl text-xs font-bold text-rose-500 hover:bg-rose-500/10 flex items-center gap-1.5 transition-colors disabled:opacity-50"
                             >
                                 <FiRotateCcw size={13} />
-                                <span>Reset to Bro Split Default</span>
+                                <span>Reset to Preset Default</span>
                             </button>
                         ) : <div />}
 

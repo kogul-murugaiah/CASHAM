@@ -37,7 +37,9 @@ interface RoutineDetailsModalProps {
 }
 
 const cleanRoutineName = (name?: string) =>
-    (name || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-—–]\s*/i, '');
+    (name || '')
+        .replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[\u2013\u2014\-]\s*/i, '')
+        .trim();
 
 export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
     routine,
