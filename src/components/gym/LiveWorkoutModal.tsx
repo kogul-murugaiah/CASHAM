@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../lib/api';
 import {
-    FiClock, FiCheck, FiPlus,
+    FiClock, FiCheck, FiPlus, FiTrash2,
     FiX, FiMinimize2, FiAward,
     FiPlusCircle, FiCheckCircle
 } from 'react-icons/fi';
@@ -285,6 +285,24 @@ export const LiveWorkoutModal: React.FC<LiveWorkoutModalProps> = ({
         setShowAddExModal(false);
     };
 
+    // Remove exercise group from workout
+    const handleRemoveExerciseGroup = async (groupIndex: number) => {
+        const group = exerciseGroups[groupIndex];
+        if (!confirm(`Remove ${group.exercise_name} from this workout?`)) return;
+
+        for (const set of group.sets) {
+            if (set.id) {
+                try {
+                    await api.delete(`/api/gym/sets?id=${set.id}`);
+                } catch {
+                    // ignore
+                }
+            }
+        }
+
+        setExerciseGroups(prev => prev.filter((_, idx) => idx !== groupIndex));
+    };
+
     // 8. Finish workout
     const handleFinishWorkout = async () => {
         try {
@@ -419,6 +437,14 @@ export const LiveWorkoutModal: React.FC<LiveWorkoutModalProps> = ({
                                             className="text-[11px] font-bold text-slate-500 hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors flex items-center gap-1"
                                         >
                                             <FiClock size={12} /> 90s Rest
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveExerciseGroup(gIdx)}
+                                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                                            title="Remove Movement from this workout"
+                                        >
+                                            <FiTrash2 size={13} />
                                         </button>
                                     </div>
                                 </div>
