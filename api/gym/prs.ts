@@ -50,16 +50,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const weight = Number(s.weight_kg);
 
             if (!prMap.has(exId)) {
-                const dateAchieved = s.gym_workouts?.workout_date || s.completed_at?.split('T')[0] || s.created_at?.split('T')[0];
+                const rawWorkout: any = s.gym_workouts;
+                const workout = Array.isArray(rawWorkout) ? rawWorkout[0] : rawWorkout;
+                const rawExercise: any = s.gym_exercises;
+                const exercise = Array.isArray(rawExercise) ? rawExercise[0] : rawExercise;
+
+                const dateAchieved = workout?.workout_date || s.completed_at?.split('T')[0] || s.created_at?.split('T')[0];
                 prMap.set(exId, {
                     exercise_id: exId,
-                    exercise_name: s.gym_exercises?.name || 'Exercise',
-                    target_muscle: s.gym_exercises?.target_muscle || 'other',
-                    equipment: s.gym_exercises?.equipment || 'other',
+                    exercise_name: exercise?.name || 'Exercise',
+                    target_muscle: exercise?.target_muscle || 'other',
+                    equipment: exercise?.equipment || 'other',
                     max_weight_kg: weight,
                     reps: s.reps,
                     date_achieved: dateAchieved,
-                    workout_name: s.gym_workouts?.name || 'Workout'
+                    workout_name: workout?.name || 'Workout'
                 });
             }
         }

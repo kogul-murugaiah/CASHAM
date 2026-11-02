@@ -58,13 +58,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const sessionMap = new Map<string, any>();
 
         for (const s of (sets || [])) {
-            const workoutId = s.gym_workouts?.id || 'unknown';
-            const workoutDate = s.gym_workouts?.workout_date || s.completed_at?.split('T')[0] || 'Unknown Date';
+            const rawWorkout: any = s.gym_workouts;
+            const workout = Array.isArray(rawWorkout) ? rawWorkout[0] : rawWorkout;
+            const workoutId = workout?.id || 'unknown';
+            const workoutDate = workout?.workout_date || s.completed_at?.split('T')[0] || 'Unknown Date';
 
             if (!sessionMap.has(workoutId)) {
                 sessionMap.set(workoutId, {
                     workout_id: workoutId,
-                    workout_name: s.gym_workouts?.name || 'Workout',
+                    workout_name: workout?.name || 'Workout',
                     workout_date: workoutDate,
                     max_weight_kg: Number(s.weight_kg),
                     total_working_sets: 0,

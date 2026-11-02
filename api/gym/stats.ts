@@ -99,9 +99,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // 5. Recent 5 workouts
         const recentWorkouts = allWorkouts.slice(0, 5).map(w => {
+            const rawRoutine: any = w.gym_routines;
+            const routine = Array.isArray(rawRoutine) ? rawRoutine[0] : rawRoutine;
+
             const exerciseNames = Array.from(new Set(
                 (w.gym_sets || [])
-                    .map((s: any) => s.gym_exercises?.name)
+                    .map((s: any) => {
+                        const rawEx: any = s.gym_exercises;
+                        const ex = Array.isArray(rawEx) ? rawEx[0] : rawEx;
+                        return ex?.name;
+                    })
                     .filter(Boolean)
             ));
 
@@ -110,7 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 name: w.name,
                 workout_date: w.workout_date,
                 duration_minutes: w.duration_minutes,
-                routine_name: w.gym_routines?.name || null,
+                routine_name: routine?.name || null,
                 total_sets: (w.gym_sets || []).filter((s: any) => s.is_completed).length,
                 exercises_summary: exerciseNames.slice(0, 3).join(', ') + (exerciseNames.length > 3 ? ` +${exerciseNames.length - 3} more` : '')
             };

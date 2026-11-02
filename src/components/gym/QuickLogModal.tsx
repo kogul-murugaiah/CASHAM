@@ -711,3 +711,4 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
         </div>
     );
 };
+
