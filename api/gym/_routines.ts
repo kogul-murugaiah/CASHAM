@@ -7,7 +7,7 @@ const cleanRoutineName = (name: string) =>
         .replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[\u2013\u2014\-]\s*/i, '')
         .trim();
 
-// Built-in presets for biceps, triceps, back & biceps, chest & triceps
+// The 7 individual muscle group presets
 const SYNTHETIC_PRESETS: Record<string, any> = {
     'a0000000-0000-0000-0000-000000000004': {
         id: 'a0000000-0000-0000-0000-000000000004',
@@ -102,118 +102,6 @@ const SYNTHETIC_PRESETS: Record<string, any> = {
                 gym_exercises: { id: '50000000-0000-0000-0000-000000000004', name: 'Close-Grip Barbell Bench Press', target_muscle: 'triceps', equipment: 'barbell', is_preset: true }
             }
         ]
-    },
-    'a0000000-0000-0000-0000-000000000008': {
-        id: 'a0000000-0000-0000-0000-000000000008',
-        user_id: null,
-        name: 'Back & Biceps Combo',
-        description: 'Classic pulling split: Heavy deadlifts, vertical lat pulls, horizontal rows and bicep burnout',
-        target_muscle: 'back_biceps',
-        is_preset: true,
-        is_active: true,
-        gym_routine_exercises: [
-            {
-                id: 're-bb-1',
-                order_index: 1,
-                target_sets: 4,
-                target_reps: 6,
-                rest_seconds: 120,
-                notes: 'Heavy compound pull sets',
-                gym_exercises: { id: '20000000-0000-0000-0000-000000000001', name: 'Barbell Conventional Deadlift', target_muscle: 'back', equipment: 'barbell', is_preset: true }
-            },
-            {
-                id: 're-bb-2',
-                order_index: 2,
-                target_sets: 4,
-                target_reps: 10,
-                rest_seconds: 90,
-                notes: 'Drive elbows down to hips',
-                gym_exercises: { id: '20000000-0000-0000-0000-000000000002', name: 'Lat Pulldown', target_muscle: 'back', equipment: 'cable', is_preset: true }
-            },
-            {
-                id: 're-bb-3',
-                order_index: 3,
-                target_sets: 3,
-                target_reps: 12,
-                rest_seconds: 75,
-                notes: 'Squeeze shoulder blades together',
-                gym_exercises: { id: '20000000-0000-0000-0000-000000000004', name: 'Seated Cable Row', target_muscle: 'back', equipment: 'cable', is_preset: true }
-            },
-            {
-                id: 're-bb-4',
-                order_index: 4,
-                target_sets: 3,
-                target_reps: 10,
-                rest_seconds: 60,
-                notes: 'Strict curls without swinging',
-                gym_exercises: { id: '40000000-0000-0000-0000-000000000001', name: 'Barbell Bicep Curl', target_muscle: 'biceps', equipment: 'barbell', is_preset: true }
-            },
-            {
-                id: 're-bb-5',
-                order_index: 5,
-                target_sets: 3,
-                target_reps: 12,
-                rest_seconds: 60,
-                notes: 'Hammer pump burnout',
-                gym_exercises: { id: '40000000-0000-0000-0000-000000000003', name: 'Dumbbell Hammer Curl', target_muscle: 'biceps', equipment: 'dumbbell', is_preset: true }
-            }
-        ]
-    },
-    'a0000000-0000-0000-0000-000000000009': {
-        id: 'a0000000-0000-0000-0000-000000000009',
-        user_id: null,
-        name: 'Chest & Triceps Combo',
-        description: 'Classic pushing split: Bench pressing, incline dumbbell work, chest flyes and tricep lockouts',
-        target_muscle: 'chest_triceps',
-        is_preset: true,
-        is_active: true,
-        gym_routine_exercises: [
-            {
-                id: 're-ct-1',
-                order_index: 1,
-                target_sets: 4,
-                target_reps: 8,
-                rest_seconds: 120,
-                notes: 'Flat bench power sets',
-                gym_exercises: { id: '10000000-0000-0000-0000-000000000001', name: 'Barbell Bench Press', target_muscle: 'chest', equipment: 'barbell', is_preset: true }
-            },
-            {
-                id: 're-ct-2',
-                order_index: 2,
-                target_sets: 3,
-                target_reps: 10,
-                rest_seconds: 90,
-                notes: 'Upper chest angle',
-                gym_exercises: { id: '10000000-0000-0000-0000-000000000002', name: 'Incline Dumbbell Press', target_muscle: 'chest', equipment: 'dumbbell', is_preset: true }
-            },
-            {
-                id: 're-ct-3',
-                order_index: 3,
-                target_sets: 3,
-                target_reps: 12,
-                rest_seconds: 60,
-                notes: 'Deep chest stretch and contraction',
-                gym_exercises: { id: '10000000-0000-0000-0000-000000000003', name: 'Cable Chest Fly', target_muscle: 'chest', equipment: 'cable', is_preset: true }
-            },
-            {
-                id: 're-ct-4',
-                order_index: 4,
-                target_sets: 3,
-                target_reps: 12,
-                rest_seconds: 60,
-                notes: 'Tricep pump finisher',
-                gym_exercises: { id: '50000000-0000-0000-0000-000000000001', name: 'Tricep Rope Pushdown', target_muscle: 'triceps', equipment: 'cable', is_preset: true }
-            },
-            {
-                id: 're-ct-5',
-                order_index: 5,
-                target_sets: 3,
-                target_reps: 10,
-                rest_seconds: 75,
-                notes: 'EZ-Bar tricep burnout',
-                gym_exercises: { id: '50000000-0000-0000-0000-000000000002', name: 'EZ-Bar Skull Crushers', target_muscle: 'triceps', equipment: 'barbell', is_preset: true }
-            }
-        ]
     }
 };
 
@@ -223,10 +111,8 @@ const MUSCLE_SORT_ORDER: Record<string, number> = {
     shoulders: 3,
     biceps: 4,
     triceps: 5,
-    back_biceps: 6,
-    chest_triceps: 7,
-    legs: 8,
-    core: 9
+    legs: 6,
+    core: 7
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -330,30 +216,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (error) throw error;
 
-            const existingRoutines = (data || []).map((r: any) => {
+            // Filter and clean routines - exclude any combination presets
+            const existingRoutines: any[] = [];
+
+            for (const r of (data || [])) {
+                // Ignore combination presets (e.g. back_biceps, chest_triceps, or legacy combos)
+                if (r.is_preset && (r.target_muscle?.includes('_') || r.id === 'a0000000-0000-0000-0000-000000000008' || r.id === 'a0000000-0000-0000-0000-000000000009')) {
+                    continue;
+                }
+
                 if (r.gym_routine_exercises) {
                     r.gym_routine_exercises.sort((a: any, b: any) => a.order_index - b.order_index);
                 }
                 const cleaned = cleanRoutineName(r.name);
                 // If this was the legacy combined arms routine, treat as Biceps Blast
                 if (r.id === 'a0000000-0000-0000-0000-000000000004' && cleaned.toLowerCase().includes('arms')) {
-                    return {
+                    existingRoutines.push({
                         ...r,
                         name: 'Biceps Blast',
                         target_muscle: 'biceps',
                         description: 'High-volume bicep isolation: Barbell curls, Incline curls, Hammer curls, and Preacher curls'
-                    };
+                    });
+                } else {
+                    existingRoutines.push({
+                        ...r,
+                        name: cleaned
+                    });
                 }
-                return {
-                    ...r,
-                    name: cleaned
-                };
-            });
+            }
 
-            // Check which presets are represented
+            // Check which 7 individual presets are represented
             const hasTriceps = existingRoutines.some((r: any) => r.target_muscle === 'triceps' || r.id === 'a0000000-0000-0000-0000-000000000007');
-            const hasBackBiceps = existingRoutines.some((r: any) => r.target_muscle === 'back_biceps' || r.id === 'a0000000-0000-0000-0000-000000000008');
-            const hasChestTriceps = existingRoutines.some((r: any) => r.target_muscle === 'chest_triceps' || r.id === 'a0000000-0000-0000-0000-000000000009');
             const hasBiceps = existingRoutines.some((r: any) => r.target_muscle === 'biceps' || r.id === 'a0000000-0000-0000-0000-000000000004');
 
             const allRoutines = [...existingRoutines];
@@ -364,14 +257,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (!hasTriceps) {
                 allRoutines.push(SYNTHETIC_PRESETS['a0000000-0000-0000-0000-000000000007']);
             }
-            if (!hasBackBiceps) {
-                allRoutines.push(SYNTHETIC_PRESETS['a0000000-0000-0000-0000-000000000008']);
-            }
-            if (!hasChestTriceps) {
-                allRoutines.push(SYNTHETIC_PRESETS['a0000000-0000-0000-0000-000000000009']);
-            }
 
-            // Sort routines logically by muscle group, custom routines follow
+            // Sort routines logically by the 7 individual muscle groups:
+            // 1. Chest, 2. Back, 3. Shoulders, 4. Biceps, 5. Triceps, 6. Legs, 7. Core
             allRoutines.sort((a, b) => {
                 const orderA = MUSCLE_SORT_ORDER[a.target_muscle] ?? 50;
                 const orderB = MUSCLE_SORT_ORDER[b.target_muscle] ?? 50;

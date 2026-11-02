@@ -365,8 +365,10 @@ export const GymTracker: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {routines.map((routine) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                    {routines
+                        .filter((r) => !r.is_preset || !r.target_muscle?.includes('_'))
+                        .map((routine) => {
                         return (
                             <div
                                 key={routine.id}

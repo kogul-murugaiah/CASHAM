@@ -25,6 +25,7 @@ interface Routine {
     name: string;
     split_type: string;
     target_muscle: string;
+    is_preset?: boolean;
     exercises?: RoutineExercise[];
 }
 
@@ -450,11 +451,13 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none pr-9"
                                     >
                                         <option value="">-- Choose Muscle Routine (or Custom) --</option>
-                                        {routines.map((r) => (
-                                            <option key={r.id} value={r.id}>
-                                                {cleanRoutineName(r.name)} • {r.target_muscle.replace(/_/g, ' ').toUpperCase()}
-                                            </option>
-                                        ))}
+                                        {routines
+                                            .filter((r) => !r.is_preset || !r.target_muscle?.includes('_'))
+                                            .map((r) => (
+                                                <option key={r.id} value={r.id}>
+                                                    {cleanRoutineName(r.name)} • {r.target_muscle.replace(/_/g, ' ').toUpperCase()}
+                                                </option>
+                                            ))}
                                     </select>
                                     <FiChevronDown className="absolute right-3.5 top-3.5 text-slate-400 pointer-events-none" size={16} />
                                 </div>

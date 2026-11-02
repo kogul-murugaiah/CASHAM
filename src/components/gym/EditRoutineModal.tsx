@@ -32,22 +32,11 @@ interface EditRoutineModalProps {
 const MUSCLE_OPTIONS = [
     { value: 'chest', label: 'Chest' },
     { value: 'back', label: 'Back & Lats' },
-    { value: 'shoulders', label: 'Shoulders (Delts)' },
+    { value: 'shoulders', label: 'Shoulders' },
     { value: 'biceps', label: 'Biceps' },
     { value: 'triceps', label: 'Triceps' },
-    { value: 'arms', label: 'Arms (Bi & Tri)' },
     { value: 'legs', label: 'Legs & Calves' },
     { value: 'core', label: 'Core / Abs' },
-    { value: 'cardio', label: 'Cardio' },
-    { value: 'chest_triceps', label: 'Chest & Triceps' },
-    { value: 'back_biceps', label: 'Back & Biceps' },
-    { value: 'shoulders_arms', label: 'Shoulders & Arms' },
-    { value: 'legs_core', label: 'Legs & Core' },
-    { value: 'push', label: 'Push (Chest/Delts/Tri)' },
-    { value: 'pull', label: 'Pull (Back/Biceps)' },
-    { value: 'upper_body', label: 'Upper Body' },
-    { value: 'lower_body', label: 'Lower Body' },
-    { value: 'full_body', label: 'Full Body' },
 ];
 
 const DAYS_OF_WEEK = [
