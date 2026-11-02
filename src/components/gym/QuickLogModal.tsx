@@ -329,17 +329,17 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
             {/* PR Celebration Overlay */}
             {prResults && (
-                <div className="relative w-full max-w-md bg-slate-900 border border-amber-500/30 rounded-3xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 z-60">
+                <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-amber-500/30 rounded-3xl p-6 shadow-2xl text-center animate-in fade-in zoom-in-95 z-60">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
                         <FiAward className="text-slate-950 text-3xl" />
                     </div>
-                    <span className="text-xs uppercase font-extrabold tracking-widest text-amber-400">
+                    <span className="text-xs uppercase font-extrabold tracking-widest text-amber-500 dark:text-amber-400">
                         New Record Achieved!
                     </span>
-                    <h3 className="text-xl font-black text-white mt-1 mb-2">
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white mt-1 mb-2">
                         Personal Record Unlocked
                     </h3>
-                    <p className="text-xs text-slate-400 mb-5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
                         Your past workout included new all-time high max weights:
                     </p>
 
@@ -347,15 +347,15 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                         {prResults.map((pr, idx) => (
                             <div
                                 key={idx}
-                                className="flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-amber-500/20 text-left"
+                                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-amber-500/20 text-left"
                             >
                                 <div>
-                                    <p className="text-sm font-bold text-white">{pr.exercise_name}</p>
-                                    <p className="text-xs text-amber-300 font-semibold">
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white">{pr.exercise_name}</p>
+                                    <p className="text-xs text-amber-600 dark:text-amber-300 font-semibold">
                                         New PR: {pr.weight_kg} KG ({pr.reps} reps)
                                     </p>
                                 </div>
-                                <span className="text-xs px-2.5 py-1 bg-amber-500/20 text-amber-300 font-bold rounded-lg">
+                                <span className="text-xs px-2.5 py-1 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold rounded-lg">
                                     +PR
                                 </span>
                             </div>
@@ -668,15 +668,15 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
 
                     {/* Nested Exercise Picker Modal */}
                     {showExPicker && (
-                        <div className="absolute inset-0 z-30 bg-slate-900/90 backdrop-blur-sm p-4 flex flex-col">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                                <h4 className="text-sm font-bold text-white">Select Exercise</h4>
+                        <div className="absolute inset-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 flex flex-col">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Select Exercise</h4>
                                 <button
                                     onClick={() => {
                                         setShowExPicker(false);
                                         setSearchEx('');
                                     }}
-                                    className="text-slate-400 hover:text-white"
+                                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg transition-colors"
                                 >
                                     <FiX size={18} />
                                 </button>
@@ -688,7 +688,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                                     value={searchEx}
                                     onChange={(e) => setSearchEx(e.target.value)}
                                     placeholder="Search by exercise or muscle (e.g. Chest, Incline)..."
-                                    className="w-full px-3.5 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     autoFocus
                                 />
                             </div>
@@ -696,13 +696,13 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
                                 {filteredExercises.length === 0 ? (
                                     <div className="py-8 text-center flex flex-col items-center justify-center space-y-3">
-                                        <p className="text-sm text-slate-400">
-                                            No exercise matching "<span className="text-white font-semibold">{searchEx}</span>"
+                                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                                            No exercise matching "<span className="text-slate-900 dark:text-white font-semibold">{searchEx}</span>"
                                         </p>
                                         <button
                                             type="button"
                                             onClick={() => setShowCustomModal(true)}
-                                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5"
+                                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
                                         >
                                             <FiPlus size={14} /> Add "{searchEx || 'Custom Exercise'}"
                                         </button>
@@ -714,17 +714,17 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                                                 key={ex.id}
                                                 type="button"
                                                 onClick={() => handleAddExercise(ex)}
-                                                className="w-full p-2.5 rounded-xl bg-slate-800/80 hover:bg-emerald-500/10 border border-slate-700/60 hover:border-emerald-500/30 text-left flex items-center justify-between transition-colors group"
+                                                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 border border-slate-200 dark:border-slate-700/60 hover:border-emerald-500/40 text-left flex items-center justify-between transition-colors group"
                                             >
                                                 <div>
-                                                    <p className="text-xs font-bold text-white group-hover:text-emerald-400">
+                                                    <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                                                         {ex.name}
                                                     </p>
-                                                    <p className="text-[10px] text-slate-400 capitalize">
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">
                                                         {ex.target_muscle} • {ex.equipment}
                                                     </p>
                                                 </div>
-                                                <span className="text-xs font-bold text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     + Select
                                                 </span>
                                             </button>
@@ -732,7 +732,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => setShowCustomModal(true)}
-                                            className="w-full mt-2 py-2 border border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors flex items-center justify-center gap-1.5"
+                                            className="w-full mt-2 py-2 border border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500/50 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center justify-center gap-1.5"
                                         >
                                             <FiPlus size={13} /> Can't find it? Add custom exercise
                                         </button>

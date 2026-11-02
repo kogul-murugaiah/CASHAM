@@ -578,7 +578,7 @@ export const LiveWorkoutModal: React.FC<LiveWorkoutModalProps> = ({
                             <button
                                 type="button"
                                 onClick={() => setShowAddExModal(false)}
-                                className="text-slate-400 hover:text-white"
+                                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg transition-colors"
                             >
                                 <FiX size={18} />
                             </button>
@@ -589,19 +589,19 @@ export const LiveWorkoutModal: React.FC<LiveWorkoutModalProps> = ({
                             placeholder="Search exercises..."
                             value={searchEx}
                             onChange={(e) => setSearchEx(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white mb-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-700/50 text-slate-900 dark:text-white placeholder:text-slate-400 mb-3 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         />
 
                         <div className="flex-1 overflow-y-auto space-y-1.5 divide-y divide-slate-100 dark:divide-white/5">
                             {allExercises.filter(e => e.name.toLowerCase().includes(searchEx.toLowerCase())).length === 0 ? (
                                 <div className="py-8 text-center flex flex-col items-center justify-center space-y-3">
-                                    <p className="text-sm text-slate-400">
-                                        No movement matching "<span className="text-white font-semibold">{searchEx}</span>"
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        No movement matching "<span className="text-slate-900 dark:text-white font-semibold">{searchEx}</span>"
                                     </p>
                                     <button
                                         type="button"
                                         onClick={() => setShowCustomModal(true)}
-                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5"
+                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold rounded-xl transition-all inline-flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
                                     >
                                         <FiPlus size={14} /> Add "{searchEx || 'Custom Exercise'}"
                                     </button>
