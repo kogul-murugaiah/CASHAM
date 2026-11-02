@@ -16,13 +16,16 @@ import { CustomExerciseModal } from '../components/gym/CustomExerciseModal';
 import { EditRoutineModal } from '../components/gym/EditRoutineModal';
 
 interface GymStats {
-    month: string;
-    total_workouts: number;
-    total_sets: number;
-    distinct_gym_days: number;
-    attendance_dates: string[];
-    all_time_prs_count: number;
-    current_week_workouts: number;
+    month?: string;
+    total_workouts?: number;
+    workouts_this_month?: number;
+    total_sets?: number;
+    total_working_sets?: number;
+    distinct_gym_days?: number;
+    total_attendance_days?: number;
+    attendance_dates?: string[];
+    all_time_prs_count?: number;
+    current_week_workouts?: number;
     muscle_volume: {
         chest: number;
         back: number;
@@ -33,6 +36,7 @@ interface GymStats {
         legs: number;
         core: number;
     };
+    recent_workouts?: any[];
 }
 
 const cleanRoutineName = (name?: string) =>
@@ -85,10 +89,14 @@ export const GymTracker: React.FC = () => {
 
             setInProgressWorkout(inProgressRes || null);
             setStats(statsRes || null);
-            setPrs(Array.isArray(prsRes) ? prsRes : []);
+            const loadedPrs = Array.isArray(prsRes) ? prsRes : (prsRes?.prs || []);
+            setPrs(loadedPrs);
             setRoutines(Array.isArray(routinesRes) ? routinesRes : []);
             setAllExercises(Array.isArray(exercisesRes) ? exercisesRes : []);
-            setRecentWorkouts(Array.isArray(workoutsRes) ? workoutsRes : []);
+            const loadedWorkouts = Array.isArray(workoutsRes?.workouts)
+                ? workoutsRes.workouts
+                : (Array.isArray(workoutsRes) ? workoutsRes : []);
+            setRecentWorkouts(loadedWorkouts);
         } catch (err) {
             console.error('Failed to load gym data:', err);
         } finally {
@@ -278,7 +286,7 @@ export const GymTracker: React.FC = () => {
                     <div>
                         <div className="flex items-baseline gap-1.5">
                             <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                                {stats?.distinct_gym_days ?? 0}
+                                {stats?.distinct_gym_days ?? stats?.total_attendance_days ?? stats?.workouts_this_month ?? 0}
                             </span>
                             <span className="text-xs text-slate-400 font-semibold">days</span>
                         </div>
@@ -320,7 +328,7 @@ export const GymTracker: React.FC = () => {
                     <div>
                         <div className="flex items-baseline gap-1.5">
                             <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                                {stats?.total_sets ?? 0}
+                                {stats?.total_working_sets ?? stats?.total_sets ?? 0}
                             </span>
                             <span className="text-xs text-slate-400 font-semibold">sets</span>
                         </div>
@@ -430,7 +438,7 @@ export const GymTracker: React.FC = () => {
                                     </p>
                                 </div>
                                 <span className="text-xs font-bold text-slate-400">
-                                    {stats.total_sets} Sets Total
+                                    {stats.total_working_sets ?? stats.total_sets ?? 0} Sets Total
                                 </span>
                             </div>
 

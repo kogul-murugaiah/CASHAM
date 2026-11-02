@@ -63,8 +63,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // 3. Workouts this month
         const thisMonthWorkouts = allWorkouts.filter(w => w.workout_date?.startsWith(monthPrefix));
+        const thisMonthDateSet = new Set<string>();
+        thisMonthWorkouts.forEach(w => {
+            if (w.workout_date) thisMonthDateSet.add(w.workout_date);
+        });
 
-        // 4. Muscle distribution (Working sets per target muscle)
+        // 4. Current week workouts (Monday to Sunday)
+        const currentDay = now.getDay();
+        const diffToMonday = (currentDay + 6) % 7;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - diffToMonday);
+        const mondayStr = monday.toISOString().split('T')[0];
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const sundayStr = sunday.toISOString().split('T')[0];
+
+        const currentWeekWorkouts = allWorkouts.filter(w =>
+            w.workout_date && w.workout_date >= mondayStr && w.workout_date <= sundayStr
+        ).length;
+
+        // 5. Muscle distribution (Working sets per target muscle)
         const muscleCounts: Record<string, number> = {
             chest: 0,
             back: 0,
@@ -84,7 +103,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         totalWorkingSets++;
                         const rawEx: any = s.gym_exercises;
                         const ex = Array.isArray(rawEx) ? rawEx[0] : rawEx;
-                        const muscle = ex?.target_muscle?.toLowerCase();
+                        const rawMuscle = (ex?.target_muscle || '').toLowerCase().trim();
+
+                        let muscle = rawMuscle;
+                        if (muscle === 'lats' || muscle === 'traps') muscle = 'back';
+                        if (muscle === 'abs' || muscle === 'obliques' || muscle === 'cardio') muscle = 'core';
+                        if (muscle === 'quads' || muscle === 'hamstrings' || muscle === 'glutes' || muscle === 'calves') muscle = 'legs';
+                        if (muscle === 'forearms') muscle = 'biceps';
+
                         if (muscle && muscleCounts[muscle] !== undefined) {
                             muscleCounts[muscle]++;
                         }
@@ -99,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             percentage: totalWorkingSets > 0 ? Math.round((count / totalWorkingSets) * 100) : 0
         })).sort((a, b) => b.working_sets - a.working_sets);
 
-        // 5. Recent 5 workouts
+        // 6. Recent 5 workouts
         const recentWorkouts = allWorkouts.slice(0, 5).map(w => {
             const rawRoutine: any = w.gym_routines;
             const routine = Array.isArray(rawRoutine) ? rawRoutine[0] : rawRoutine;
@@ -127,10 +153,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         return res.status(200).json({
             attendance_dates: attendanceDates,
+            distinct_gym_days: thisMonthDateSet.size || thisMonthWorkouts.length,
             total_attendance_days: attendanceDates.length,
             total_workouts: allWorkouts.length,
             workouts_this_month: thisMonthWorkouts.length,
+            total_sets: totalWorkingSets,
             total_working_sets: totalWorkingSets,
+            current_week_workouts: currentWeekWorkouts,
             muscle_distribution: muscleDistribution,
             muscle_volume: {
                 chest: muscleCounts.chest,
@@ -149,4 +178,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: error.message });
     }
 }
-

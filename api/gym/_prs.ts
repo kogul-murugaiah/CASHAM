@@ -55,11 +55,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const rawExercise: any = s.gym_exercises;
                 const exercise = Array.isArray(rawExercise) ? rawExercise[0] : rawExercise;
 
+                const rawMuscle = (exercise?.target_muscle || 'other').toLowerCase().trim();
+                let muscle = rawMuscle;
+                if (muscle === 'lats' || muscle === 'traps') muscle = 'back';
+                if (muscle === 'abs' || muscle === 'obliques' || muscle === 'cardio') muscle = 'core';
+                if (muscle === 'quads' || muscle === 'hamstrings' || muscle === 'glutes' || muscle === 'calves') muscle = 'legs';
+                if (muscle === 'forearms') muscle = 'biceps';
+
                 const dateAchieved = workout?.workout_date || s.completed_at?.split('T')[0] || s.created_at?.split('T')[0];
                 prMap.set(exId, {
                     exercise_id: exId,
                     exercise_name: exercise?.name || 'Exercise',
-                    target_muscle: exercise?.target_muscle || 'other',
+                    target_muscle: muscle,
                     equipment: exercise?.equipment || 'other',
                     max_weight_kg: weight,
                     reps: s.reps,
@@ -80,4 +87,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: error.message });
     }
 }
-
