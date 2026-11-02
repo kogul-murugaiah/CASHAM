@@ -453,3 +453,4 @@ BEGIN
         (r_core, ex_woodchoppers, 2, 3, 15, 45, 'High to low rotational power for obliques.'),
         (r_core, ex_plank, 3, 3, 60, 60, 'Hold tight for 60 seconds per set.');
 END $$;
+
