@@ -82,7 +82,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 w.gym_sets.forEach((s: any) => {
                     if (s.is_completed && !s.is_warmup) {
                         totalWorkingSets++;
-                        const muscle = s.gym_exercises?.target_muscle?.toLowerCase();
+                        const rawEx: any = s.gym_exercises;
+                        const ex = Array.isArray(rawEx) ? rawEx[0] : rawEx;
+                        const muscle = ex?.target_muscle?.toLowerCase();
                         if (muscle && muscleCounts[muscle] !== undefined) {
                             muscleCounts[muscle]++;
                         }

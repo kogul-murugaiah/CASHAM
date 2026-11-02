@@ -50,6 +50,9 @@ interface QuickLogModalProps {
     initialRoutine?: Routine | null;
 }
 
+const cleanRoutineName = (name?: string) =>
+    (name || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-—–]\s*/i, '');
+
 export const QuickLogModal: React.FC<QuickLogModalProps> = ({
     onClose,
     onFinished,
@@ -60,7 +63,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
     const todayStr = new Date().toISOString().split('T')[0];
 
     const [workoutDate, setWorkoutDate] = useState(todayStr);
-    const [workoutName, setWorkoutName] = useState(initialRoutine?.name || 'Quick Workout');
+    const [workoutName, setWorkoutName] = useState(initialRoutine ? cleanRoutineName(initialRoutine.name) : 'Workout Session');
     const [selectedRoutineId, setSelectedRoutineId] = useState(initialRoutine?.id || '');
     const [durationMinutes, setDurationMinutes] = useState<string>('60');
     const [notes, setNotes] = useState('');
@@ -92,7 +95,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                 })),
             }));
             setExerciseBlocks(blocks);
-            setWorkoutName(initialRoutine.name);
+            setWorkoutName(cleanRoutineName(initialRoutine.name));
             setSelectedRoutineId(initialRoutine.id);
         }
     }, [initialRoutine]);
@@ -103,7 +106,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
 
         const found = routines.find((r) => r.id === routineId);
         if (found) {
-            setWorkoutName(found.name);
+            setWorkoutName(cleanRoutineName(found.name));
             if (found.exercises && found.exercises.length > 0) {
                 const blocks: ExerciseBlock[] = found.exercises.map((rx) => ({
                     exercise_id: rx.exercise_id,
@@ -436,7 +439,7 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
 
                             <div className="sm:col-span-2">
                                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                                    Bro Split Routine Preset
+                                    Training Routine (Muscle Focus or Custom)
                                 </label>
                                 <div className="relative">
                                     <select
@@ -444,10 +447,10 @@ export const QuickLogModal: React.FC<QuickLogModalProps> = ({
                                         onChange={(e) => handleRoutineChange(e.target.value)}
                                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none pr-9"
                                     >
-                                        <option value="">-- Choose Bro Split (or Custom) --</option>
+                                        <option value="">-- Choose Muscle Routine (or Custom) --</option>
                                         {routines.map((r) => (
                                             <option key={r.id} value={r.id}>
-                                                {r.name} ({r.target_muscle.toUpperCase()})
+                                                {cleanRoutineName(r.name)} • {r.target_muscle.replace(/_/g, ' ').toUpperCase()}
                                             </option>
                                         ))}
                                     </select>

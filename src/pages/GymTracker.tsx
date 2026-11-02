@@ -33,6 +33,9 @@ interface GymStats {
     };
 }
 
+const cleanRoutineName = (name?: string) =>
+    (name || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-—–]\s*/i, '');
+
 export const GymTracker: React.FC = () => {
     // Core data state
     const [loading, setLoading] = useState(true);
@@ -52,9 +55,6 @@ export const GymTracker: React.FC = () => {
     const [selectedRoutineForDetails, setSelectedRoutineForDetails] = useState<any | null>(null);
     const [selectedRoutineForEdit, setSelectedRoutineForEdit] = useState<any | null>(null);
     const [showCustomExModal, setShowCustomExModal] = useState(false);
-
-    // Today's day of week: 0 = Sunday, 1 = Monday, 2 = Tuesday, etc.
-    const todayDayOfWeek = new Date().getDay();
 
     // ─── Fetch All Hub Data ───────────────────────────────────────
     const loadDashboardData = useCallback(async (isRefresh = false) => {
@@ -101,7 +101,7 @@ export const GymTracker: React.FC = () => {
     const handleStartLiveWorkout = async (routine?: any) => {
         try {
             const payload: any = {
-                name: routine ? routine.name : `Workout (${new Date().toLocaleDateString('en-US', { weekday: 'short' })})`,
+                name: routine ? cleanRoutineName(routine.name) : 'Workout Session',
                 split_type: routine ? routine.split_type : 'custom',
                 routine_id: routine ? routine.id : null,
                 workout_date: new Date().toISOString().split('T')[0],
@@ -348,64 +348,46 @@ export const GymTracker: React.FC = () => {
                 </div>
             </div>
 
-            {/* ─── Weekly Bro Split Routines Row ────────────────────── */}
+            {/* ─── Muscle Group Routines Row ──────────────────────── */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                            Bro Split Weekly Schedule
+                            Training Routines by Muscle Group
                         </h2>
                         <p className="text-xs text-slate-400">
-                            Pre-configured 5-day hyper-focused split + Saturday Core
+                            Customizable splits (Bro Split, PPL, Upper/Lower) — train any muscle on any day without restrictions
                         </p>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {routines.map((routine) => {
-                        const isToday = routine.day_of_week === todayDayOfWeek;
-                        const dayInitials = ['', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][routine.day_of_week] || 'SPLIT';
-
                         return (
                             <div
                                 key={routine.id}
                                 onClick={() => setSelectedRoutineForDetails(routine)}
-                                className={`p-4 rounded-2xl border text-left cursor-pointer transition-all hover:scale-102 flex flex-col justify-between relative group ${
-                                    isToday
-                                        ? 'bg-gradient-to-b from-emerald-500/15 to-transparent border-emerald-500/50 shadow-lg shadow-emerald-500/10'
-                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                                }`}
+                                className="p-4 rounded-2xl border text-left cursor-pointer transition-all hover:scale-102 flex flex-col justify-between relative group bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 shadow-sm"
                             >
-                                {isToday && (
-                                    <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950 shadow-sm">
-                                        TODAY
-                                    </span>
-                                )}
-
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[11px] font-black tracking-widest text-slate-400">
-                                            {dayInitials}
+                                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                            {routine.target_muscle?.replace(/_/g, ' ') || 'MUSCLE'}
                                         </span>
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                                                {routine.target_muscle?.replace(/_/g, ' ') || 'SPLIT'}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedRoutineForEdit(routine);
-                                                }}
-                                                className="p-1 rounded-md text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
-                                                title="Edit / Customize Split"
-                                            >
-                                                <FiEdit3 size={12} />
-                                            </button>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedRoutineForEdit(routine);
+                                            }}
+                                            className="p-1 rounded-md text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                                            title="Edit Routine"
+                                        >
+                                            <FiEdit3 size={13} />
+                                        </button>
                                     </div>
                                     <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">
-                                        {routine.name.replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\s*-\s*/, '')}
+                                        {cleanRoutineName(routine.name)}
                                     </h3>
                                     <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
                                         {routine.description || 'Targeted hypertrophy session'}
@@ -413,7 +395,7 @@ export const GymTracker: React.FC = () => {
                                 </div>
 
                                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                    <span>View Split</span>
+                                    <span>View Workout</span>
                                     <FiChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                                 </div>
                             </div>

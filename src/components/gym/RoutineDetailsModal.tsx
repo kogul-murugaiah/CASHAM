@@ -36,6 +36,9 @@ interface RoutineDetailsModalProps {
     onEdit: (routine: Routine) => void;
 }
 
+const cleanRoutineName = (name?: string) =>
+    (name || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*[-—–]\s*/i, '');
+
 export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
     routine,
     onClose,
@@ -84,11 +87,6 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
         };
     }, [routine]);
 
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const dayLabel = fullRoutine.day_of_week !== undefined && fullRoutine.day_of_week !== null
-        ? dayNames[fullRoutine.day_of_week]
-        : null;
-
     const exercises = fullRoutine.exercises || [];
 
     return (
@@ -114,27 +112,22 @@ export const RoutineDetailsModal: React.FC<RoutineDetailsModalProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2 mb-2">
-                        {dayLabel && (
-                            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                                {dayLabel}
-                            </span>
-                        )}
                         <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                            {fullRoutine.target_muscle?.replace(/_/g, ' ') || 'SPLIT'}
+                            {fullRoutine.target_muscle?.replace(/_/g, ' ') || 'MUSCLE'}
                         </span>
                         {fullRoutine.is_preset ? (
                             <span className="text-[10px] font-semibold text-slate-400">
-                                Bro Split Preset
+                                Preset Routine
                             </span>
                         ) : (
                             <span className="text-[10px] font-semibold text-emerald-400">
-                                Custom Split
+                                Custom Routine
                             </span>
                         )}
                     </div>
 
                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                        {fullRoutine.name}
+                        {cleanRoutineName(fullRoutine.name)}
                     </h2>
                     {fullRoutine.description && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md">
