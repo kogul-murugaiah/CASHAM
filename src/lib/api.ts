@@ -48,9 +48,9 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 }
 
 export const api = {
-    get: (url: string) => fetchWithAuth(url),
-    post: (url: string, data?: any) => fetchWithAuth(url, { method: 'POST', body: JSON.stringify(data) }),
-    put: (url: string, data?: any) => fetchWithAuth(url, { method: 'PUT', body: JSON.stringify(data) }),
-    patch: (url: string, data?: any) => fetchWithAuth(url, { method: 'PATCH', body: JSON.stringify(data) }),
-    delete: (url: string) => fetchWithAuth(url, { method: 'DELETE' }),
+    get: <T = any>(url: string): Promise<T> => fetchWithAuth(url),
+    post: <T = any>(url: string, data?: any): Promise<T> => fetchWithAuth(url, { method: 'POST', body: JSON.stringify(data) }),
+    put: <T = any>(url: string, data?: any): Promise<T> => fetchWithAuth(url, { method: 'PUT', body: JSON.stringify(data) }),
+    patch: <T = any>(url: string, data?: any): Promise<T> => fetchWithAuth(url, { method: 'PATCH', body: JSON.stringify(data) }),
+    delete: <T = any>(url: string): Promise<T> => fetchWithAuth(url, { method: 'DELETE' }),
 };

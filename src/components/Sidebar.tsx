@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { api } from "../lib/api";
 import Logo from "./Logo";
@@ -6,7 +6,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
-    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard, FiBriefcase, FiCheckSquare
+    FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard, FiBriefcase, FiCheckSquare,
+    FiActivity
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -15,6 +16,7 @@ const NAV_GROUPS = [
         items: [
             { to: "/dashboard", icon: FiHome, label: "Dashboard" },
             { to: "/tasks", icon: FiCheckSquare, label: "Task Manager" },
+            { to: "/gym", icon: FiActivity, label: "Gym Tracker" },
         ],
     },
     {

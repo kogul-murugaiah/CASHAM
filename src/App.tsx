@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Expense Tracker Application
  * Copyright (c) 2026 kogulmurugaiah
  * All rights reserved.
@@ -39,6 +39,7 @@ const Ledger = lazy(() => import('./pages/Ledger'));
 const RentTracker = lazy(() => import('./pages/RentTracker'));
 const FundTracker = lazy(() => import('./pages/FundTracker'));
 const TaskTracker = lazy(() => import('./pages/TaskTracker'));
+const GymTracker = lazy(() => import('./pages/GymTracker'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 
@@ -110,6 +111,7 @@ function App() {
                             <Route path="/rent-tracker" element={<RentTracker />} />
                             <Route path="/fund-tracker" element={<FundTracker />} />
                             <Route path="/tasks" element={<TaskTracker />} />
+                            <Route path="/gym" element={<GymTracker />} />
                             <Route path="/add-investment" element={<AddInvestment />} />
                             <Route path="/portfolio" element={<Portfolio />} />
                             <Route path="/budget-planner" element={<BudgetPlanner />} />
