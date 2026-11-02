@@ -1,12 +1,12 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import exercisesHandler from './exercises.js';
-import routinesHandler from './routines.js';
-import workoutsHandler from './workouts.js';
-import setsHandler from './sets.js';
-import prsHandler from './prs.js';
-import statsHandler from './stats.js';
-import historyHandler from './history.js';
-import settingsHandler from './settings.js';
+import exercisesHandler from './_exercises.js';
+import routinesHandler from './_routines.js';
+import workoutsHandler from './_workouts.js';
+import setsHandler from './_sets.js';
+import prsHandler from './_prs.js';
+import statsHandler from './_stats.js';
+import historyHandler from './_history.js';
+import settingsHandler from './_settings.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const resource = req.query.resource as string;
@@ -32,4 +32,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(404).json({ error: `Gym resource /api/gym/${resource} not found` });
     }
 }
-
