@@ -42,6 +42,8 @@ const TaskTracker = lazy(() => import('./pages/TaskTracker'));
 const GymTracker = lazy(() => import('./pages/GymTracker'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const Documentation = lazy(() => import('./pages/Documentation'));
+const ApiReference = lazy(() => import('./pages/ApiReference'));
 
 // Simple mobile-friendly fallback loader
 const PageLoader = () => (
@@ -86,6 +88,10 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/privacy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
               <Route path="/terms" element={<Suspense fallback={<PageLoader />}><TermsOfService /></Suspense>} />
+              <Route path="/docs" element={<Suspense fallback={<PageLoader />}><Documentation /></Suspense>} />
+              <Route path="/documentation" element={<Suspense fallback={<PageLoader />}><Documentation /></Suspense>} />
+              <Route path="/api-docs" element={<Suspense fallback={<PageLoader />}><ApiReference /></Suspense>} />
+              <Route path="/api-reference" element={<Suspense fallback={<PageLoader />}><ApiReference /></Suspense>} />
 
               <Route
                 path="/*"

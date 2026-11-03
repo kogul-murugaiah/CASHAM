@@ -45,6 +45,10 @@ const LandingPage = () => {
         }
     };
 
+    const supportMailto = `mailto:koguldev7@gmail.com?subject=${encodeURIComponent('[CASHAM Support] Inquiry / Feedback')}&body=${encodeURIComponent(
+        'Hi Kogul,\n\nI am reaching out regarding CASHAM with the following inquiry / feedback:\n\n[Please write your message here]\n\n---\nApp Version: 1.2.0\nPlatform: CASHAM Life & Finance OS\n'
+    )}`;
+
     return (
         <div className="landing-page min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-emerald-500/30 transition-colors duration-200">
             {/* Navbar */}
@@ -70,18 +74,18 @@ const LandingPage = () => {
                             >
                                 Platform Modules
                             </button>
-                            <button
-                                onClick={() => scrollToSection('why-free')}
-                                className="text-sm font-semibold text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
+                            <Link
+                                to="/docs"
+                                className="text-sm font-semibold text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-white transition-colors"
                             >
-                                100% Free
-                            </button>
-                            <button
-                                onClick={() => scrollToSection('footer')}
-                                className="text-sm font-semibold text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
+                                Documentation
+                            </Link>
+                            <a
+                                href={supportMailto}
+                                className="text-sm font-semibold text-slate-600 hover:text-emerald-600 dark:text-slate-300 dark:hover:text-white transition-colors"
                             >
-                                About
-                            </button>
+                                Contact Support
+                            </a>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -579,14 +583,25 @@ const LandingPage = () => {
                             </ul>
                         </div>
 
-                        {/* Platform Resources */}
+                        {/* Resources Column */}
                         <div>
-                            <h4 className="font-bold text-slate-900 dark:text-white mb-5 uppercase text-xs tracking-wider">Features</h4>
-                            <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
-                                <li>Credit Cards & Advances</li>
-                                <li>Gym & Muscle Tracker</li>
-                                <li>Portfolio & Net Worth</li>
-                                <li>Rent & Recurring Subscriptions</li>
+                            <h4 className="font-bold text-slate-900 dark:text-white mb-5 uppercase text-xs tracking-wider">Resources</h4>
+                            <ul className="space-y-3 text-sm">
+                                <li>
+                                    <Link to="/docs" className="text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors">
+                                        Documentation
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/api-docs" className="text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors">
+                                        API Reference
+                                    </Link>
+                                </li>
+                                <li>
+                                    <a href={supportMailto} className="text-slate-600 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors">
+                                        Contact Support
+                                    </a>
+                                </li>
                             </ul>
                         </div>
 
