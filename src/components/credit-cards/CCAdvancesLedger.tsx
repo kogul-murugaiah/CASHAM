@@ -1,5 +1,5 @@
 import React from "react";
-import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo } from "react-icons/fi";
+import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../../lib/formatters";
 import type { CreditCard, CCAdvance, CurrencyStyle } from "./types";
 
@@ -16,6 +16,7 @@ interface CCAdvancesLedgerProps {
   onOpenAdvanceModal: () => void;
   onToggleReceived: (advance: CCAdvance) => void;
   onDeleteAdvance: (id: string, personName: string) => void;
+  onMoveToExpense?: (advance: CCAdvance) => void;
   currencyStyle?: CurrencyStyle;
   isDark: boolean;
 }
@@ -33,6 +34,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
   onOpenAdvanceModal,
   onToggleReceived,
   onDeleteAdvance,
+  onMoveToExpense,
   currencyStyle,
   isDark,
 }) => {
@@ -271,13 +273,26 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
                       </button>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => onDeleteAdvance(advance.id, advance.person_name)}
-                        className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
-                        title="Delete advance"
-                      >
-                        <FiTrash2 size={14} />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        {onMoveToExpense && (
+                          <button
+                            type="button"
+                            onClick={() => onMoveToExpense(advance)}
+                            className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-400 hover:text-emerald-500 transition-colors"
+                            title="Move to Transactions / Personal Expenses"
+                          >
+                            <FiArrowUpRight size={15} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onDeleteAdvance(advance.id, advance.person_name)}
+                          className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
+                          title="Delete advance"
+                        >
+                          <FiTrash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

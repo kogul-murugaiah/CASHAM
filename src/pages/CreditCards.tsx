@@ -30,6 +30,7 @@ import { CCMasterHistory } from "../components/credit-cards/CCMasterHistory";
 import { CCSettlementHistory } from "../components/credit-cards/CCSettlementHistory";
 import { CCCardModal } from "../components/credit-cards/CCCardModal";
 import { CCAdvanceModal } from "../components/credit-cards/CCAdvanceModal";
+import { CCMoveToExpenseModal } from "../components/credit-cards/CCMoveToExpenseModal";
 import { CCSmartSettleModal } from "../components/credit-cards/CCSmartSettleModal";
 
 const CreditCards = () => {
@@ -94,6 +95,7 @@ const CreditCards = () => {
 
   // CC Advance Modal State
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [advanceToMove, setAdvanceToMove] = useState<CCAdvance | null>(null);
   const [advanceForm, setAdvanceForm] = useState<AdvanceFormState>({
     person_name: "",
     amount: "",
@@ -725,6 +727,15 @@ const CreditCards = () => {
     }
   };
 
+  const handleMoveAdvanceSuccess = (msg: string) => {
+    setSuccess(msg);
+    setTimeout(() => setSuccess(""), 3000);
+    fetchAdvances();
+    loadDues();
+    loadMasterExpenses();
+    fetchCards();
+  };
+
   const pendingAdvances = useMemo(
     () => filteredAdvances.filter((a) => !(a as { cc_bill_settled?: boolean }).cc_bill_settled),
     [filteredAdvances]
@@ -1014,6 +1025,7 @@ const CreditCards = () => {
             onOpenAdvanceModal={handleOpenAdvanceModal}
             onToggleReceived={handleToggleReceived}
             onDeleteAdvance={handleDeleteAdvance}
+            onMoveToExpense={(adv) => setAdvanceToMove(adv)}
             currencyStyle={currencyStyle}
             isDark={isDark}
           />
@@ -1065,6 +1077,16 @@ const CreditCards = () => {
           onClose={() => setShowAdvanceModal(false)}
           onSave={handleSaveAdvance}
           savingAdvance={savingAdvance}
+          isDark={isDark}
+        />
+
+        <CCMoveToExpenseModal
+          isOpen={Boolean(advanceToMove)}
+          advance={advanceToMove}
+          cards={cards}
+          onClose={() => setAdvanceToMove(null)}
+          onSuccess={handleMoveAdvanceSuccess}
+          currencyStyle={currencyStyle}
           isDark={isDark}
         />
 
