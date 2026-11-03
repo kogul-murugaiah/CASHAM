@@ -165,7 +165,7 @@ const LandingPage = () => {
                                         to="/signup"
                                         className="w-full sm:w-auto px-8 py-4 rounded-full bg-emerald-600 text-white font-bold text-base sm:text-lg hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 text-center flex items-center justify-center gap-2"
                                     >
-                                        Start Free — No Credit Card Needed <FiArrowRight />
+                                        Get Started Free <FiArrowRight />
                                     </Link>
                                 )}
                                 <button
