@@ -13,3 +13,4 @@ UPDATE public.cc_advances
     WHERE cash_received = true AND (paid_amount IS NULL OR paid_amount = 0);
 
 COMMENT ON COLUMN public.cc_advances.paid_amount IS 'Total amount repaid by the friend in cash/UPI so far';
+
