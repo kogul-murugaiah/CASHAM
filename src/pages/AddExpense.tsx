@@ -7,7 +7,8 @@ import { useCreditCards } from "../hooks/useCreditCards";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency, formatDate, getLocalDateString } from "../lib/formatters";
 import { CustomDropdown } from "../components/CustomDropdown";
-import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus, FiUsers, FiSearch } from "react-icons/fi";
+import { EditExpenseModal } from "../components/EditExpenseModal";
+import { FiRepeat, FiTrash2, FiX, FiCreditCard, FiPlus, FiUsers, FiSearch, FiEdit2 } from "react-icons/fi";
 
 type SplitEntry = { id: string; person_name: string; amount: string };
 
@@ -55,6 +56,7 @@ const AddExpense = () => {
   const [success, setSuccess] = useState("");
   const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
   const [todayExpenses, setTodayExpenses] = useState(0);
+  const [expenseToEdit, setExpenseToEdit] = useState<any | null>(null);
 
   // Template state
   const [templates, setTemplates] = useState<ExpenseTemplate[]>([]);
@@ -138,6 +140,21 @@ const AddExpense = () => {
       setTemplates(data || []);
     } catch (err: any) {
       console.error("Error fetching templates:", err);
+    }
+  };
+
+  const handleDeleteRecent = async (id: string, itemName?: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${itemName || "this expense"}"?`)) {
+      return;
+    }
+    try {
+      await api.delete(`/api/expenses?id=${id}`);
+      setSuccess("Expense deleted successfully");
+      fetchRecentExpenses();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message || "Failed to delete expense");
+      setTimeout(() => setError(""), 3000);
     }
   };
 
@@ -662,14 +679,14 @@ const AddExpense = () => {
           <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/80 dark:bg-slate-800/40 p-5 space-y-4 relative z-10 shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl transition-all ${form.paidViaCreditCard ? 'bg-purple-500/20 text-purple-700 dark:text-purple-400 ring-1 ring-purple-500/40' : 'bg-slate-200 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400'}`}>
+                <div className={`p-2.5 rounded-xl transition-all ${form.paidViaCreditCard ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-500/40' : 'bg-slate-200 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400'}`}>
                   <FiCreditCard size={20} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                     Paid via Credit Card?
                     {form.paidViaCreditCard && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                         ACTIVE
                       </span>
                     )}
@@ -694,7 +711,7 @@ const AddExpense = () => {
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-12 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                <div className="w-12 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
               </label>
             </div>
 
@@ -702,25 +719,25 @@ const AddExpense = () => {
               <div className="pt-3 border-t border-slate-200 dark:border-white/5 grid gap-4 sm:grid-cols-2 animate-fade-in">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                    <label className="block text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                       Select Credit Card
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowNewCardModal(true)}
-                      className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 flex items-center gap-1 transition-colors"
+                      className="text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 flex items-center gap-1 transition-colors"
                     >
                       <FiPlus size={12} /> Add Card
                     </button>
                   </div>
 
                   {creditCards.length === 0 ? (
-                    <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-700 dark:text-purple-300 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 flex items-center justify-between">
                       <span>No credit cards added yet.</span>
                       <button
                         type="button"
                         onClick={() => setShowNewCardModal(true)}
-                        className="px-2 py-1 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-500"
+                        className="px-2 py-1 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500"
                       >
                         + Add Card
                       </button>
@@ -747,12 +764,12 @@ const AddExpense = () => {
                   )}
                 </div>
 
-                <div className="flex flex-col justify-center p-3.5 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-xs text-purple-900 dark:text-purple-200">
-                  <p className="font-semibold text-purple-950 dark:text-white mb-0.5">
+                <div className="flex flex-col justify-center p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-xs text-emerald-900 dark:text-emerald-200">
+                  <p className="font-semibold text-emerald-950 dark:text-white mb-0.5">
                     💡 Smart Envelope Budgeting
                   </p>
-                  <p className="text-purple-800 dark:text-purple-300/90 leading-relaxed">
-                    This ₹{form.amount || '0'} will immediately deduct from <span className="font-bold text-purple-950 dark:text-white">{form.accountType || 'selected account'}</span> balance. When your credit card bill arrives, you can collect this amount from {form.accountType || 'this account'} and mark the bill settled.
+                  <p className="text-emerald-800 dark:text-emerald-300/90 leading-relaxed">
+                    This ₹{form.amount || '0'} will immediately deduct from <span className="font-bold text-emerald-950 dark:text-white">{form.accountType || 'selected account'}</span> balance. When your credit card bill arrives, you can collect this amount from {form.accountType || 'this account'} and mark the bill settled.
                   </p>
                 </div>
               </div>
@@ -923,6 +940,7 @@ const AddExpense = () => {
                       <th className="px-6 py-4">Account</th>
                       <th className="px-6 py-4">Payment</th>
                       <th className="px-6 py-4 text-right">Amount</th>
+                      <th className="px-6 py-4 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-white/5">
@@ -948,7 +966,7 @@ const AddExpense = () => {
                         </td>
                         <td className="px-6 py-4 text-sm whitespace-nowrap">
                           {expense.paid_via_credit_card ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-purple-50 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/30 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                               <FiCreditCard size={12} />
                               {expense.credit_card_name || "Credit Card"}
                             </span>
@@ -961,6 +979,26 @@ const AddExpense = () => {
                         <td className="px-6 py-4 text-sm font-bold text-right text-red-600 dark:text-red-400 font-mono">
                           {formatCurrency(expense.amount, currencyStyle)}
                         </td>
+                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setExpenseToEdit(expense)}
+                              className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"
+                              title="Edit Expense"
+                            >
+                              <FiEdit2 size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRecent(expense.id, expense.item)}
+                              className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all"
+                              title="Delete Expense"
+                            >
+                              <FiTrash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -970,13 +1008,28 @@ const AddExpense = () => {
           </div>
         )}
 
+        {/* Edit Expense Modal */}
+        <EditExpenseModal
+          isOpen={Boolean(expenseToEdit)}
+          expense={expenseToEdit}
+          categories={categories}
+          accountTypes={accountTypes}
+          creditCards={creditCards}
+          onClose={() => setExpenseToEdit(null)}
+          onSaved={() => {
+            setSuccess("Expense updated successfully!");
+            fetchRecentExpenses();
+            setTimeout(() => setSuccess(""), 3000);
+          }}
+        />
+
         {/* New Card Modal */}
         {showNewCardModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="glass-card max-w-md w-full p-6 space-y-5 border border-slate-200 dark:border-white/10 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FiCreditCard className="text-purple-600 dark:text-purple-400" />
+                  <FiCreditCard className="text-emerald-600 dark:text-emerald-400" />
                   Add New Credit Card
                 </h3>
                 <button
@@ -999,7 +1052,7 @@ const AddExpense = () => {
                     placeholder="e.g., HDFC Millennia, Slice Card"
                     value={newCardForm.name}
                     onChange={(e) => setNewCardForm({ ...newCardForm, name: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none"
                   />
                 </div>
 
@@ -1013,7 +1066,7 @@ const AddExpense = () => {
                       placeholder="e.g., HDFC, ICICI"
                       value={newCardForm.bank_name}
                       onChange={(e) => setNewCardForm({ ...newCardForm, bank_name: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none"
                     />
                   </div>
 
@@ -1027,7 +1080,7 @@ const AddExpense = () => {
                       placeholder="e.g., 4242"
                       value={newCardForm.card_last4}
                       onChange={(e) => setNewCardForm({ ...newCardForm, card_last4: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none font-mono"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -1041,7 +1094,7 @@ const AddExpense = () => {
                     placeholder="e.g., 100000"
                     value={newCardForm.credit_limit}
                     onChange={(e) => setNewCardForm({ ...newCardForm, credit_limit: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-purple-500/40 outline-none font-mono"
+                    className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none font-mono"
                   />
                 </div>
 
@@ -1056,7 +1109,7 @@ const AddExpense = () => {
                       max={31}
                       value={newCardForm.billing_cycle_day}
                       onChange={(e) => setNewCardForm({ ...newCardForm, billing_cycle_day: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/40 outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/40 outline-none"
                     />
                   </div>
                   <div>
@@ -1069,7 +1122,7 @@ const AddExpense = () => {
                       max={31}
                       value={newCardForm.payment_due_day}
                       onChange={(e) => setNewCardForm({ ...newCardForm, payment_due_day: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/40 outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-700/50 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/40 outline-none"
                     />
                   </div>
                 </div>
@@ -1085,7 +1138,7 @@ const AddExpense = () => {
                   <button
                     type="submit"
                     disabled={cardSaving || !newCardForm.name.trim()}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-500/20 disabled:opacity-50"
                   >
                     {cardSaving ? "Adding..." : "Save Card"}
                   </button>
