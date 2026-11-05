@@ -302,3 +302,4 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     </div>
   );
 };
+

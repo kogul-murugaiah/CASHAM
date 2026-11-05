@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiArrowUpRight, FiX, FiInfo, FiCheck } from "react-icons/fi";
+import { FiArrowUpRight, FiX, FiInfo, FiCheck, FiPieChart } from "react-icons/fi";
 import { api } from "../../lib/api";
 import { useExpenseCategories } from "../../hooks/useExpenseCategories";
 import { useAccountTypes } from "../../hooks/useAccountTypes";
@@ -39,6 +39,15 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const totalAdvance = Number(advance?.amount || 0);
+  const alreadyPaid = Number(
+    advance?.paid_amount || (advance?.cash_received ? totalAdvance : 0) || 0
+  );
+  const maxMoveable = Math.max(0, totalAdvance - alreadyPaid);
+  const moveVal = Number(amount) || 0;
+  const isPartial = moveVal > 0 && moveVal < totalAdvance;
+  const remainingAdvance = Math.max(0, totalAdvance - moveVal);
+
   // Initialize form state when advance opens
   useEffect(() => {
     if (advance && isOpen) {
@@ -68,7 +77,6 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
 
   useEffect(() => {
     if (accountTypes.length > 0 && !accountType) {
-      // Prefer "Credit Card" if exists in account types, else first account
       const ccAcc = accountTypes.find((a) => a.toLowerCase().includes("credit card"));
       setAccountType(ccAcc || accountTypes[0]);
     }
@@ -84,8 +92,18 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
       setError("Item name is required");
       return;
     }
-    if (!amount || Number(amount) <= 0) {
+    if (!amount || moveVal <= 0) {
       setError("Please enter a valid amount");
+      return;
+    }
+    if (moveVal > totalAdvance) {
+      setError(`Amount to move cannot exceed the total advance amount of ${formatCurrency(totalAdvance, currencyStyle)}`);
+      return;
+    }
+    if (alreadyPaid > 0 && moveVal > maxMoveable + 0.01) {
+      setError(
+        `Cannot move more than unpaid balance (${formatCurrency(maxMoveable, currencyStyle)}) because ${advance.person_name} has already repaid ${formatCurrency(alreadyPaid, currencyStyle)}.`
+      );
       return;
     }
     if (!date) {
@@ -105,7 +123,7 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
     try {
       // 1. Create the personal expense
       await api.post("/api/expenses", {
-        amount: Number(amount),
+        amount: moveVal,
         date,
         item: item.trim(),
         description: description.trim() || null,
@@ -117,11 +135,29 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
         cc_bill_settled: false,
       });
 
-      // 2. Delete the advance from cc_advances table
-      await api.delete(`/api/cc-advances?id=${advance.id}`);
+      // 2. Either delete or partially update the CC advance
+      if (moveVal >= totalAdvance) {
+        // Full move: delete advance
+        await api.delete(`/api/cc-advances?id=${advance.id}`);
+        onSuccess(`Advance for "${advance.person_name}" moved to transactions!`);
+      } else {
+        // Partial move: update advance to the remaining amount
+        const newTotal = totalAdvance - moveVal;
+        const newPaid = Math.min(alreadyPaid, newTotal);
+        await api.put("/api/cc-advances", {
+          id: advance.id,
+          amount: newTotal,
+          paid_amount: newPaid,
+          cash_received: newPaid >= newTotal,
+        });
+        onSuccess(
+          `Moved ${formatCurrency(moveVal, currencyStyle)} to personal transactions! ${formatCurrency(
+            newTotal,
+            currencyStyle
+          )} remains in advances for ${advance.person_name}.`
+        );
+      }
 
-      // 3. Notify parent
-      onSuccess(`Advance for "${advance.person_name}" moved to transactions!`);
       onClose();
     } catch (err: unknown) {
       console.error("Failed to move advance to expenses", err);
@@ -150,10 +186,10 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
             </div>
             <div>
               <h3 className={`text-lg font-bold font-heading ${textPrimary}`}>
-                Move to Transactions
+                Move / Split to Personal Expense
               </h3>
               <p className={`text-xs ${textSecondary}`}>
-                Convert this advance into your personal expense transaction
+                Convert full or partial advance into your personal expense
               </p>
             </div>
           </div>
@@ -173,13 +209,13 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
           }`}
         >
           <div>
-            <span className={`block font-medium ${textSecondary}`}>Original Advance For</span>
+            <span className={`block font-medium ${textSecondary}`}>Advance For</span>
             <span className={`text-sm font-bold ${textPrimary}`}>{advance.person_name}</span>
           </div>
           <div className="text-right">
-            <span className={`block font-medium ${textSecondary}`}>Advance Amount</span>
+            <span className={`block font-medium ${textSecondary}`}>Current Advance Total</span>
             <span className="text-sm font-bold text-emerald-500 font-mono">
-              {formatCurrency(advance.amount, currencyStyle)}
+              {formatCurrency(totalAdvance, currencyStyle)}
             </span>
           </div>
         </div>
@@ -199,7 +235,7 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
             <input
               type="text"
               required
-              placeholder="e.g. Team Dinner, Flight Tickets, Electronics"
+              placeholder="e.g. My Share of Team Dinner, Flight Ticket"
               value={item}
               onChange={(e) => setItem(e.target.value)}
               className={inputClass}
@@ -208,18 +244,37 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className={`block text-xs font-semibold mb-1 ${textSecondary}`}>
-                Amount (₹) *
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label className={`block text-xs font-semibold ${textSecondary}`}>
+                  Amount to Move (₹) *
+                </label>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setAmount(Math.round(totalAdvance / 2).toString())}
+                    className="px-1.5 py-0.5 text-[10px] rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/15 hover:text-emerald-500"
+                  >
+                    50%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAmount(totalAdvance.toString())}
+                    className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-emerald-500/20"
+                  >
+                    100%
+                  </button>
+                </div>
+              </div>
               <input
                 type="number"
                 required
                 min="0.01"
+                max={totalAdvance}
                 step="any"
                 placeholder="Amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className={inputClass}
+                className={`${inputClass} font-mono font-bold`}
               />
             </div>
             <div>
@@ -235,6 +290,36 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Split Preview Banner (when amount < total) */}
+          {isPartial && (
+            <div
+              className={`p-3.5 rounded-2xl border text-xs space-y-2 animate-fade-in ${
+                isDark ? "bg-slate-800/80 border-slate-700/80" : "bg-slate-50 border-slate-200"
+              }`}
+            >
+              <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
+                <FiPieChart className="text-emerald-500" size={14} />
+                <span>Split Breakdown</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+                <div>
+                  <span className="text-[11px] text-slate-400 block">Personal Expense</span>
+                  <span className="text-sm font-bold text-emerald-500 font-mono">
+                    {formatCurrency(moveVal, currencyStyle)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block">
+                    Remains for {advance.person_name}
+                  </span>
+                  <span className="text-sm font-bold text-blue-500 font-mono">
+                    {formatCurrency(remainingAdvance, currencyStyle)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -325,7 +410,15 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
           >
             <FiInfo size={15} className="shrink-0 mt-0.5 text-emerald-500" />
             <span>
-              This will create a new transaction in your <strong>Expense Tracker</strong>, apply it to your monthly budget, and automatically remove this record from <strong>CC Advances</strong>.
+              {isPartial ? (
+                <>
+                  Moving <strong>{formatCurrency(moveVal, currencyStyle)}</strong> creates an expense transaction, while the remaining <strong>{formatCurrency(remainingAdvance, currencyStyle)}</strong> stays active in CC Advances for <strong>{advance.person_name}</strong>.
+                </>
+              ) : (
+                <>
+                  Moving the full amount will create a transaction in <strong>Expense Tracker</strong> and close this advance record.
+                </>
+              )}
             </span>
           </div>
 
@@ -351,12 +444,12 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
               {submitting ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Moving...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
                   <FiCheck size={14} />
-                  <span>Convert to Expense</span>
+                  <span>{isPartial ? "Split & Move to Expense" : "Convert to Expense"}</span>
                 </>
               )}
             </button>
@@ -366,4 +459,3 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
     </div>
   );
 };
-

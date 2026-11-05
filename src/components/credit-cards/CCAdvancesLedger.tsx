@@ -1,5 +1,5 @@
 import React from "react";
-import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight } from "react-icons/fi";
+import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight, FiDollarSign } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../../lib/formatters";
 import type { CreditCard, CCAdvance, CurrencyStyle } from "./types";
 
@@ -17,6 +17,7 @@ interface CCAdvancesLedgerProps {
   onToggleReceived: (advance: CCAdvance) => void;
   onDeleteAdvance: (id: string, personName: string) => void;
   onMoveToExpense?: (advance: CCAdvance) => void;
+  onOpenPaymentModal?: (advance: CCAdvance) => void;
   currencyStyle?: CurrencyStyle;
   isDark: boolean;
 }
@@ -35,6 +36,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
   onToggleReceived,
   onDeleteAdvance,
   onMoveToExpense,
+  onOpenPaymentModal,
   currencyStyle,
   isDark,
 }) => {
@@ -51,11 +53,20 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
 
   const pendingCollection = filteredAdvances
     .filter((a) => !a.cash_received && !(a as { cc_bill_settled?: boolean }).cc_bill_settled)
-    .reduce((s, a) => s + Number(a.amount), 0);
+    .reduce((s, a) => {
+      const total = Number(a.amount || 0);
+      const paid = Number(a.paid_amount || 0);
+      return s + Math.max(0, total - paid);
+    }, 0);
 
   const cashCollected = filteredAdvances
-    .filter((a) => a.cash_received && !(a as { cc_bill_settled?: boolean }).cc_bill_settled)
-    .reduce((s, a) => s + Number(a.amount), 0);
+    .filter((a) => !(a as { cc_bill_settled?: boolean }).cc_bill_settled)
+    .reduce((s, a) => {
+      if (a.cash_received) {
+        return s + Number(a.amount || 0);
+      }
+      return s + Number(a.paid_amount || 0);
+    }, 0);
 
   const billSettled = filteredAdvances
     .filter((a) => (a as { cc_bill_settled?: boolean }).cc_bill_settled)
@@ -72,7 +83,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
           </p>
           <p className={`text-xs mt-1 ${textSecondary}`}>
             {filteredAdvances.filter((a) => !a.cash_received && !(a as { cc_bill_settled?: boolean }).cc_bill_settled).length}{" "}
-            awaiting cash
+            active advance{filteredAdvances.length === 1 ? "" : "s"}
           </p>
         </div>
         <div className={`rounded-2xl border p-5 ${cardBg}`}>
@@ -81,8 +92,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
             {formatCurrency(cashCollected, currencyStyle)}
           </p>
           <p className={`text-xs mt-1 ${textSecondary}`}>
-            {filteredAdvances.filter((a) => a.cash_received && !(a as { cc_bill_settled?: boolean }).cc_bill_settled).length}{" "}
-            received — ready to settle
+            Total friend repayments received
           </p>
         </div>
         <div className={`rounded-2xl border p-5 ${cardBg}`}>
@@ -105,11 +115,10 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
         <FiInfo className="text-blue-500 flex-shrink-0 mt-0.5" size={16} />
         <div>
           <p className={`text-sm font-semibold ${isDark ? "text-blue-300" : "text-blue-700"}`}>
-            How CC Advances Work
+            How CC Advances & Partial Repayments Work
           </p>
           <p className={`text-xs mt-0.5 ${isDark ? "text-blue-300/70" : "text-blue-600/80"}`}>
-            When you pay for someone using your credit card, log it here. Once they pay you back, mark &quot;Cash Received&quot;.
-            When your credit card bill arrives, use &quot;Settle Statement&quot; in the header to settle all card expenses and CC advances up to your statement date in one go.
+            When you pay for someone using your credit card, log it here. When friends pay you back in parts or full, use <strong>Record Payment</strong>. You can also split and move any portion into your personal expenses.
           </p>
         </div>
       </div>
@@ -130,7 +139,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
                 </span>
               </h3>
               <p className={`text-xs mt-0.5 ${textSecondary}`}>
-                Use <strong>Settle Statement</strong> in the header to settle these advances along with card expenses by date.
+                Use <strong>Settle Statement</strong> in the header to settle card expenses and advances up to your statement date.
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -222,80 +231,148 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
                   <th className="px-6 py-4">Description</th>
                   <th className="px-6 py-4">Card Used</th>
                   <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4 text-center">Cash Received?</th>
-                  <th className="px-6 py-4 text-center">Action</th>
+                  <th className="px-6 py-4">Amount & Status</th>
+                  <th className="px-6 py-4 text-center">Cash Status</th>
+                  <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${divider}`}>
-                {displayedAdvances.map((advance) => (
-                  <tr key={advance.id} className={`transition-colors ${rowHover}`}>
-                    <td className={`px-6 py-4 text-sm font-semibold ${textPrimary}`}>
-                      <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold">
-                          {advance.person_name[0].toUpperCase()}
+                {displayedAdvances.map((advance) => {
+                  const total = Number(advance.amount || 0);
+                  const paid = Number(
+                    advance.paid_amount || (advance.cash_received ? total : 0) || 0
+                  );
+                  const remaining = Math.max(0, total - paid);
+                  const isPartiallyPaid = paid > 0 && !advance.cash_received;
+
+                  return (
+                    <tr key={advance.id} className={`transition-colors ${rowHover}`}>
+                      <td className={`px-6 py-4 text-sm font-semibold ${textPrimary}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center text-xs font-bold">
+                            {advance.person_name[0].toUpperCase()}
+                          </span>
+                          {advance.person_name}
+                        </div>
+                      </td>
+                      <td className={`px-6 py-4 text-sm ${textSecondary}`}>{advance.description || "—"}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
+                          <FiCreditCard size={12} /> {advance.credit_card_name}
                         </span>
-                        {advance.person_name}
-                      </div>
-                    </td>
-                    <td className={`px-6 py-4 text-sm ${textSecondary}`}>{advance.description || "—"}</td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
-                        <FiCreditCard size={12} /> {advance.credit_card_name}
-                      </span>
-                    </td>
-                    <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>
-                      {formatDate(advance.date)}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold text-blue-500 font-mono">
-                      {formatCurrency(advance.amount, currencyStyle)}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => onToggleReceived(advance)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          advance.cash_received
-                            ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
-                            : `${
-                                isDark
-                                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
-                                  : "bg-amber-50 text-amber-600 border border-amber-300 hover:bg-amber-100"
-                              }`
-                        }`}
-                      >
+                      </td>
+                      <td className={`px-6 py-4 text-sm whitespace-nowrap ${textSecondary}`}>
+                        {formatDate(advance.date)}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-mono whitespace-nowrap">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`font-bold ${
+                                isPartiallyPaid
+                                  ? "text-amber-500"
+                                  : advance.cash_received
+                                  ? "text-emerald-500"
+                                  : "text-blue-500"
+                              }`}
+                            >
+                              {formatCurrency(total, currencyStyle)}
+                            </span>
+                          </div>
+                          {isPartiallyPaid && (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-[11px]">
+                                <span className="text-emerald-500 font-semibold">
+                                  {formatCurrency(paid, currencyStyle)} paid
+                                </span>
+                                <span className="text-slate-400">·</span>
+                                <span className="text-amber-500 font-semibold">
+                                  {formatCurrency(remaining, currencyStyle)} due
+                                </span>
+                              </div>
+                              <div className="w-32 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-emerald-500 h-1.5 rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      Math.round((paid / (total || 1)) * 100)
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center whitespace-nowrap">
                         {advance.cash_received ? (
-                          <>
-                            <FiCheckCircle size={12} /> Received
-                          </>
-                        ) : (
-                          "Pending"
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        {onMoveToExpense && (
                           <button
-                            type="button"
-                            onClick={() => onMoveToExpense(advance)}
-                            className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-400 hover:text-emerald-500 transition-colors"
-                            title="Move to Transactions / Personal Expenses"
+                            onClick={() => onToggleReceived(advance)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"
+                            title="Click to toggle status"
                           >
-                            <FiArrowUpRight size={15} />
+                            <FiCheckCircle size={12} /> Received
+                          </button>
+                        ) : isPartiallyPaid ? (
+                          <button
+                            onClick={() => (onOpenPaymentModal ? onOpenPaymentModal(advance) : onToggleReceived(advance))}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition-all"
+                            title="Click to record next installment"
+                          >
+                            Partial ({formatCurrency(paid, currencyStyle)})
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onToggleReceived(advance)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                              isDark
+                                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20"
+                                : "bg-amber-50 text-amber-600 border border-amber-300 hover:bg-amber-100"
+                            }`}
+                          >
+                            Pending
                           </button>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => onDeleteAdvance(advance.id, advance.person_name)}
-                          className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
-                          title="Delete advance"
-                        >
-                          <FiTrash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Record Payment Button */}
+                          {!advance.cash_received && onOpenPaymentModal && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenPaymentModal(advance)}
+                              className="p-1.5 rounded-lg hover:bg-teal-500/15 text-slate-400 hover:text-teal-500 transition-colors"
+                              title="Record payment / installment"
+                            >
+                              <FiDollarSign size={15} />
+                            </button>
+                          )}
+                          {/* Move / Split to Expense Button */}
+                          {onMoveToExpense && (
+                            <button
+                              type="button"
+                              onClick={() => onMoveToExpense(advance)}
+                              className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-400 hover:text-emerald-500 transition-colors"
+                              title="Move / Split to Personal Expense"
+                            >
+                              <FiArrowUpRight size={15} />
+                            </button>
+                          )}
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => onDeleteAdvance(advance.id, advance.person_name)}
+                            className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-400 hover:text-red-500 transition-colors"
+                            title="Delete advance"
+                          >
+                            <FiTrash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

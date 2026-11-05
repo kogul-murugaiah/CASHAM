@@ -37,25 +37,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // POST → create a new advance
     if (method === 'POST') {
         try {
-            const { person_name, amount, credit_card_id, credit_card_name, date, description } = req.body;
+            const { person_name, amount, paid_amount, credit_card_id, credit_card_name, date, description } = req.body;
             if (!person_name || !amount || !credit_card_name || !date) {
                 return res.status(400).json({ error: 'person_name, amount, credit_card_name and date are required' });
             }
-            const { data, error } = await supabaseAdmin
+            const insertPayload: any = {
+                user_id: user.id,
+                person_name: person_name.trim(),
+                amount: Number(amount),
+                paid_amount: Number(paid_amount || 0),
+                credit_card_id: credit_card_id || null,
+                credit_card_name,
+                date,
+                description: description?.trim() || null,
+                cash_received: false,
+            };
+
+            let { data, error } = await supabaseAdmin
                 .from('cc_advances')
-                .insert([{
-                    user_id: user.id,
-                    person_name: person_name.trim(),
-                    amount: Number(amount),
-                    credit_card_id: credit_card_id || null,
-                    credit_card_name,
-                    date,
-                    description: description?.trim() || null,
-                    cash_received: false,
-                }])
+                .insert([insertPayload])
                 .select()
                 .single();
-            if (error) throw error;
+
+            if (error && error.message?.includes('paid_amount')) {
+                delete insertPayload.paid_amount;
+                const retry = await supabaseAdmin
+                    .from('cc_advances')
+                    .insert([insertPayload])
+                    .select()
+                    .single();
+                if (retry.error) throw retry.error;
+                data = { ...retry.data, paid_amount: 0 };
+            } else if (error) {
+                throw error;
+            }
+
             return res.status(201).json(data);
         } catch (err: any) {
             return res.status(500).json({ error: err.message });
@@ -65,12 +81,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PUT → mark cash received (or update details)
     if (method === 'PUT') {
         try {
-            const { id, cash_received, cash_received_date, person_name, amount, description } = req.body;
+            const { id, cash_received, cash_received_date, person_name, amount, paid_amount, description } = req.body;
             if (!id) return res.status(400).json({ error: 'id is required' });
 
             const updates: any = {};
             if (person_name !== undefined) updates.person_name = person_name.trim();
             if (amount !== undefined) updates.amount = Number(amount);
+            if (paid_amount !== undefined) updates.paid_amount = Number(paid_amount);
             if (description !== undefined) updates.description = description?.trim() || null;
             if (cash_received !== undefined) {
                 updates.cash_received = Boolean(cash_received);
@@ -79,14 +96,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     : null;
             }
 
-            const { data, error } = await supabaseAdmin
+            let { data, error } = await supabaseAdmin
                 .from('cc_advances')
                 .update(updates)
                 .eq('id', id)
                 .eq('user_id', user.id)
                 .select()
                 .single();
-            if (error) throw error;
+
+            if (error && error.message?.includes('paid_amount')) {
+                delete updates.paid_amount;
+                const retry = await supabaseAdmin
+                    .from('cc_advances')
+                    .update(updates)
+                    .eq('id', id)
+                    .eq('user_id', user.id)
+                    .select()
+                    .single();
+                if (retry.error) throw retry.error;
+                data = { ...retry.data, paid_amount: Number(paid_amount) };
+            } else if (error) {
+                throw error;
+            }
+
             return res.status(200).json(data);
         } catch (err: any) {
             return res.status(500).json({ error: err.message });

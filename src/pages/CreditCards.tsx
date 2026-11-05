@@ -31,6 +31,7 @@ import { CCSettlementHistory } from "../components/credit-cards/CCSettlementHist
 import { CCCardModal } from "../components/credit-cards/CCCardModal";
 import { CCAdvanceModal } from "../components/credit-cards/CCAdvanceModal";
 import { CCMoveToExpenseModal } from "../components/credit-cards/CCMoveToExpenseModal";
+import { CCRecordPaymentModal } from "../components/credit-cards/CCRecordPaymentModal";
 import { CCSmartSettleModal } from "../components/credit-cards/CCSmartSettleModal";
 
 const CreditCards = () => {
@@ -56,6 +57,7 @@ const CreditCards = () => {
     fetchAdvances,
     addAdvance,
     markReceived,
+    recordPayment,
     deleteAdvance,
   } = useCCAdvances();
 
@@ -96,6 +98,7 @@ const CreditCards = () => {
   // CC Advance Modal State
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
   const [advanceToMove, setAdvanceToMove] = useState<CCAdvance | null>(null);
+  const [advanceToPay, setAdvanceToPay] = useState<CCAdvance | null>(null);
   const [advanceForm, setAdvanceForm] = useState<AdvanceFormState>({
     person_name: "",
     amount: "",
@@ -727,6 +730,19 @@ const CreditCards = () => {
     }
   };
 
+  const handleRecordPayment = async (id: string, amount: number, date: string, note?: string) => {
+    try {
+      await recordPayment(id, amount, date, note);
+      setSuccess("Payment recorded successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+      fetchAdvances();
+      fetchCards();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to record payment");
+      setTimeout(() => setError(""), 3000);
+    }
+  };
+
   const handleMoveAdvanceSuccess = (msg: string) => {
     setSuccess(msg);
     setTimeout(() => setSuccess(""), 3000);
@@ -1026,6 +1042,7 @@ const CreditCards = () => {
             onToggleReceived={handleToggleReceived}
             onDeleteAdvance={handleDeleteAdvance}
             onMoveToExpense={(adv) => setAdvanceToMove(adv)}
+            onOpenPaymentModal={(adv) => setAdvanceToPay(adv)}
             currencyStyle={currencyStyle}
             isDark={isDark}
           />
@@ -1086,6 +1103,15 @@ const CreditCards = () => {
           cards={cards}
           onClose={() => setAdvanceToMove(null)}
           onSuccess={handleMoveAdvanceSuccess}
+          currencyStyle={currencyStyle}
+          isDark={isDark}
+        />
+
+        <CCRecordPaymentModal
+          isOpen={Boolean(advanceToPay)}
+          advance={advanceToPay}
+          onClose={() => setAdvanceToPay(null)}
+          onRecord={handleRecordPayment}
           currencyStyle={currencyStyle}
           isDark={isDark}
         />
