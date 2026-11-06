@@ -277,7 +277,20 @@ export const CCMasterHistory: React.FC<CCMasterHistoryProps> = ({
                         )}
                         {t.type === "expense" && (
                           <span className="text-[10px] font-medium text-slate-400">
-                            {t.funds_set_aside ? "Funds Moved" : "Funds Pending"}
+                            {(() => {
+                              const total = Number(t.amount || 0);
+                              const moved = t.funds_moved_amount != null
+                                ? Number(t.funds_moved_amount)
+                                : (t.funds_set_aside ? total : 0);
+                              if (moved > 0 && moved < total) {
+                                return (
+                                  <span className="text-amber-500 font-semibold">
+                                    Short {formatCurrency(total - moved, currencyStyle)}
+                                  </span>
+                                );
+                              }
+                              return t.funds_set_aside ? "Funds Moved" : "Funds Pending";
+                            })()}
                           </span>
                         )}
                         {t.type === "advance" && (

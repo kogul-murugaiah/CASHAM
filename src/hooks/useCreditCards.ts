@@ -153,11 +153,12 @@ export const useCreditCards = () => {
     }
   }, [fetchCards]);
 
-  const toggleFundsSetAside = useCallback(async (expense_id: string, isSetAside: boolean) => {
+  const toggleFundsSetAside = useCallback(async (expense_id: string, isSetAside: boolean, fundsMovedAmount?: number) => {
     try {
       await api.put('/api/expenses', {
         id: expense_id,
-        cc_funds_set_aside: isSetAside
+        cc_funds_set_aside: isSetAside,
+        ...(fundsMovedAmount !== undefined ? { funds_moved_amount: fundsMovedAmount } : {})
       });
     } catch (err: any) {
       throw new Error(err.message || 'Failed to update funds status');

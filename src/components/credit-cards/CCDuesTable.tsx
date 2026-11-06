@@ -1,5 +1,5 @@
 import React from "react";
-import { FiCreditCard, FiCheckCircle, FiX } from "react-icons/fi";
+import { FiCreditCard, FiCheckCircle, FiX, FiAlertCircle, FiRotateCcw } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../../lib/formatters";
 import type { CreditCard, UnsettledExpense, CurrencyStyle } from "./types";
 
@@ -10,9 +10,12 @@ interface CCDuesTableProps {
   setDuesSearch: (val: string) => void;
   duesFilterCard: string;
   onFilterCardChange: (cardId: string) => void;
-  duesFilterFundsStatus: "all" | "moved" | "pending";
-  setDuesFilterFundsStatus: (status: "all" | "moved" | "pending") => void;
-  onToggleExpenseFundsSetAside: (expense: UnsettledExpense) => void;
+  duesFilterFundsStatus: "all" | "moved" | "pending" | "shortfall";
+  setDuesFilterFundsStatus: (status: "all" | "moved" | "pending" | "shortfall") => void;
+  onToggleExpenseFundsSetAside: (
+    expense: UnsettledExpense,
+    action?: "toggle" | "cover_shortfall" | "reset_pending"
+  ) => void;
   currencyStyle?: CurrencyStyle;
   isDark: boolean;
 }
@@ -111,11 +114,12 @@ export const CCDuesTable: React.FC<CCDuesTableProps> = ({
             </select>
             <select
               value={duesFilterFundsStatus}
-              onChange={(e) => setDuesFilterFundsStatus(e.target.value as "all" | "moved" | "pending")}
+              onChange={(e) => setDuesFilterFundsStatus(e.target.value as "all" | "moved" | "pending" | "shortfall")}
               className={`${inputClass} sm:w-44`}
             >
               <option value="all">All Funds Status</option>
               <option value="moved">Funds Moved</option>
+              <option value="shortfall">Shortfall / Underfunded</option>
               <option value="pending">Funds Pending</option>
             </select>
           </div>
@@ -171,26 +175,80 @@ export const CCDuesTable: React.FC<CCDuesTableProps> = ({
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => onToggleExpenseFundsSetAside(expense)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          expense.cc_funds_set_aside
-                            ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25"
-                            : `${
-                                isDark
-                                  ? "bg-slate-700/60 text-slate-400 border border-white/10 hover:bg-slate-700"
-                                  : "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"
-                              }`
-                        }`}
-                      >
-                        {expense.cc_funds_set_aside ? (
-                          <>
-                            <FiCheckCircle size={12} /> Moved
-                          </>
-                        ) : (
-                          "Pending"
-                        )}
-                      </button>
+                      {(() => {
+                        const total = Number(expense.amount || 0);
+                        const moved = expense.funds_moved_amount != null
+                          ? Number(expense.funds_moved_amount)
+                          : (expense.cc_funds_set_aside ? total : 0);
+                        const isFullyMoved = moved >= total && total > 0;
+                        const isShortfall = moved > 0 && moved < total;
+                        const shortfall = Math.max(0, total - moved);
+
+                        if (isShortfall) {
+                          return (
+                            <div className="inline-flex flex-col items-center gap-1">
+                              <div className="inline-flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => onToggleExpenseFundsSetAside(expense, "cover_shortfall")}
+                                  title={`Only ${formatCurrency(moved, currencyStyle)} was moved. Click to cover shortfall of ${formatCurrency(shortfall, currencyStyle)}`}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition-all shadow-sm"
+                                >
+                                  <FiAlertCircle size={12} className="text-amber-500 shrink-0" />
+                                  <span>Short {formatCurrency(shortfall, currencyStyle)}</span>
+                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                                    +Cover
+                                  </span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onToggleExpenseFundsSetAside(expense, "reset_pending")}
+                                  title="Reset to Pending (unmoved)"
+                                  aria-label="Reset to Pending"
+                                  className={`p-1.5 rounded-lg text-xs transition-colors ${
+                                    isDark
+                                      ? "text-slate-400 hover:text-rose-400 hover:bg-slate-700"
+                                      : "text-slate-400 hover:text-rose-500 hover:bg-slate-100"
+                                  }`}
+                                >
+                                  <FiRotateCcw size={11} />
+                                </button>
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {formatCurrency(moved, currencyStyle)} moved · {formatCurrency(shortfall, currencyStyle)} needed
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        if (isFullyMoved) {
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => onToggleExpenseFundsSetAside(expense, "toggle")}
+                              title="Funds moved from bank account to cover this card expense. Click to mark Pending."
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"
+                            >
+                              <FiCheckCircle size={12} /> Moved
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => onToggleExpenseFundsSetAside(expense, "toggle")}
+                            title="Funds not yet set aside from budget account. Click to mark as Moved."
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                              isDark
+                                ? "bg-slate-700/60 text-slate-400 border border-white/10 hover:bg-slate-700"
+                                : "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            Pending
+                          </button>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-sm font-bold text-right text-red-500 font-mono whitespace-nowrap">
                       {formatCurrency(expense.amount, currencyStyle)}

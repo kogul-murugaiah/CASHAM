@@ -169,6 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           cc_bill_settled,
           cc_settled_at,
           cc_settlement_id,
+          cc_funds_set_aside,
           categories (
             id,
             name
@@ -285,6 +286,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 credit_card_name,
                 cc_bill_settled,
                 cc_funds_set_aside,
+                funds_moved_amount,
             } = req.body;
 
             if (!id) return res.status(400).json({ error: 'Missing expense id' });
@@ -300,17 +302,79 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (credit_card_id !== undefined) updates.credit_card_id = credit_card_id || null;
             if (credit_card_name !== undefined) updates.credit_card_name = credit_card_name || null;
             if (cc_bill_settled !== undefined) updates.cc_bill_settled = Boolean(cc_bill_settled);
-            if (cc_funds_set_aside !== undefined) updates.cc_funds_set_aside = Boolean(cc_funds_set_aside);
 
-            const { data, error } = await supabaseAdmin
+            if (funds_moved_amount !== undefined) {
+                updates.funds_moved_amount = Number(funds_moved_amount || 0);
+            }
+            if (cc_funds_set_aside !== undefined) {
+                updates.cc_funds_set_aside = Boolean(cc_funds_set_aside);
+            }
+
+            // If amount was changed but funds_moved_amount/cc_funds_set_aside was NOT explicitly passed:
+            // (e.g. from Expense Tracker or Edit Expense Modal)
+            if (amount !== undefined && funds_moved_amount === undefined && cc_funds_set_aside === undefined) {
+                try {
+                    let existingRes = await supabaseAdmin
+                        .from('expenses')
+                        .select('amount, paid_via_credit_card, cc_funds_set_aside, funds_moved_amount')
+                        .eq('id', id)
+                        .eq('user_id', user.id)
+                        .single();
+
+                    if (existingRes.error && (existingRes.error.code === '42703' || existingRes.error.message?.includes('funds_moved_amount'))) {
+                        existingRes = await supabaseAdmin
+                            .from('expenses')
+                            .select('amount, paid_via_credit_card, cc_funds_set_aside')
+                            .eq('id', id)
+                            .eq('user_id', user.id)
+                            .single();
+                    }
+
+                    const existing = existingRes.data;
+                    const isCC = existing?.paid_via_credit_card || updates.paid_via_credit_card;
+                    if (existing && isCC) {
+                        const newAmount = Number(amount);
+                        const prevMoved = existing.funds_moved_amount != null
+                            ? Number(existing.funds_moved_amount)
+                            : (existing.cc_funds_set_aside ? Number(existing.amount) : 0);
+
+                        if (prevMoved > 0) {
+                            if (newAmount > prevMoved) {
+                                // Shortfall: user moved e.g. 130, new amount is 150
+                                updates.funds_moved_amount = prevMoved;
+                                updates.cc_funds_set_aside = false;
+                            } else {
+                                // Fully covered: user moved 130, new amount is <= 130
+                                updates.funds_moved_amount = newAmount;
+                                updates.cc_funds_set_aside = true;
+                            }
+                        }
+                    }
+                } catch (lookupErr) {
+                    console.error('Error looking up existing expense for envelope shortfall calculation:', lookupErr);
+                }
+            }
+
+            let updateResult = await supabaseAdmin
                 .from('expenses')
                 .update(updates)
                 .eq('id', id)
                 .eq('user_id', user.id)
                 .select();
 
-            if (error) throw error;
-            return res.status(200).json(data[0]);
+            if (updateResult.error && (updateResult.error.code === '42703' || updateResult.error.message?.includes('funds_moved_amount'))) {
+                // If DB column funds_moved_amount has not been created yet in Supabase:
+                const { funds_moved_amount: _drop, ...fallbackUpdates } = updates;
+                updateResult = await supabaseAdmin
+                    .from('expenses')
+                    .update(fallbackUpdates)
+                    .eq('id', id)
+                    .eq('user_id', user.id)
+                    .select();
+            }
+
+            if (updateResult.error) throw updateResult.error;
+            return res.status(200).json(updateResult.data[0]);
         } catch (error: any) {
             return res.status(500).json({ error: error.message });
         }

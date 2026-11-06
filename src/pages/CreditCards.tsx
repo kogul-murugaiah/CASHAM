@@ -113,7 +113,7 @@ const CreditCards = () => {
   // Search & Filter State
   const [duesSearch, setDuesSearch] = useState("");
   const [duesFilterCard, setDuesFilterCard] = useState("all");
-  const [duesFilterFundsStatus, setDuesFilterFundsStatus] = useState<"all" | "moved" | "pending">("all");
+  const [duesFilterFundsStatus, setDuesFilterFundsStatus] = useState<"all" | "moved" | "pending" | "shortfall">("all");
   const [advancesSearch, setAdvancesSearch] = useState("");
   const [advancesFilterCard, setAdvancesFilterCard] = useState("all");
   const [advancesFilterCashStatus, setAdvancesFilterCashStatus] = useState<"all" | "received" | "pending" | "partial">("all");
@@ -201,9 +201,23 @@ const CreditCards = () => {
       list = list.filter((e) => e.credit_card_id === effectiveCardId || e.credit_card_name === fc?.name);
     }
     if (duesFilterFundsStatus === "moved") {
-      list = list.filter((e) => e.cc_funds_set_aside);
+      list = list.filter((e) => {
+        const total = Number(e.amount || 0);
+        const moved = e.funds_moved_amount != null ? Number(e.funds_moved_amount) : (e.cc_funds_set_aside ? total : 0);
+        return moved >= total && total > 0;
+      });
     } else if (duesFilterFundsStatus === "pending") {
-      list = list.filter((e) => !e.cc_funds_set_aside);
+      list = list.filter((e) => {
+        const total = Number(e.amount || 0);
+        const moved = e.funds_moved_amount != null ? Number(e.funds_moved_amount) : (e.cc_funds_set_aside ? total : 0);
+        return moved === 0;
+      });
+    } else if (duesFilterFundsStatus === "shortfall") {
+      list = list.filter((e) => {
+        const total = Number(e.amount || 0);
+        const moved = e.funds_moved_amount != null ? Number(e.funds_moved_amount) : (e.cc_funds_set_aside ? total : 0);
+        return moved > 0 && moved < total;
+      });
     }
     if (duesSearch.trim()) {
       const q = duesSearch.toLowerCase();
@@ -268,6 +282,7 @@ const CreditCards = () => {
       amount: Number(e.amount || 0),
       settled: !!e.cc_bill_settled,
       funds_set_aside: !!e.cc_funds_set_aside,
+      funds_moved_amount: e.funds_moved_amount,
       rawExpense: e,
     }));
 
@@ -358,9 +373,14 @@ const CreditCards = () => {
       t.amount,
       t.settled ? "Settled" : "Active Due",
       t.type === "expense"
-        ? t.funds_set_aside
-          ? "Funds Moved"
-          : "Funds Pending"
+        ? (() => {
+            const total = Number(t.amount || 0);
+            const moved = t.funds_moved_amount != null
+              ? Number(t.funds_moved_amount)
+              : (t.funds_set_aside ? total : 0);
+            if (moved > 0 && moved < total) return `Shortfall (₹${total - moved} needed)`;
+            return t.funds_set_aside ? "Funds Moved" : "Funds Pending";
+          })()
         : t.cash_received
         ? "Cash Received"
         : "Cash Pending",
@@ -663,15 +683,49 @@ const CreditCards = () => {
     }
   };
 
-  const handleToggleExpenseFundsSetAside = async (expense: UnsettledExpense) => {
+  const handleToggleExpenseFundsSetAside = async (
+    expense: UnsettledExpense,
+    action?: "toggle" | "cover_shortfall" | "reset_pending"
+  ) => {
     try {
-      const newValue = !expense.cc_funds_set_aside;
-      await toggleFundsSetAside(expense.id, newValue);
+      const total = Number(expense.amount || 0);
+      const currentMoved = expense.funds_moved_amount != null
+        ? Number(expense.funds_moved_amount)
+        : (expense.cc_funds_set_aside ? total : 0);
+      const isShortfall = currentMoved > 0 && currentMoved < total;
+
+      let nextSetAside: boolean;
+      let nextMovedAmount: number;
+
+      if (action === "cover_shortfall") {
+        nextSetAside = true;
+        nextMovedAmount = total;
+      } else if (action === "reset_pending") {
+        nextSetAside = false;
+        nextMovedAmount = 0;
+      } else if (isShortfall) {
+        // Clicking shortfall badge directly defaults to covering shortfall
+        nextSetAside = true;
+        nextMovedAmount = total;
+      } else {
+        nextSetAside = !expense.cc_funds_set_aside;
+        nextMovedAmount = nextSetAside ? total : 0;
+      }
+
+      await toggleFundsSetAside(expense.id, nextSetAside, nextMovedAmount);
       setUnsettledExpenses((prev) =>
-        prev.map((e) => (e.id === expense.id ? { ...e, cc_funds_set_aside: newValue } : e))
+        prev.map((e) =>
+          e.id === expense.id
+            ? { ...e, cc_funds_set_aside: nextSetAside, funds_moved_amount: nextMovedAmount }
+            : e
+        )
       );
       setMasterExpenses((prev) =>
-        prev.map((e) => (e.id === expense.id ? { ...e, cc_funds_set_aside: newValue } : e))
+        prev.map((e) =>
+          e.id === expense.id
+            ? { ...e, cc_funds_set_aside: nextSetAside, funds_moved_amount: nextMovedAmount }
+            : e
+        )
       );
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to update funds status");

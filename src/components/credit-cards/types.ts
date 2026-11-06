@@ -15,6 +15,7 @@ export type UnsettledExpense = {
   credit_card_name: string | null;
   cc_bill_settled: boolean;
   cc_funds_set_aside?: boolean;
+  funds_moved_amount?: number;
   categories: { id: number; name: string } | null;
 };
 
@@ -32,6 +33,7 @@ export type UnifiedMasterTransaction = {
   amount: number;
   settled: boolean;
   funds_set_aside?: boolean;
+  funds_moved_amount?: number;
   cash_received?: boolean;
   rawExpense?: UnsettledExpense;
   rawAdvance?: CCAdvance;

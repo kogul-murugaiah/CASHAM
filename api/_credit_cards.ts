@@ -22,45 +22,85 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // View: Unsettled Dues + Cards + All Unsettled Expenses
         if (view === 'dues') {
             try {
-                const [cardsRes, expensesRes] = await Promise.all([
-                    supabaseAdmin
-                        .from('credit_cards')
-                        .select('*')
-                        .eq('user_id', user.id)
-                        .order('name', { ascending: true }),
-                    supabaseAdmin
+                const cardsRes = await supabaseAdmin
+                    .from('credit_cards')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('name', { ascending: true });
+
+                if (cardsRes.error) throw cardsRes.error;
+
+                const duesSelectWithFunds = `
+                    id,
+                    amount,
+                    date,
+                    item,
+                    description,
+                    category_id,
+                    account_type,
+                    paid_via_credit_card,
+                    credit_card_id,
+                    credit_card_name,
+                    cc_bill_settled,
+                    cc_settled_at,
+                    cc_funds_set_aside,
+                    funds_moved_amount,
+                    categories (
+                        id,
+                        name
+                    )
+                `;
+
+                const duesSelectLegacy = `
+                    id,
+                    amount,
+                    date,
+                    item,
+                    description,
+                    category_id,
+                    account_type,
+                    paid_via_credit_card,
+                    credit_card_id,
+                    credit_card_name,
+                    cc_bill_settled,
+                    cc_settled_at,
+                    cc_funds_set_aside,
+                    categories (
+                        id,
+                        name
+                    )
+                `;
+
+                let expensesRes = await supabaseAdmin
+                    .from('expenses')
+                    .select(duesSelectWithFunds)
+                    .eq('user_id', user.id)
+                    .eq('paid_via_credit_card', true)
+                    .eq('cc_bill_settled', false)
+                    .order('date', { ascending: false });
+
+                if (expensesRes.error && (expensesRes.error.code === '42703' || expensesRes.error.message?.includes('funds_moved_amount'))) {
+                    expensesRes = await supabaseAdmin
                         .from('expenses')
-                        .select(`
-                            id,
-                            amount,
-                            date,
-                            item,
-                            description,
-                            category_id,
-                            account_type,
-                            paid_via_credit_card,
-                            credit_card_id,
-                            credit_card_name,
-                            cc_bill_settled,
-                            cc_settled_at,
-                            cc_funds_set_aside,
-                            categories (
-                                id,
-                                name
-                            )
-                        `)
+                        .select(duesSelectLegacy)
                         .eq('user_id', user.id)
                         .eq('paid_via_credit_card', true)
                         .eq('cc_bill_settled', false)
-                        .order('date', { ascending: false })
-                ]);
+                        .order('date', { ascending: false });
+                }
 
-                if (cardsRes.error) throw cardsRes.error;
                 if (expensesRes.error) throw expensesRes.error;
+
+                const expensesData = (expensesRes.data || []).map((e: any) => ({
+                    ...e,
+                    funds_moved_amount: e.funds_moved_amount != null
+                        ? Number(e.funds_moved_amount)
+                        : (e.cc_funds_set_aside ? Number(e.amount) : 0),
+                }));
 
                 return res.status(200).json({
                     cards: cardsRes.data || [],
-                    expenses: expensesRes.data || [],
+                    expenses: expensesData,
                 });
             } catch (error: any) {
                 return res.status(500).json({ error: error.message });
@@ -70,33 +110,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // View: Master CC Activity (All Credit Card Expenses, both settled and unsettled)
         if (view === 'master') {
             try {
-                const { data, error } = await supabaseAdmin
-                    .from('expenses')
-                    .select(`
+                const masterSelectWithFunds = `
+                    id,
+                    amount,
+                    date,
+                    item,
+                    description,
+                    category_id,
+                    account_type,
+                    paid_via_credit_card,
+                    credit_card_id,
+                    credit_card_name,
+                    cc_bill_settled,
+                    cc_settled_at,
+                    cc_funds_set_aside,
+                    funds_moved_amount,
+                    categories (
                         id,
-                        amount,
-                        date,
-                        item,
-                        description,
-                        category_id,
-                        account_type,
-                        paid_via_credit_card,
-                        credit_card_id,
-                        credit_card_name,
-                        cc_bill_settled,
-                        cc_settled_at,
-                        cc_funds_set_aside,
-                        categories (
-                            id,
-                            name
-                        )
-                    `)
+                        name
+                    )
+                `;
+
+                const masterSelectLegacy = `
+                    id,
+                    amount,
+                    date,
+                    item,
+                    description,
+                    category_id,
+                    account_type,
+                    paid_via_credit_card,
+                    credit_card_id,
+                    credit_card_name,
+                    cc_bill_settled,
+                    cc_settled_at,
+                    cc_funds_set_aside,
+                    categories (
+                        id,
+                        name
+                    )
+                `;
+
+                let resExp = await supabaseAdmin
+                    .from('expenses')
+                    .select(masterSelectWithFunds)
                     .eq('user_id', user.id)
                     .eq('paid_via_credit_card', true)
                     .order('date', { ascending: false });
 
-                if (error) throw error;
-                return res.status(200).json(data || []);
+                if (resExp.error && (resExp.error.code === '42703' || resExp.error.message?.includes('funds_moved_amount'))) {
+                    resExp = await supabaseAdmin
+                        .from('expenses')
+                        .select(masterSelectLegacy)
+                        .eq('user_id', user.id)
+                        .eq('paid_via_credit_card', true)
+                        .order('date', { ascending: false });
+                }
+
+                if (resExp.error) throw resExp.error;
+
+                const mapped = (resExp.data || []).map((e: any) => ({
+                    ...e,
+                    funds_moved_amount: e.funds_moved_amount != null
+                        ? Number(e.funds_moved_amount)
+                        : (e.cc_funds_set_aside ? Number(e.amount) : 0),
+                }));
+
+                return res.status(200).json(mapped);
             } catch (error: any) {
                 return res.status(500).json({ error: error.message });
             }
