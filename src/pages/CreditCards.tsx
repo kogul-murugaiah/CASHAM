@@ -32,6 +32,7 @@ import { CCCardModal } from "../components/credit-cards/CCCardModal";
 import { CCAdvanceModal } from "../components/credit-cards/CCAdvanceModal";
 import { CCMoveToExpenseModal } from "../components/credit-cards/CCMoveToExpenseModal";
 import { CCRecordPaymentModal } from "../components/credit-cards/CCRecordPaymentModal";
+import { CCInstallmentHistoryModal } from "../components/credit-cards/CCInstallmentHistoryModal";
 import { CCSmartSettleModal } from "../components/credit-cards/CCSmartSettleModal";
 
 const CreditCards = () => {
@@ -115,7 +116,8 @@ const CreditCards = () => {
   const [duesFilterFundsStatus, setDuesFilterFundsStatus] = useState<"all" | "moved" | "pending">("all");
   const [advancesSearch, setAdvancesSearch] = useState("");
   const [advancesFilterCard, setAdvancesFilterCard] = useState("all");
-  const [advancesFilterCashStatus, setAdvancesFilterCashStatus] = useState<"all" | "received" | "pending">("all");
+  const [advancesFilterCashStatus, setAdvancesFilterCashStatus] = useState<"all" | "received" | "pending" | "partial">("all");
+  const [advanceForHistory, setAdvanceForHistory] = useState<CCAdvance | null>(null);
 
   // Smart "Settle by Date" State
   const [showSmartSettleModal, setShowSmartSettleModal] = useState(false);
@@ -230,6 +232,12 @@ const CreditCards = () => {
       list = list.filter((a) => a.cash_received);
     } else if (advancesFilterCashStatus === "pending") {
       list = list.filter((a) => !a.cash_received);
+    } else if (advancesFilterCashStatus === "partial") {
+      list = list.filter((a) => {
+        const total = Number(a.amount || 0);
+        const paid = Number(a.paid_amount || 0);
+        return !a.cash_received && paid > 0 && paid < total;
+      });
     }
     if (advancesSearch.trim()) {
       const q = advancesSearch.toLowerCase();
@@ -1043,6 +1051,7 @@ const CreditCards = () => {
             onDeleteAdvance={handleDeleteAdvance}
             onMoveToExpense={(adv) => setAdvanceToMove(adv)}
             onOpenPaymentModal={(adv) => setAdvanceToPay(adv)}
+            onOpenHistoryModal={(adv) => setAdvanceForHistory(adv)}
             currencyStyle={currencyStyle}
             isDark={isDark}
           />
@@ -1112,6 +1121,15 @@ const CreditCards = () => {
           advance={advanceToPay}
           onClose={() => setAdvanceToPay(null)}
           onRecord={handleRecordPayment}
+          currencyStyle={currencyStyle}
+          isDark={isDark}
+        />
+
+        <CCInstallmentHistoryModal
+          isOpen={Boolean(advanceForHistory)}
+          advance={advanceForHistory}
+          onClose={() => setAdvanceForHistory(null)}
+          onRecordMore={(adv) => setAdvanceToPay(adv)}
           currencyStyle={currencyStyle}
           isDark={isDark}
         />

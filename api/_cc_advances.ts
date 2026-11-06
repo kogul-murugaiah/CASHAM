@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // POST → create a new advance
     if (method === 'POST') {
         try {
-            const { person_name, amount, paid_amount, credit_card_id, credit_card_name, date, description } = req.body;
+            const { person_name, amount, paid_amount, repayments, credit_card_id, credit_card_name, date, description } = req.body;
             if (!person_name || !amount || !credit_card_name || !date) {
                 return res.status(400).json({ error: 'person_name, amount, credit_card_name and date are required' });
             }
@@ -46,6 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 person_name: person_name.trim(),
                 amount: Number(amount),
                 paid_amount: Number(paid_amount || 0),
+                repayments: Array.isArray(repayments) ? repayments : [],
                 credit_card_id: credit_card_id || null,
                 credit_card_name,
                 date,
@@ -59,15 +60,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 .select()
                 .single();
 
-            if (error && error.message?.includes('paid_amount')) {
+            if (error && (error.message?.includes('paid_amount') || error.message?.includes('repayments'))) {
                 delete insertPayload.paid_amount;
+                delete insertPayload.repayments;
                 const retry = await supabaseAdmin
                     .from('cc_advances')
                     .insert([insertPayload])
                     .select()
                     .single();
                 if (retry.error) throw retry.error;
-                data = { ...retry.data, paid_amount: 0 };
+                data = { ...retry.data, paid_amount: 0, repayments: [] };
             } else if (error) {
                 throw error;
             }
@@ -81,13 +83,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PUT → mark cash received (or update details)
     if (method === 'PUT') {
         try {
-            const { id, cash_received, cash_received_date, person_name, amount, paid_amount, description } = req.body;
+            const { id, cash_received, cash_received_date, person_name, amount, paid_amount, repayments, description } = req.body;
             if (!id) return res.status(400).json({ error: 'id is required' });
 
             const updates: any = {};
             if (person_name !== undefined) updates.person_name = person_name.trim();
             if (amount !== undefined) updates.amount = Number(amount);
             if (paid_amount !== undefined) updates.paid_amount = Number(paid_amount);
+            if (repayments !== undefined) updates.repayments = repayments;
             if (description !== undefined) updates.description = description?.trim() || null;
             if (cash_received !== undefined) {
                 updates.cash_received = Boolean(cash_received);
@@ -104,8 +107,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 .select()
                 .single();
 
-            if (error && error.message?.includes('paid_amount')) {
+            if (error && (error.message?.includes('paid_amount') || error.message?.includes('repayments'))) {
                 delete updates.paid_amount;
+                delete updates.repayments;
                 const retry = await supabaseAdmin
                     .from('cc_advances')
                     .update(updates)
@@ -114,7 +118,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .select()
                     .single();
                 if (retry.error) throw retry.error;
-                data = { ...retry.data, paid_amount: Number(paid_amount) };
+                data = {
+                    ...retry.data,
+                    paid_amount: paid_amount !== undefined ? Number(paid_amount) : retry.data?.paid_amount,
+                    repayments: repayments !== undefined ? repayments : retry.data?.repayments || [],
+                };
             } else if (error) {
                 throw error;
             }

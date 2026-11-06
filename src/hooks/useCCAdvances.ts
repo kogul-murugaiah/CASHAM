@@ -1,12 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
 
+export type CCRepayment = {
+    id: string;
+    amount: number;
+    date: string;
+    note?: string;
+    created_at?: string;
+};
+
 export type CCAdvance = {
     id: string;
     user_id: string;
     person_name: string;
     amount: number;
     paid_amount?: number;
+    repayments?: CCRepayment[];
     credit_card_id: string | null;
     credit_card_name: string;
     date: string;
@@ -44,6 +53,7 @@ export function useCCAdvances() {
         person_name: string;
         amount: number;
         paid_amount?: number;
+        repayments?: CCRepayment[];
         credit_card_id?: string | null;
         credit_card_name: string;
         date: string;
@@ -56,15 +66,28 @@ export function useCCAdvances() {
 
     const markReceived = useCallback(async (id: string, received: boolean, receivedDate?: string) => {
         const advance = advances.find(a => a.id === id);
+        const total = Number(advance?.amount || 0);
+        const fullRepayments: CCRepayment[] = received
+            ? [{
+                id: `rep-${Date.now()}`,
+                amount: total,
+                date: receivedDate || new Date().toISOString().split('T')[0],
+                note: 'Full settlement',
+            }]
+            : [];
+
         const data = await api.put('/api/cc-advances', {
             id,
             cash_received: received,
-            paid_amount: received ? (advance?.amount || 0) : 0,
-            cash_received_date: receivedDate,
+            paid_amount: received ? total : 0,
+            repayments: fullRepayments,
+            cash_received_date: received ? (receivedDate || new Date().toISOString().split('T')[0]) : null,
         });
+
         const result: CCAdvance = {
             ...data,
-            paid_amount: received ? (advance?.amount || 0) : 0,
+            paid_amount: received ? total : 0,
+            repayments: fullRepayments,
             cash_received: received,
         };
         setAdvances(prev => prev.map(a => a.id === id ? result : a));
@@ -78,6 +101,28 @@ export function useCCAdvances() {
         const newPaid = Math.min(total, currentPaid + Number(paymentAmount));
         const isFullyPaid = newPaid >= total;
 
+        const effectiveDate = paymentDate || new Date().toISOString().split('T')[0];
+        const newRepayment: CCRepayment = {
+            id: `rep-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            amount: Number(paymentAmount),
+            date: effectiveDate,
+            note: note?.trim() || undefined,
+            created_at: new Date().toISOString(),
+        };
+
+        const existingRepayments: CCRepayment[] = Array.isArray(current?.repayments) && current.repayments.length > 0
+            ? current.repayments
+            : (Number(current?.paid_amount || 0) > 0
+                ? [{
+                    id: `rep-initial-${current?.id}`,
+                    amount: Number(current?.paid_amount),
+                    date: current?.cash_received_date || current?.date || effectiveDate,
+                    note: current?.description || 'Prior installment',
+                }]
+                : []);
+
+        const updatedRepayments = [...existingRepayments, newRepayment];
+
         let newDescription = current?.description || '';
         if (note?.trim()) {
             newDescription = newDescription ? `${newDescription} | ${note.trim()}` : note.trim();
@@ -86,14 +131,16 @@ export function useCCAdvances() {
         const data = await api.put('/api/cc-advances', {
             id,
             paid_amount: newPaid,
+            repayments: updatedRepayments,
             cash_received: isFullyPaid,
-            cash_received_date: isFullyPaid ? (paymentDate || new Date().toISOString().split('T')[0]) : current?.cash_received_date,
+            cash_received_date: isFullyPaid ? effectiveDate : current?.cash_received_date,
             description: newDescription || null,
         });
 
         const result: CCAdvance = {
             ...data,
             paid_amount: newPaid,
+            repayments: updatedRepayments,
             cash_received: isFullyPaid,
         };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight, FiDollarSign } from "react-icons/fi";
+import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight, FiDollarSign, FiClock } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../../lib/formatters";
 import type { CreditCard, CCAdvance, CurrencyStyle } from "./types";
 
@@ -11,13 +11,14 @@ interface CCAdvancesLedgerProps {
   setAdvancesSearch: (val: string) => void;
   advancesFilterCard: string;
   onFilterCardChange: (cardId: string) => void;
-  advancesFilterCashStatus: "all" | "received" | "pending";
-  setAdvancesFilterCashStatus: (status: "all" | "received" | "pending") => void;
+  advancesFilterCashStatus: "all" | "received" | "pending" | "partial";
+  setAdvancesFilterCashStatus: (status: "all" | "received" | "pending" | "partial") => void;
   onOpenAdvanceModal: () => void;
   onToggleReceived: (advance: CCAdvance) => void;
   onDeleteAdvance: (id: string, personName: string) => void;
   onMoveToExpense?: (advance: CCAdvance) => void;
   onOpenPaymentModal?: (advance: CCAdvance) => void;
+  onOpenHistoryModal?: (advance: CCAdvance) => void;
   currencyStyle?: CurrencyStyle;
   isDark: boolean;
 }
@@ -37,6 +38,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
   onDeleteAdvance,
   onMoveToExpense,
   onOpenPaymentModal,
+  onOpenHistoryModal,
   currencyStyle,
   isDark,
 }) => {
@@ -200,12 +202,13 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
             </select>
             <select
               value={advancesFilterCashStatus}
-              onChange={(e) => setAdvancesFilterCashStatus(e.target.value as "all" | "received" | "pending")}
+              onChange={(e) => setAdvancesFilterCashStatus(e.target.value as "all" | "received" | "pending" | "partial")}
               className={`${inputClass} sm:w-44`}
             >
               <option value="all">All Cash Status</option>
               <option value="received">Cash Received</option>
               <option value="pending">Cash Pending</option>
+              <option value="partial">Partially Paid</option>
             </select>
           </div>
         </div>
@@ -265,7 +268,11 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
                         {formatDate(advance.date)}
                       </td>
                       <td className="px-6 py-4 text-sm font-mono whitespace-nowrap">
-                        <div className="space-y-1">
+                        <div
+                          onClick={() => onOpenHistoryModal && onOpenHistoryModal(advance)}
+                          className={`space-y-1 ${onOpenHistoryModal ? "cursor-pointer group/hist" : ""}`}
+                          title={onOpenHistoryModal ? "Click to view installment history" : undefined}
+                        >
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-bold ${
@@ -337,6 +344,17 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* History / Timeline Button */}
+                          {onOpenHistoryModal && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenHistoryModal(advance)}
+                              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-teal-500 transition-colors"
+                              title="View installment history & timeline"
+                            >
+                              <FiClock size={14} />
+                            </button>
+                          )}
                           {/* Record Payment Button */}
                           {!advance.cash_received && onOpenPaymentModal && (
                             <button

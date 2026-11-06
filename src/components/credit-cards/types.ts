@@ -1,5 +1,5 @@
 import type { CreditCard, CreditCardSettlement } from "../../hooks/useCreditCards";
-import type { CCAdvance } from "../../hooks/useCCAdvances";
+import type { CCAdvance, CCRepayment } from "../../hooks/useCCAdvances";
 import type { CurrencyStyle } from "../../lib/formatters";
 
 export type UnsettledExpense = {
@@ -56,4 +56,4 @@ export type AdvanceFormState = {
   description: string;
 };
 
-export type { CreditCard, CreditCardSettlement, CCAdvance, CurrencyStyle };
+export type { CreditCard, CreditCardSettlement, CCAdvance, CCRepayment, CurrencyStyle };
