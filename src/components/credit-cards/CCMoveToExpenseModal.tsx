@@ -55,7 +55,10 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
         ? advance.description
         : `Advance - ${advance.person_name}`;
       setItem(suggestedItem);
-      setAmount(advance.amount.toString());
+      const total = Number(advance.amount || 0);
+      const paid = Number(advance.paid_amount || (advance.cash_received ? total : 0) || 0);
+      const available = paid > 0 ? Math.max(0, total - paid) : total;
+      setAmount(available > 0 ? available.toString() : total.toString());
       setDate(advance.date);
       setCreditCardId(advance.credit_card_id || "");
       setCreditCardName(advance.credit_card_name || "");
@@ -204,20 +207,32 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
 
         {/* Advance Quick Summary Banner */}
         <div
-          className={`p-3 rounded-2xl border text-xs flex items-center justify-between ${
+          className={`p-3.5 rounded-2xl border text-xs space-y-2 ${
             isDark ? "bg-slate-800/60 border-slate-700" : "bg-slate-50 border-slate-200"
           }`}
         >
-          <div>
-            <span className={`block font-medium ${textSecondary}`}>Advance For</span>
-            <span className={`text-sm font-bold ${textPrimary}`}>{advance.person_name}</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className={`block font-medium ${textSecondary}`}>Advance For</span>
+              <span className={`text-sm font-bold ${textPrimary}`}>{advance.person_name}</span>
+            </div>
+            <div className="text-right">
+              <span className={`block font-medium ${textSecondary}`}>Advance Total</span>
+              <span className="text-sm font-bold text-emerald-500 font-mono">
+                {formatCurrency(totalAdvance, currencyStyle)}
+              </span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className={`block font-medium ${textSecondary}`}>Current Advance Total</span>
-            <span className="text-sm font-bold text-emerald-500 font-mono">
-              {formatCurrency(totalAdvance, currencyStyle)}
-            </span>
-          </div>
+          {alreadyPaid > 0 && (
+            <div className={`pt-2 border-t flex items-center justify-between text-[11px] ${divider}`}>
+              <span className="text-emerald-500 font-medium">
+                Already Repaid: {formatCurrency(alreadyPaid, currencyStyle)}
+              </span>
+              <span className="text-amber-500 font-bold font-mono">
+                Unpaid Available to Move: {formatCurrency(maxMoveable, currencyStyle)}
+              </span>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -251,17 +266,23 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => setAmount(Math.round(totalAdvance / 2).toString())}
+                    onClick={() => {
+                      const base = alreadyPaid > 0 ? maxMoveable : totalAdvance;
+                      setAmount(Math.round(base / 2).toString());
+                    }}
                     className="px-1.5 py-0.5 text-[10px] rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-500/15 hover:text-emerald-500"
                   >
                     50%
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAmount(totalAdvance.toString())}
+                    onClick={() => {
+                      const base = alreadyPaid > 0 ? maxMoveable : totalAdvance;
+                      setAmount(base.toString());
+                    }}
                     className="px-1.5 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-emerald-500/20"
                   >
-                    100%
+                    {alreadyPaid > 0 ? "Full Due" : "100%"}
                   </button>
                 </div>
               </div>
@@ -269,7 +290,7 @@ export const CCMoveToExpenseModal: React.FC<CCMoveToExpenseModalProps> = ({
                 type="number"
                 required
                 min="0.01"
-                max={totalAdvance}
+                max={alreadyPaid > 0 ? maxMoveable : totalAdvance}
                 step="any"
                 placeholder="Amount"
                 value={amount}
