@@ -11,6 +11,13 @@ export interface CreditCard {
   payment_due_day: number;
   color?: string;
   total_dues?: number;
+  statement_due?: number;
+  unbilled_amount?: number;
+  statement_settled?: boolean;
+  last_statement_date?: string;
+  next_statement_date?: string;
+  statement_due_date?: string;
+  days_until_due?: number;
   utilization_percent?: number;
   created_at?: string;
 }

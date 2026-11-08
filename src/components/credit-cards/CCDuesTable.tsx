@@ -12,6 +12,8 @@ interface CCDuesTableProps {
   onFilterCardChange: (cardId: string) => void;
   duesFilterFundsStatus: "all" | "moved" | "pending" | "shortfall";
   setDuesFilterFundsStatus: (status: "all" | "moved" | "pending" | "shortfall") => void;
+  duesFilterCycle?: "all" | "statement" | "unbilled";
+  setDuesFilterCycle?: (cycle: "all" | "statement" | "unbilled") => void;
   onToggleExpenseFundsSetAside: (
     expense: UnsettledExpense,
     action?: "toggle" | "cover_shortfall" | "reset_pending"
@@ -29,6 +31,8 @@ export const CCDuesTable: React.FC<CCDuesTableProps> = ({
   onFilterCardChange,
   duesFilterFundsStatus,
   setDuesFilterFundsStatus,
+  duesFilterCycle = "all",
+  setDuesFilterCycle,
   onToggleExpenseFundsSetAside,
   currencyStyle,
   isDark,
@@ -122,6 +126,17 @@ export const CCDuesTable: React.FC<CCDuesTableProps> = ({
               <option value="shortfall">Shortfall / Underfunded</option>
               <option value="pending">Funds Pending</option>
             </select>
+            {setDuesFilterCycle && (
+              <select
+                value={duesFilterCycle}
+                onChange={(e) => setDuesFilterCycle(e.target.value as "all" | "statement" | "unbilled")}
+                className={`${inputClass} sm:w-44`}
+              >
+                <option value="all">All Cycles</option>
+                <option value="statement">Statement Dues (Past/Due)</option>
+                <option value="unbilled">Unbilled (Next Cycle)</option>
+              </select>
+            )}
           </div>
         </div>
 

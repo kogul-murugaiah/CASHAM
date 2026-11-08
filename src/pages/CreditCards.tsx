@@ -34,6 +34,7 @@ import { CCMoveToExpenseModal } from "../components/credit-cards/CCMoveToExpense
 import { CCRecordPaymentModal } from "../components/credit-cards/CCRecordPaymentModal";
 import { CCInstallmentHistoryModal } from "../components/credit-cards/CCInstallmentHistoryModal";
 import { CCSmartSettleModal } from "../components/credit-cards/CCSmartSettleModal";
+import { getCardCycleDates, calculateCardCycleDues, type CardCycleDues } from "../lib/creditCardCycles";
 
 const CreditCards = () => {
   const {
@@ -114,6 +115,7 @@ const CreditCards = () => {
   const [duesSearch, setDuesSearch] = useState("");
   const [duesFilterCard, setDuesFilterCard] = useState("all");
   const [duesFilterFundsStatus, setDuesFilterFundsStatus] = useState<"all" | "moved" | "pending" | "shortfall">("all");
+  const [duesFilterCycle, setDuesFilterCycle] = useState<"all" | "statement" | "unbilled">("all");
   const [advancesSearch, setAdvancesSearch] = useState("");
   const [advancesFilterCard, setAdvancesFilterCard] = useState("all");
   const [advancesFilterCashStatus, setAdvancesFilterCashStatus] = useState<"all" | "received" | "pending" | "partial">("all");
@@ -219,6 +221,19 @@ const CreditCards = () => {
         return moved > 0 && moved < total;
       });
     }
+    if (duesFilterCycle !== "all") {
+      list = list.filter((e) => {
+        const card = cards.find(
+          (c) => (e.credit_card_id && c.id === e.credit_card_id) || (e.credit_card_name && c.name === e.credit_card_name)
+        );
+        const cycle = getCardCycleDates(card?.billing_cycle_day || 23, card?.payment_due_day || 20);
+        if (duesFilterCycle === "statement") {
+          return e.date <= cycle.lastStatementDate;
+        } else {
+          return e.date > cycle.lastStatementDate;
+        }
+      });
+    }
     if (duesSearch.trim()) {
       const q = duesSearch.toLowerCase();
       list = list.filter(
@@ -232,7 +247,7 @@ const CreditCards = () => {
       );
     }
     return list;
-  }, [unsettledExpenses, activeCardId, duesFilterCard, duesFilterFundsStatus, duesSearch, cards]);
+  }, [unsettledExpenses, activeCardId, duesFilterCard, duesFilterFundsStatus, duesFilterCycle, duesSearch, cards]);
 
   // Search + filter on top of filteredAdvances (combines card selection + cash received status)
   const displayedAdvances = useMemo(() => {
@@ -547,6 +562,21 @@ const CreditCards = () => {
 
     return map;
   }, [cards, unsettledExpenses, advances]);
+
+  const cardCyclesMap = useMemo(() => {
+    const map: Record<string, CardCycleDues> = {};
+    for (const c of cards) {
+      map[c.id] = calculateCardCycleDues(c, unsettledExpenses, advances);
+    }
+    return map;
+  }, [cards, unsettledExpenses, advances]);
+
+  const getCardCycleData = useCallback(
+    (card: CreditCard): CardCycleDues => {
+      return cardCyclesMap[card.id] || calculateCardCycleDues(card, unsettledExpenses, advances);
+    },
+    [cardCyclesMap, cards, unsettledExpenses, advances]
+  );
 
   const getCardDues = (card: CreditCard): number => {
     if (!loadingDues) {
@@ -985,6 +1015,7 @@ const CreditCards = () => {
           onDeleteCard={handleDeleteCard}
           totalOutstandingDues={totalOutstandingDues}
           getCardDues={getCardDues}
+          getCardCycleData={getCardCycleData}
           currencyStyle={currencyStyle}
           isDark={isDark}
         />
@@ -1079,6 +1110,8 @@ const CreditCards = () => {
             }}
             duesFilterFundsStatus={duesFilterFundsStatus}
             setDuesFilterFundsStatus={setDuesFilterFundsStatus}
+            duesFilterCycle={duesFilterCycle}
+            setDuesFilterCycle={setDuesFilterCycle}
             onToggleExpenseFundsSetAside={handleToggleExpenseFundsSetAside}
             currencyStyle={currencyStyle}
             isDark={isDark}

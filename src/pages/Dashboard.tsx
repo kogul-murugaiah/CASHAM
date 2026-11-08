@@ -7,6 +7,7 @@ import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
 import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown, FiCreditCard } from "react-icons/fi";
 import type { CreditCard } from "../hooks/useCreditCards";
+import { getCardCycleDates } from "../lib/creditCardCycles";
 import { useTasks, getLocalDateStr } from "../hooks/useTasks";
 import {
   BarChart,
@@ -158,33 +159,33 @@ const Dashboard = () => {
     };
     fetchData();
   }, [currentYear, currentMonth, accountTypes]);
-  // ── Due-Soon Credit Card Alerts (within 5 days with pending dues) ────────
+  // ── Due-Soon Credit Card Alerts (ONLY when the last generated statement has open dues!) ────────
   const dueSoonCards = useMemo(() => {
-    const today = new Date();
-    const currentDay = today.getDate();
-    const totalDaysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-
     return creditCards
       .filter(card => {
-        const dues = Number(card.total_dues || 0);
-        if (dues <= 0) return false;
-        const dueDay = card.payment_due_day;
-        if (!dueDay) return false;
+        // If card already has backend statement_due, use it; otherwise compute cycle
+        let statementDue = card.statement_due;
+        let daysLeft = card.days_until_due;
 
-        let daysLeft = dueDay - currentDay;
-        if (daysLeft < 0) {
-          daysLeft = totalDaysInMonth - currentDay + dueDay;
+        if (statementDue === undefined || daysLeft === undefined) {
+          const cycle = getCardCycleDates(card.billing_cycle_day || 23, card.payment_due_day || 20);
+          daysLeft = cycle.daysUntilDue;
+          statementDue = card.statement_settled ? 0 : Number(card.total_dues || 0);
         }
+
+        // SUPPRESS ALERT COMPLETELY if the last statement is already paid / 0 dues!
+        if (Number(statementDue) <= 0) return false;
+
+        // Only alert if within 5 days of statement due date or overdue
         return daysLeft <= 5;
       })
       .map(card => {
-        const dueDay = card.payment_due_day || 20;
-        let daysLeft = dueDay - currentDay;
-        if (daysLeft < 0) {
-          daysLeft = totalDaysInMonth - currentDay + dueDay;
-        }
+        const cycle = getCardCycleDates(card.billing_cycle_day || 23, card.payment_due_day || 20);
+        const daysLeft = card.days_until_due ?? cycle.daysUntilDue;
+        const statementDue = card.statement_due ?? card.total_dues ?? 0;
         return {
           ...card,
+          statement_due: statementDue,
           daysUntilDue: daysLeft
         };
       })
@@ -358,7 +359,7 @@ const Dashboard = () => {
                         <p className={`text-sm sm:text-base font-bold mt-0.5 ${isDark ? "text-slate-100" : "text-slate-900"}`}>
                           <span className="font-extrabold">{card.name}</span> bill payment {dueText}{" "}
                           <span className="font-mono text-amber-500">
-                            ({formatCurrency(card.total_dues || 0, currencyStyle)} pending)
+                            ({formatCurrency(card.statement_due || 0, currencyStyle)} pending)
                           </span>
                         </p>
                       </div>

@@ -1,7 +1,8 @@
 import React from "react";
-import { FiCreditCard, FiPlus, FiArrowRight, FiEdit2, FiTrash2, FiCalendar, FiClock } from "react-icons/fi";
+import { FiCreditCard, FiPlus, FiArrowRight, FiEdit2, FiTrash2, FiCalendar, FiClock, FiCheckCircle } from "react-icons/fi";
 import { formatCurrency } from "../../lib/formatters";
 import type { CreditCard, CurrencyStyle } from "./types";
+import { getCardCycleDates, type CardCycleDues } from "../../lib/creditCardCycles";
 
 interface CCCardListProps {
   cards: CreditCard[];
@@ -12,6 +13,7 @@ interface CCCardListProps {
   onDeleteCard: (id: string, name: string) => void;
   totalOutstandingDues: number;
   getCardDues: (card: CreditCard) => number;
+  getCardCycleData?: (card: CreditCard) => CardCycleDues;
   currencyStyle?: CurrencyStyle;
   isDark: boolean;
 }
@@ -25,6 +27,7 @@ export const CCCardList: React.FC<CCCardListProps> = ({
   onDeleteCard,
   totalOutstandingDues,
   getCardDues,
+  getCardCycleData,
   currencyStyle,
   isDark,
 }) => {
@@ -41,17 +44,6 @@ export const CCCardList: React.FC<CCCardListProps> = ({
     : "bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-md";
   const progressTrack = isDark ? "bg-slate-700/60" : "bg-slate-200";
   const dueBadge = isDark ? "bg-slate-700/60 text-slate-300" : "bg-slate-100 text-slate-600";
-
-  const getDueCountdown = (dueDay: number) => {
-    const today = new Date();
-    const currentDay = today.getDate();
-    let daysLeft = dueDay - currentDay;
-    if (daysLeft < 0) {
-      const totalDaysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-      daysLeft = totalDaysInMonth - currentDay + dueDay;
-    }
-    return daysLeft;
-  };
 
   return (
     <div className="space-y-3 animate-fade-in">
@@ -112,7 +104,13 @@ export const CCCardList: React.FC<CCCardListProps> = ({
             const cardDues = getCardDues(card);
             const cardLimit = Number(card.credit_limit || 0);
             const cardUtil = cardLimit > 0 ? (cardDues / cardLimit) * 100 : 0;
-            const daysUntilDue = getDueCountdown(card.payment_due_day || 20);
+
+            const cycleData = getCardCycleData ? getCardCycleData(card) : null;
+            const cycleInfo = cycleData ? cycleData.cycleInfo : getCardCycleDates(card.billing_cycle_day || 23, card.payment_due_day || 20);
+            const statementDue = cycleData ? cycleData.statementDue : (card.statement_due ?? 0);
+            const unbilledSpends = cycleData ? cycleData.unbilledSpends : (card.unbilled_amount ?? cardDues);
+            const isStatementPaid = cycleData ? cycleData.isStatementPaid : (statementDue === 0);
+            const daysUntilDue = cycleInfo.daysUntilDue;
 
             return (
               <div
@@ -163,13 +161,19 @@ export const CCCardList: React.FC<CCCardListProps> = ({
                   <span className="flex items-center gap-1">
                     <FiCalendar size={11} /> Bill: {card.billing_cycle_day}th
                   </span>
-                  <span
-                    className={`font-semibold px-1.5 py-0.5 rounded ${
-                      daysUntilDue <= 5 ? "bg-red-500/15 text-red-500" : dueBadge
-                    }`}
-                  >
-                    <FiClock className="inline mr-0.5" size={10} /> Due in {daysUntilDue}d
-                  </span>
+                  {isStatementPaid ? (
+                    <span className="font-semibold px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                      <FiCheckCircle size={10} /> Statement Paid
+                    </span>
+                  ) : (
+                    <span
+                      className={`font-semibold px-1.5 py-0.5 rounded text-[10px] inline-flex items-center gap-1 ${
+                        daysUntilDue <= 5 ? "bg-red-500/15 text-red-500 border border-red-500/25" : dueBadge
+                      }`}
+                    >
+                      <FiClock size={10} /> {daysUntilDue <= 0 ? "Due Today" : `Due in ${daysUntilDue}d`}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-3">
@@ -189,11 +193,28 @@ export const CCCardList: React.FC<CCCardListProps> = ({
                   </div>
                 </div>
 
-                <div className={`mt-3 pt-2.5 border-t flex items-baseline justify-between ${divider}`}>
-                  <span className={`text-[10px] uppercase font-semibold ${textSecondary}`}>Outstanding</span>
-                  <span className="text-lg font-bold font-heading text-emerald-500">
-                    {formatCurrency(cardDues, currencyStyle)}
-                  </span>
+                {/* 2-Metric Cycle Breakdown */}
+                <div className={`mt-3 pt-2.5 border-t space-y-1.5 ${divider}`}>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className={textSecondary}>Statement Due:</span>
+                    <span className={isStatementPaid ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-bold text-red-500 font-mono"}>
+                      {isStatementPaid ? "₹0 (Paid)" : formatCurrency(statementDue, currencyStyle)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className={textSecondary} title={`Next bill generated on ${cycleInfo.nextStatementDate}`}>
+                      Unbilled Spends:
+                    </span>
+                    <span className={`font-semibold font-mono ${textPrimary}`}>
+                      {formatCurrency(unbilledSpends, currencyStyle)}
+                    </span>
+                  </div>
+                  <div className={`flex items-baseline justify-between pt-1 border-t border-dashed ${divider}`}>
+                    <span className={`text-[10px] uppercase font-bold ${textSecondary}`}>Total Outstanding</span>
+                    <span className="text-base font-bold font-heading text-emerald-500 font-mono">
+                      {formatCurrency(cardDues, currencyStyle)}
+                    </span>
+                  </div>
                 </div>
               </div>
             );

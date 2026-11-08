@@ -216,7 +216,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
         }
 
-        // Default: List All Cards with live unsettled dues calculated
+        // Default: List All Cards with live cycle-aware dues calculated
         try {
             const [cardsRes, expensesRes, advancesRes] = await Promise.all([
                 supabaseAdmin
@@ -226,13 +226,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     .order('created_at', { ascending: true }),
                 supabaseAdmin
                     .from('expenses')
-                    .select('amount, credit_card_id, credit_card_name')
+                    .select('amount, credit_card_id, credit_card_name, date')
                     .eq('user_id', user.id)
                     .eq('paid_via_credit_card', true)
                     .eq('cc_bill_settled', false),
                 supabaseAdmin
                     .from('cc_advances')
-                    .select('amount, credit_card_id, credit_card_name')
+                    .select('amount, credit_card_id, credit_card_name, date')
                     .eq('user_id', user.id)
                     .eq('cc_bill_settled', false)
             ]);
@@ -245,7 +245,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const expenses = expensesRes.data || [];
             const advances = advancesRes.data || [];
 
-            // Compute dues per card
+            function computeCycleDates(billingDay = 23, dueDay = 20, refDate = new Date()) {
+                const y = refDate.getFullYear();
+                const m = refDate.getMonth();
+                const d = refDate.getDate();
+
+                const safeBilling = Math.min(31, Math.max(1, Number(billingDay) || 23));
+                const safeDue = Math.min(31, Math.max(1, Number(dueDay) || 20));
+
+                let lastStmtY = y;
+                let lastStmtM = m;
+                if (d < safeBilling) {
+                    lastStmtM = m - 1;
+                    if (lastStmtM < 0) {
+                        lastStmtM = 11;
+                        lastStmtY = y - 1;
+                    }
+                }
+                const maxDayInLastStmt = new Date(lastStmtY, lastStmtM + 1, 0).getDate();
+                const lastStmtD = Math.min(safeBilling, maxDayInLastStmt);
+                const lastStmtDate = new Date(lastStmtY, lastStmtM, lastStmtD);
+
+                let dueY = lastStmtY;
+                let dueM = lastStmtM;
+                if (safeDue <= safeBilling) {
+                    dueM = lastStmtM + 1;
+                    if (dueM > 11) {
+                        dueM = 0;
+                        dueY = lastStmtY + 1;
+                    }
+                }
+                const maxDayInDue = new Date(dueY, dueM + 1, 0).getDate();
+                const actualDueD = Math.min(safeDue, maxDayInDue);
+                const dueDate = new Date(dueY, dueM, actualDueD);
+
+                let nextStmtY = lastStmtY;
+                let nextStmtM = lastStmtM + 1;
+                if (nextStmtM > 11) {
+                    nextStmtM = 0;
+                    nextStmtY = lastStmtY + 1;
+                }
+                const maxDayInNextStmt = new Date(nextStmtY, nextStmtM + 1, 0).getDate();
+                const nextStmtD = Math.min(safeBilling, maxDayInNextStmt);
+                const nextStmtDate = new Date(nextStmtY, nextStmtM, nextStmtD);
+
+                const refMidnight = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+                const dueMidnight = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+                const diffDays = Math.round((dueMidnight.getTime() - refMidnight.getTime()) / (1000 * 60 * 60 * 24));
+
+                const toISO = (dt) => {
+                    const yr = dt.getFullYear();
+                    const mo = String(dt.getMonth() + 1).padStart(2, '0');
+                    const da = String(dt.getDate()).padStart(2, '0');
+                    return `${yr}-${mo}-${da}`;
+                };
+
+                return {
+                    lastStatementDate: toISO(lastStmtDate),
+                    dueDate: toISO(dueDate),
+                    nextStatementDate: toISO(nextStmtDate),
+                    daysUntilDue: diffDays,
+                };
+            }
+
+            // Compute cycle-separated dues per card
             const cardsWithDues = cards.map((card) => {
                 const cardExpenses = expenses.filter(
                     (e) => e.credit_card_id === card.id || e.credit_card_name === card.name
@@ -253,17 +316,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 const cardAdvances = advances.filter(
                     (a) => a.credit_card_id === card.id || a.credit_card_name === card.name
                 );
-                
-                const totalExpenses = cardExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-                const totalAdvances = cardAdvances.reduce((sum, a) => sum + Number(a.amount || 0), 0);
-                const totalDues = totalExpenses + totalAdvances;
-                
+
+                const cycle = computeCycleDates(card.billing_cycle_day || 23, card.payment_due_day || 20);
+                const cutoff = cycle.lastStatementDate;
+
+                let statementDue = 0;
+                let unbilledAmount = 0;
+
+                for (const e of cardExpenses) {
+                    const amt = Number(e.amount || 0);
+                    if (e.date && e.date <= cutoff) {
+                        statementDue += amt;
+                    } else {
+                        unbilledAmount += amt;
+                    }
+                }
+
+                for (const a of cardAdvances) {
+                    const amt = Number(a.amount || 0);
+                    if (a.date && a.date <= cutoff) {
+                        statementDue += amt;
+                    } else {
+                        unbilledAmount += amt;
+                    }
+                }
+
+                const totalDues = statementDue + unbilledAmount;
                 const limit = Number(card.credit_limit || 0);
                 const utilization = limit > 0 ? (totalDues / limit) * 100 : 0;
 
                 return {
                     ...card,
                     total_dues: totalDues,
+                    statement_due: statementDue,
+                    unbilled_amount: unbilledAmount,
+                    statement_settled: statementDue === 0,
+                    last_statement_date: cycle.lastStatementDate,
+                    statement_due_date: cycle.dueDate,
+                    next_statement_date: cycle.nextStatementDate,
+                    days_until_due: cycle.daysUntilDue,
                     utilization_percent: Number(utilization.toFixed(1)),
                 };
             });
