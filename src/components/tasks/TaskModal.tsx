@@ -4,6 +4,7 @@ import {
     CATEGORIES,
     COLORS,
     TIME_BLOCKS,
+    shiftDateStr,
     type FrequencyType,
     type TimeBlock,
 } from './taskConstants';
@@ -18,19 +19,29 @@ export interface ModalProps {
 }
 
 export function AddEditTaskModal({ isDark, task, defaultFrequency, onClose, onSave }: ModalProps) {
+    const todayStr = getLocalDateStr();
+    const tomorrowStr = shiftDateStr(todayStr, 1);
+
+    const initialFrequency = task?.frequency_type || defaultFrequency || 'daily';
     const [title, setTitle] = useState(task?.title || '');
     const [description, setDescription] = useState(task?.description || '');
     const [category, setCategory] = useState(task?.category || 'Personal');
     const [color, setColor] = useState(task?.color || '#10b981');
-    const [frequencyType, setFrequencyType] = useState<FrequencyType>(task?.frequency_type || defaultFrequency || 'daily');
+    const [frequencyType, setFrequencyType] = useState<FrequencyType>(initialFrequency);
     const [freqDays, setFreqDays] = useState<number[]>(task?.frequency_days || []);
     const [freqMonthlyDate, setFreqMonthlyDate] = useState(task?.frequency_monthly_date || 1);
     const [freqXTimes, setFreqXTimes] = useState<number>(task?.frequency_x_times || 2);
-    const [customStartDate, setCustomStartDate] = useState<string>(task?.due_date || getLocalDateStr());
+    const [customStartDate, setCustomStartDate] = useState<string>(task?.due_date || todayStr);
     const [timeBlock, setTimeBlock] = useState<TimeBlock>(task?.time_block || 'anytime');
     const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium');
     const [estimatedMins, setEstimatedMins] = useState(task?.estimated_minutes?.toString() || '');
-    const [dueDate, setDueDate] = useState(task?.due_date || '');
+    const [dueDate, setDueDate] = useState<string>(() => {
+        if (task) return task.due_date || '';
+        // If opened explicitly via "Add Long-Term Goal", default to no deadline
+        if (defaultFrequency === 'one_time') return '';
+        // Otherwise (general Add Task or Today tab), default to today
+        return todayStr;
+    });
     const [carryForward, setCarryForward] = useState(task?.carry_forward ?? true);
     const [endDate, setEndDate] = useState(task?.end_date || '');
     const [saving, setSaving] = useState(false);
@@ -145,13 +156,19 @@ export function AddEditTaskModal({ isDark, task, defaultFrequency, onClose, onSa
                                 <button
                                     type="button"
                                     key={f}
-                                    onClick={() => setFrequencyType(f)}
+                                    onClick={() => {
+                                        setFrequencyType(f);
+                                        if (f === 'one_time' && !dueDate && !task) {
+                                            setDueDate(todayStr);
+                                            setCarryForward(true);
+                                        }
+                                    }}
                                     className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all capitalize ${frequencyType === f
                                         ? 'bg-emerald-500 text-white border-emerald-500'
                                         : isDark ? 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300'
                                         }`}
                                 >
-                                    {f === 'one_time' ? 'One-Time Goal' : f === 'custom' ? 'Custom Gap' : f}
+                                    {f === 'one_time' ? 'One-Time / Goal' : f === 'custom' ? 'Custom Gap' : f}
                                 </button>
                             ))}
                         </div>
@@ -229,34 +246,90 @@ export function AddEditTaskModal({ isDark, task, defaultFrequency, onClose, onSa
                         {frequencyType === 'one_time' && (
                             <div className="mt-3 space-y-3">
                                 <div>
-                                    <label className={`text-xs ${label}`}>Target Due Date (Optional):</label>
-                                    <input
-                                        type="date"
-                                        value={dueDate}
-                                        onChange={e => setDueDate(e.target.value)}
-                                        className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
-                                    />
-                                    <p className={`text-[11px] mt-1 ${label}`}>
-                                        Leave blank if this is a long-term goal with no strict deadline.
-                                    </p>
+                                    <label className={`text-xs font-semibold ${label}`}>Target Deadline / Schedule:</label>
+                                    {/* Quick Presets */}
+                                    <div className="grid grid-cols-3 gap-2 mt-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setDueDate(todayStr); setCarryForward(true); }}
+                                            className={`py-2 px-2 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all ${
+                                                dueDate === todayStr
+                                                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/25'
+                                                    : isDark ? 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <span>⚡ Today</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setDueDate(tomorrowStr); setCarryForward(true); }}
+                                            className={`py-2 px-2 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all ${
+                                                dueDate === tomorrowStr
+                                                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-500/25'
+                                                    : isDark ? 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <span>📅 Tomorrow</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDueDate('')}
+                                            className={`py-2 px-2 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all ${
+                                                !dueDate
+                                                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/25'
+                                                    : isDark ? 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500' : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            <span>🎯 Long-Term</span>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-slate-50 border-slate-200'}`}>
-                                    <label className="flex items-center gap-2.5 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={carryForward}
-                                            onChange={e => setCarryForward(e.target.checked)}
-                                            className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/30"
-                                        />
+                                {dueDate ? (
+                                    <div className="space-y-3">
                                         <div>
-                                            <span className="text-xs font-semibold block">Carry Forward If Uncompleted</span>
-                                            <span className={`text-[11px] block ${label}`}>
-                                                Automatically moves this task to Today's Focus if it is overdue.
-                                            </span>
+                                            <label className={`text-xs ${label}`}>Scheduled Date:</label>
+                                            <input
+                                                type="date"
+                                                value={dueDate}
+                                                onChange={e => setDueDate(e.target.value)}
+                                                className={`mt-1.5 w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 ${input}`}
+                                            />
+                                            <p className={`text-[11px] mt-1 ${label}`}>
+                                                {dueDate === todayStr ? "Will show up in Today's Focus immediately." : `Scheduled for ${dueDate}.`}
+                                            </p>
                                         </div>
-                                    </label>
-                                </div>
+
+                                        <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/60 border-slate-700/60' : 'bg-slate-50 border-slate-200'}`}>
+                                            <label className="flex items-center gap-2.5 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={carryForward}
+                                                    onChange={e => setCarryForward(e.target.checked)}
+                                                    className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500/30"
+                                                />
+                                                <div>
+                                                    <span className="text-xs font-semibold block">Carry Forward If Uncompleted</span>
+                                                    <span className={`text-[11px] block ${label}`}>
+                                                        Automatically keeps this task in Today's Focus if it is overdue.
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={`p-3 rounded-xl border text-xs ${isDark ? 'bg-amber-500/10 border-amber-500/25 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+                                        <div className="flex items-start gap-2">
+                                            <span className="text-base leading-none">🎯</span>
+                                            <div>
+                                                <span className="font-semibold block">Long-Term Goal (No Deadline)</span>
+                                                <span className="text-[11px] opacity-90 block mt-0.5">
+                                                    Saved in your <strong>Long-Term Goals</strong> tab without cluttering daily focus. You can schedule it anytime.
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 

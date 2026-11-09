@@ -83,7 +83,7 @@ export function TaskCard({
                     )}
 
                     {!hideTypeBadge && !isRepeating && !task.due_date && (
-                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+                        <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
                             Long-Term Goal
                         </span>
                     )}
@@ -113,7 +113,7 @@ export function TaskCard({
                         </div>
                     )}
                     {task.due_date && !isRepeating && (
-                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-indigo-400/80' : 'text-indigo-600'}`}>
+                        <div className={`flex items-center gap-1 text-[10px] ${isDark ? 'text-sky-400/80' : 'text-sky-600'}`}>
                             <FiCalendar size={10} />
                             <span>Due: {task.due_date}</span>
                         </div>

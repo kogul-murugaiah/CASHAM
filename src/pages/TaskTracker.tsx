@@ -86,6 +86,11 @@ export default function TaskTracker() {
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'long_term' | 'paused' | 'stopped'>('all');
     const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
+    // Quick add for today's focus
+    const [quickAddTitle, setQuickAddTitle] = useState('');
+    const [quickAddCategory, setQuickAddCategory] = useState('Personal');
+    const [quickAdding, setQuickAdding] = useState(false);
+
     // Heatmap View Mode: 'month' (default calendar) vs 'year' (52-week grid)
     const [heatmapViewMode, setHeatmapViewMode] = useState<'month' | 'year'>('month');
     const [heatmapYear, setHeatmapYear] = useState<number>(() => new Date().getFullYear());
@@ -346,6 +351,35 @@ export default function TaskTracker() {
         fetchTodayTasks(selectedDate);
     };
 
+    const handleQuickAddToday = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const title = quickAddTitle.trim();
+        if (!title || quickAdding) return;
+
+        setQuickAdding(true);
+        try {
+            await addTask({
+                title,
+                frequency_type: 'one_time',
+                due_date: selectedDate || todayStr,
+                carry_forward: true,
+                priority: 'medium',
+                category: quickAddCategory,
+                color: '#10b981',
+                time_block: 'anytime',
+            });
+            setQuickAddTitle('');
+            await fetchTodayTasks(selectedDate);
+            fetchAllTasks();
+            setActionToast('Task added to Today\'s Focus!');
+            setTimeout(() => setActionToast(null), 3000);
+        } catch (err: any) {
+            console.error('Failed to quick-add task:', err);
+        } finally {
+            setQuickAdding(false);
+        }
+    };
+
     const openAdd = () => { setEditingTask(undefined); setModalDefaultFreq(undefined); setShowModal(true); };
     const openAddGoal = () => { setEditingTask(undefined); setModalDefaultFreq('one_time'); setShowModal(true); };
     const openEdit = (t: Task) => { setEditingTask(t); setModalDefaultFreq(t.frequency_type); setShowModal(true); };
@@ -553,7 +587,7 @@ export default function TaskTracker() {
                     {selectedDate !== todayStr && (
                         <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-3 animate-fade-in ${selectedDate === yesterdayStr
                             ? 'bg-amber-500/10 border-amber-500/25 text-amber-400'
-                            : isDark ? 'bg-indigo-500/10 border-indigo-500/25 text-indigo-300' : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                            : isDark ? 'bg-sky-500/10 border-sky-500/25 text-sky-300' : 'bg-sky-50 border-sky-200 text-sky-700'
                         }`}>
                             <span className="flex items-center gap-2">
                                 <FiCalendar size={15} className="flex-shrink-0" />
@@ -570,6 +604,36 @@ export default function TaskTracker() {
                             </button>
                         </div>
                     )}
+
+                    {/* ── Quick Add Bar for Today's Focus ── */}
+                    <form onSubmit={handleQuickAddToday} className={`p-2.5 sm:p-3 rounded-2xl border ${card} shadow-sm`}>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={quickAddTitle}
+                                onChange={e => setQuickAddTitle(e.target.value)}
+                                placeholder={selectedDate === todayStr ? "⚡ Quick add a task for today... (Press Enter)" : `⚡ Quick add task for ${formatNiceDate(selectedDate)}... (Press Enter)`}
+                                className={`flex-1 min-w-0 px-3.5 py-2 sm:py-2.5 rounded-xl border text-xs sm:text-sm outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all ${inputCls}`}
+                            />
+                            <select
+                                value={quickAddCategory}
+                                onChange={e => setQuickAddCategory(e.target.value)}
+                                className={`hidden md:block px-2.5 py-2 sm:py-2.5 rounded-xl border text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer ${inputCls}`}
+                                title="Task Category"
+                            >
+                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <button
+                                type="submit"
+                                disabled={!quickAddTitle.trim() || quickAdding}
+                                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs sm:text-sm font-semibold transition-all shadow-md shadow-emerald-500/20 flex-shrink-0"
+                            >
+                                <FiPlus size={15} />
+                                <span className="hidden sm:inline">{quickAdding ? 'Adding…' : 'Add to Today'}</span>
+                                <span className="sm:hidden">{quickAdding ? '…' : 'Add'}</span>
+                            </button>
+                        </div>
+                    </form>
 
                     {/* Progress bar */}
                     {todayTotal > 0 && (
@@ -768,7 +832,7 @@ export default function TaskTracker() {
                         {/* ── Stats Overview ── */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div className={`rounded-2xl border p-4 ${card}`}>
-                                <div className="flex items-center gap-1.5 mb-1 text-indigo-400">
+                                <div className="flex items-center gap-1.5 mb-1 text-sky-400">
                                     <FiActivity size={14} />
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Total Goals</span>
                                 </div>
@@ -991,7 +1055,7 @@ export default function TaskTracker() {
                         </div>
 
                         <div className={`rounded-2xl border p-4 ${card}`}>
-                            <div className="flex items-center gap-1.5 mb-1 text-indigo-400">
+                            <div className="flex items-center gap-1.5 mb-1 text-sky-400">
                                 <FiActivity size={14} />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">
                                     {selectedTask ? 'Total Completed' : 'Total Tasks'}

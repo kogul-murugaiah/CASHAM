@@ -11,8 +11,8 @@ export type FrequencyType = 'daily' | 'weekly' | 'monthly' | 'one_time' | 'custo
 export const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const CATEGORIES = ['Personal', 'Health', 'Work', 'Finance', 'Learning', 'Social', 'Fitness', 'Other'];
 export const COLORS = [
-    '#10b981', '#6366f1', '#f59e0b', '#ef4444',
-    '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6',
+    '#10b981', '#0ea5e9', '#f59e0b', '#ef4444',
+    '#3b82f6', '#059669', '#ec4899', '#14b8a6',
 ];
 export const PRIORITY_COLORS = { low: 'emerald', medium: 'amber', high: 'red' } as const;
 export const PRIORITY_WEIGHT: Record<string, number> = { high: 3, medium: 2, low: 1 };

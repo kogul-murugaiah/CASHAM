@@ -5,7 +5,7 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown, FiCreditCard } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown, FiCreditCard, FiPlus } from "react-icons/fi";
 import type { CreditCard } from "../hooks/useCreditCards";
 import { getCardCycleDates } from "../lib/creditCardCycles";
 import { useTasks, getLocalDateStr } from "../hooks/useTasks";
@@ -31,13 +31,42 @@ type Transfer = { id: string; from_account: string; to_account: string; amount: 
 
 
 
-const COLORS = ["#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b"];
+const COLORS = ["#10b981", "#0ea5e9", "#ec4899", "#14b8a6", "#f59e0b"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 // ─── Component ──────────────────────────────────────────────────
 
 const Dashboard = () => {
-  const { todayTasks, fetchTodayTasks, toggleComplete, heatmapData, fetchHeatmapData } = useTasks();
+  const { todayTasks, fetchTodayTasks, toggleComplete, heatmapData, fetchHeatmapData, addTask } = useTasks();
+  const [quickDashboardTitle, setQuickDashboardTitle] = useState("");
+  const [quickDashboardAdding, setQuickDashboardAdding] = useState(false);
+
+  const handleQuickAddDashboard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = quickDashboardTitle.trim();
+    if (!title || quickDashboardAdding) return;
+
+    setQuickDashboardAdding(true);
+    try {
+      await addTask({
+        title,
+        frequency_type: 'one_time',
+        due_date: getLocalDateStr(),
+        carry_forward: true,
+        priority: 'medium',
+        category: 'Personal',
+        color: '#10b981',
+        time_block: 'anytime',
+      });
+      setQuickDashboardTitle("");
+      await fetchTodayTasks();
+      fetchHeatmapData();
+    } catch (err) {
+      console.error("Failed to add task from dashboard:", err);
+    } finally {
+      setQuickDashboardAdding(false);
+    }
+  };
 
   useEffect(() => {
     fetchTodayTasks();
@@ -523,6 +552,31 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
+
+            {/* Quick-Add Bar for Dashboard */}
+            <form onSubmit={handleQuickAddDashboard} className="mb-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={quickDashboardTitle}
+                  onChange={(e) => setQuickDashboardTitle(e.target.value)}
+                  placeholder="⚡ Quick add today's task... (Press Enter)"
+                  className={`flex-1 min-w-0 px-3.5 py-2 rounded-xl text-xs sm:text-sm border outline-none transition-all ${
+                    isDark
+                      ? "bg-slate-900/80 border-slate-700/80 text-white placeholder-slate-500 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+                      : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+                  }`}
+                />
+                <button
+                  type="submit"
+                  disabled={!quickDashboardTitle.trim() || quickDashboardAdding}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-semibold transition-all shadow-sm shadow-emerald-500/20 flex-shrink-0"
+                >
+                  <FiPlus size={14} />
+                  <span>{quickDashboardAdding ? "Adding…" : "Add"}</span>
+                </button>
+              </div>
+            </form>
 
             {/* Quick-Action Task List */}
             {todayTasksTotal === 0 ? (
