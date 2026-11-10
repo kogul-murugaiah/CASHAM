@@ -7,6 +7,9 @@ export interface Fund {
     description?: string;
     created_at: string;
     totalIncome: number;
+    completedExpenses: number;
+    plannedExpenses: number;
+    plannedCount: number;
     actualBalance: number;
     projectedBalance: number;
 }
@@ -22,6 +25,18 @@ export interface FundTransaction {
     created_at: string;
 }
 
+export interface UpdateFundTransactionPayload {
+    id: string;
+    type?: 'income' | 'expense';
+    amount?: number;
+    date?: string;
+    description?: string;
+    status?: 'planned' | 'completed';
+}
+
+const getErrMsg = (err: unknown, fallback: string) =>
+    err instanceof Error ? err.message : fallback;
+
 export const useFunds = () => {
     const [funds, setFunds] = useState<Fund[]>([]);
     const [loading, setLoading] = useState(false);
@@ -33,8 +48,8 @@ export const useFunds = () => {
         try {
             const data = await api.get('/api/funds?action=list_funds');
             setFunds(data || []);
-        } catch (err: any) {
-            setError(err.message || 'Failed to fetch funds');
+        } catch (err: unknown) {
+            setError(getErrMsg(err, 'Failed to fetch funds'));
         } finally {
             setLoading(false);
         }
@@ -45,8 +60,20 @@ export const useFunds = () => {
             const data = await api.post('/api/funds?action=create_fund', { name, description });
             setFunds(prev => [data, ...prev]);
             return data;
-        } catch (err: any) {
-            throw new Error(err.message || 'Failed to create fund');
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to create fund'));
+        }
+    };
+
+    const updateFund = async (id: string, name: string, description?: string) => {
+        try {
+            const data = await api.put('/api/funds?action=update_fund', { id, name, description });
+            setFunds(prev =>
+                prev.map(f => (f.id === id ? { ...f, name: data.name, description: data.description } : f))
+            );
+            return data;
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to update fund'));
         }
     };
 
@@ -54,8 +81,8 @@ export const useFunds = () => {
         try {
             await api.delete(`/api/funds?action=delete_fund&id=${id}`);
             setFunds(prev => prev.filter(f => f.id !== id));
-        } catch (err: any) {
-            throw new Error(err.message || 'Failed to delete fund');
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to delete fund'));
         }
     };
 
@@ -63,8 +90,8 @@ export const useFunds = () => {
         try {
             const data = await api.get(`/api/funds?action=list_transactions&fund_id=${fund_id}`);
             return data || [];
-        } catch (err: any) {
-            throw new Error(err.message || 'Failed to fetch transactions');
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to fetch transactions'));
         }
     };
 
@@ -78,29 +105,33 @@ export const useFunds = () => {
     }) => {
         try {
             const result = await api.post('/api/funds?action=add_transaction', data);
-            // We should re-fetch funds to update balances
             fetchFunds();
             return result;
-        } catch (err: any) {
-            throw new Error(err.message || 'Failed to add transaction');
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to add transaction'));
+        }
+    };
+
+    const updateTransaction = async (payload: UpdateFundTransactionPayload): Promise<FundTransaction> => {
+        try {
+            const updated = await api.put('/api/funds?action=update_transaction', payload);
+            fetchFunds(); // Re-fetch balances
+            return updated;
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to update transaction'));
         }
     };
 
     const updateTransactionStatus = async (id: string, status: 'planned' | 'completed') => {
-        try {
-            await api.put('/api/funds?action=update_transaction', { id, status });
-            fetchFunds(); // Re-fetch balances
-        } catch (err: any) {
-            throw new Error(err.message || 'Failed to update transaction');
-        }
+        return updateTransaction({ id, status });
     };
 
     const deleteTransaction = async (id: string) => {
         try {
             await api.delete(`/api/funds?action=delete_transaction&id=${id}`);
             fetchFunds(); // Re-fetch balances
-        } catch (err: any) {
-            throw new Error(err.message || 'Failed to delete transaction');
+        } catch (err: unknown) {
+            throw new Error(getErrMsg(err, 'Failed to delete transaction'));
         }
     };
 
@@ -110,9 +141,11 @@ export const useFunds = () => {
         error,
         fetchFunds,
         createFund,
+        updateFund,
         deleteFund,
         fetchTransactions,
         addTransaction,
+        updateTransaction,
         updateTransactionStatus,
         deleteTransaction
     };

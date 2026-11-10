@@ -33,19 +33,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     let totalIncome = 0;
                     let completedExpenses = 0;
                     let plannedExpenses = 0;
+                    let plannedCount = 0;
 
                     txs.forEach(t => {
                         if (t.type === 'income') {
                             totalIncome += Number(t.amount);
                         } else if (t.type === 'expense') {
                             if (t.status === 'completed') completedExpenses += Number(t.amount);
-                            if (t.status === 'planned') plannedExpenses += Number(t.amount);
+                            if (t.status === 'planned') {
+                                plannedExpenses += Number(t.amount);
+                                plannedCount += 1;
+                            }
                         }
                     });
 
                     return {
                         ...fund,
                         totalIncome,
+                        completedExpenses,
+                        plannedExpenses,
+                        plannedCount,
                         actualBalance: totalIncome - completedExpenses,
                         projectedBalance: totalIncome - completedExpenses - plannedExpenses
                     };
@@ -74,11 +81,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (method === 'POST') {
             if (action === 'create_fund') {
                 const { name, description } = req.body;
-                if (!name) return res.status(400).json({ error: 'name is required' });
+                if (!name || !String(name).trim()) return res.status(400).json({ error: 'name is required' });
 
                 const { data, error } = await supabaseAdmin
                     .from('funds')
-                    .insert([{ user_id: user.id, name, description }])
+                    .insert([{ user_id: user.id, name: String(name).trim(), description: description?.trim() || null }])
                     .select()
                     .single();
 
@@ -86,6 +93,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 return res.status(201).json({
                     ...data,
                     totalIncome: 0,
+                    completedExpenses: 0,
+                    plannedExpenses: 0,
+                    plannedCount: 0,
                     actualBalance: 0,
                     projectedBalance: 0
                 });
@@ -93,6 +103,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (action === 'add_transaction') {
                 const { fund_id, type, amount, date, description, status } = req.body;
+                if (!fund_id || !type || amount === undefined || !date || !description) {
+                    return res.status(400).json({ error: 'Missing required transaction fields' });
+                }
 
                 const { data, error } = await supabaseAdmin
                     .from('fund_transactions')
@@ -102,7 +115,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         type,
                         amount: Number(amount),
                         date,
-                        description,
+                        description: String(description).trim(),
                         status: type === 'income' ? 'completed' : (status || 'completed')
                     }])
                     .select()
@@ -114,11 +127,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         if (method === 'PUT') {
+            if (action === 'update_fund') {
+                const { id, name, description } = req.body;
+                if (!id) return res.status(400).json({ error: 'id is required' });
+                if (!name || !String(name).trim()) return res.status(400).json({ error: 'name is required' });
+
+                const updates: { name: string; description?: string | null } = { name: String(name).trim() };
+                if (description !== undefined) {
+                    updates.description = String(description).trim() || null;
+                }
+
+                const { data, error } = await supabaseAdmin
+                    .from('funds')
+                    .update(updates)
+                    .eq('id', id)
+                    .eq('user_id', user.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                return res.status(200).json(data);
+            }
+
             if (action === 'update_transaction') {
-                const { id, status } = req.body;
+                const { id, type, amount, date, description, status } = req.body;
+                if (!id) return res.status(400).json({ error: 'id is required' });
+
+                const updates: Record<string, string | number> = {};
+                if (type !== undefined) updates.type = type;
+                if (amount !== undefined) updates.amount = Number(amount);
+                if (date !== undefined) updates.date = date;
+                if (description !== undefined) updates.description = String(description).trim();
+                if (type === 'income') {
+                    updates.status = 'completed';
+                } else if (status !== undefined) {
+                    updates.status = status;
+                }
+
+                if (Object.keys(updates).length === 0) {
+                    return res.status(400).json({ error: 'No fields to update' });
+                }
+
                 const { data, error } = await supabaseAdmin
                     .from('fund_transactions')
-                    .update({ status })
+                    .update(updates)
                     .eq('id', id)
                     .eq('user_id', user.id)
                     .select()
@@ -157,8 +209,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         return res.status(405).json({ error: 'Method not allowed' });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Funds API Error:', err);
-        return res.status(500).json({ error: err.message });
+        const message = err instanceof Error ? err.message : 'Internal server error';
+        return res.status(500).json({ error: message });
     }
 }
