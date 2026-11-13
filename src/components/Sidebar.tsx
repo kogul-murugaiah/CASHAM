@@ -7,7 +7,7 @@ import {
     FiHome, FiPlusCircle, FiMinusCircle, FiTrendingUp,
     FiList, FiBarChart2, FiLogOut, FiChevronLeft, FiMenu, FiX,
     FiSun, FiMoon, FiPieChart, FiRepeat, FiUpload, FiSettings, FiTarget, FiUsers, FiCreditCard, FiBriefcase, FiCheckSquare,
-    FiActivity
+    FiActivity, FiEdit3
 } from "react-icons/fi";
 
 const NAV_GROUPS = [
@@ -15,6 +15,7 @@ const NAV_GROUPS = [
         label: "Overview",
         items: [
             { to: "/dashboard", icon: FiHome, label: "Dashboard" },
+            { to: "/notes", icon: FiEdit3, label: "Quick Notes" },
             { to: "/tasks", icon: FiCheckSquare, label: "Task Manager" },
             { to: "/gym", icon: FiActivity, label: "Gym Tracker" },
         ],

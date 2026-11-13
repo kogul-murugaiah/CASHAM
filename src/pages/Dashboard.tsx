@@ -5,10 +5,11 @@ import { api } from "../lib/api";
 import { useAccountTypes } from "../hooks/useAccountTypes";
 import { useUserPreferences } from "../hooks/useUserPreferences";
 import { formatCurrency } from "../lib/formatters";
-import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown, FiCreditCard, FiPlus } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiCheckCircle, FiCircle, FiCheckSquare, FiZap, FiArrowRight, FiChevronDown, FiCreditCard, FiPlus, FiEdit3 } from "react-icons/fi";
 import type { CreditCard } from "../hooks/useCreditCards";
 import { getCardCycleDates } from "../lib/creditCardCycles";
 import { useTasks, getLocalDateStr } from "../hooks/useTasks";
+import { useNotes } from "../hooks/useNotes";
 import {
   BarChart,
   Bar,
@@ -38,8 +39,25 @@ const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "Ju
 
 const Dashboard = () => {
   const { todayTasks, fetchTodayTasks, toggleComplete, heatmapData, fetchHeatmapData, addTask } = useTasks();
+  const { notes, createNote } = useNotes();
   const [quickDashboardTitle, setQuickDashboardTitle] = useState("");
   const [quickDashboardAdding, setQuickDashboardAdding] = useState(false);
+  const [quickNoteText, setQuickNoteText] = useState("");
+  const [savingQuickNote, setSavingQuickNote] = useState(false);
+
+  const handleQuickNoteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = quickNoteText.trim();
+    if (!text || savingQuickNote) return;
+
+    setSavingQuickNote(true);
+    try {
+      await createNote({ content: text, category: 'General' });
+      setQuickNoteText("");
+    } finally {
+      setSavingQuickNote(false);
+    }
+  };
 
   const handleQuickAddDashboard = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -626,6 +644,95 @@ const Dashboard = () => {
                       )}
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Quick Notes & Brain Dump Widget ── */}
+          <div className="glass-card p-6 border-emerald-500/15 relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shadow-sm shadow-emerald-500/10">
+                  <FiEdit3 size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white font-heading">Quick Notes & Brain Dump</h3>
+                    {notes.length > 0 && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        {notes.length} {notes.length === 1 ? 'Note' : 'Notes'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Jot down anything on your mind instantly</p>
+                </div>
+              </div>
+
+              <Link
+                to="/notes"
+                className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors w-fit group"
+              >
+                <span>Open Notes Board</span>
+                <FiArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+
+            {/* Quick Input Bar */}
+            <form onSubmit={handleQuickNoteSubmit} className="mb-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={quickNoteText}
+                  onChange={(e) => setQuickNoteText(e.target.value)}
+                  placeholder="⚡ Jot down an idea, thought, or reminder... (Press Enter)"
+                  className={`flex-1 min-w-0 px-3.5 py-2 rounded-xl text-xs sm:text-sm border outline-none transition-all ${
+                    isDark
+                      ? "bg-slate-900/80 border-slate-700/80 text-white placeholder-slate-500 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+                      : "bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+                  }`}
+                />
+                <button
+                  type="submit"
+                  disabled={!quickNoteText.trim() || savingQuickNote}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-semibold transition-all shadow-sm shadow-emerald-500/20 flex-shrink-0"
+                >
+                  <FiPlus size={14} />
+                  <span>{savingQuickNote ? "Saving…" : "Save"}</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Recent Notes Preview */}
+            {notes.length === 0 ? (
+              <div className="py-4 text-center rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
+                <p className="text-xs text-slate-500 dark:text-slate-400">No notes yet. Type a quick thought above or open the notes board.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                {notes.slice(0, 3).map((note) => (
+                  <Link
+                    key={note.id}
+                    to="/notes"
+                    className={`p-3 rounded-xl border transition-all block group hover:shadow-sm ${
+                      isDark
+                        ? "bg-slate-800/60 hover:bg-slate-800 border-white/5 hover:border-emerald-500/30"
+                        : "bg-slate-50 hover:bg-slate-100 border-slate-200 hover:border-emerald-500/30"
+                    }`}
+                  >
+                    {note.title && (
+                      <p className="text-xs font-bold truncate text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                        {note.title}
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mt-0.5">
+                      {note.content}
+                    </p>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/50 dark:border-white/5 text-[10px] text-slate-400">
+                      <span>{note.category || 'General'}</span>
+                      <span className="group-hover:text-emerald-400 transition-colors">Edit →</span>
+                    </div>
+                  </Link>
                 ))}
               </div>
             )}
