@@ -17,7 +17,8 @@ import {
     FiArrowRight,
     FiCalendar,
     FiCheckSquare,
-    FiDollarSign
+    FiDollarSign,
+    FiLogIn
 } from 'react-icons/fi';
 
 const LandingPage = () => {
@@ -88,32 +89,33 @@ const LandingPage = () => {
                             </a>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
                         <button
                             onClick={toggleTheme}
                             aria-label="Toggle Theme"
-                            className="p-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-sm"
+                            className="p-2 sm:p-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all cursor-pointer shadow-sm shrink-0"
                         >
                             {theme === "dark" ? <FiSun className="w-4 h-4 text-amber-400" /> : <FiMoon className="w-4 h-4 text-slate-600" />}
                         </button>
                         {isAuthenticated ? (
                             <Link
                                 to="/dashboard"
-                                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 shadow-sm"
+                                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-xs sm:text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 shadow-sm shrink-0"
                             >
                                 Dashboard
                             </Link>
                         ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
                                 <Link
                                     to="/login"
-                                    className="hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-all shadow-sm active:scale-95 inline-flex items-center gap-1 sm:gap-1.5 shrink-0"
                                 >
-                                    Log in
+                                    <FiLogIn className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                    <span>Log in</span>
                                 </Link>
                                 <Link
                                     to="/signup"
-                                    className="px-5 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 shadow-sm"
+                                    className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs sm:text-sm hover:shadow-lg hover:shadow-emerald-500/25 transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
                                 >
                                     Get Started
                                 </Link>
@@ -175,6 +177,18 @@ const LandingPage = () => {
                                     Explore Modules
                                 </button>
                             </div>
+
+                            {!isAuthenticated && (
+                                <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+                                    Already have an account?{' '}
+                                    <Link
+                                        to="/login"
+                                        className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                                    >
+                                        Log in here <FiArrowRight className="w-3.5 h-3.5" />
+                                    </Link>
+                                </p>
+                            )}
 
                             {/* Trust badges */}
                             <div className="mt-12 pt-8 border-t border-slate-200 dark:border-white/10 flex flex-wrap gap-x-8 gap-y-4 text-sm text-slate-700 dark:text-slate-300 font-semibold">
@@ -527,6 +541,17 @@ const LandingPage = () => {
                                     </Link>
                                 )}
                             </div>
+                            {!isAuthenticated && (
+                                <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+                                    Already have an account?{' '}
+                                    <Link
+                                        to="/login"
+                                        className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                                    >
+                                        Log in to your account
+                                    </Link>
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
