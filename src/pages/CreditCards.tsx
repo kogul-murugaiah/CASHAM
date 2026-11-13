@@ -60,6 +60,7 @@ const CreditCards = () => {
     addAdvance,
     markReceived,
     recordPayment,
+    updateAdvance,
     deleteAdvance,
   } = useCCAdvances();
 
@@ -99,6 +100,7 @@ const CreditCards = () => {
 
   // CC Advance Modal State
   const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [editingAdvance, setEditingAdvance] = useState<CCAdvance | null>(null);
   const [advanceToMove, setAdvanceToMove] = useState<CCAdvance | null>(null);
   const [advanceToPay, setAdvanceToPay] = useState<CCAdvance | null>(null);
   const [advanceForm, setAdvanceForm] = useState<AdvanceFormState>({
@@ -764,6 +766,7 @@ const CreditCards = () => {
 
   // CC Advance Handlers
   const handleOpenAdvanceModal = () => {
+    setEditingAdvance(null);
     const defaultCard = cards.find((c) => c.id === activeCardId) || cards[0];
     setAdvanceForm({
       person_name: "",
@@ -776,25 +779,62 @@ const CreditCards = () => {
     setShowAdvanceModal(true);
   };
 
+  const handleOpenEditAdvance = (adv: CCAdvance) => {
+    setEditingAdvance(adv);
+    setAdvanceForm({
+      person_name: adv.person_name,
+      amount: String(adv.amount),
+      credit_card_id: adv.credit_card_id || "",
+      credit_card_name: adv.credit_card_name,
+      date: adv.date,
+      description: adv.description || "",
+    });
+    setShowAdvanceModal(true);
+  };
+
   const handleSaveAdvance = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!advanceForm.person_name.trim() || !advanceForm.amount || !advanceForm.credit_card_name) return;
+
+    const newAmount = Number(advanceForm.amount);
+    if (editingAdvance && editingAdvance.paid_amount && newAmount < Number(editingAdvance.paid_amount)) {
+      setError(`Amount cannot be less than already collected repayment of ${formatCurrency(editingAdvance.paid_amount, currencyStyle)}`);
+      return;
+    }
+
     setSavingAdvance(true);
     try {
-      await addAdvance({
-        person_name: advanceForm.person_name.trim(),
-        amount: Number(advanceForm.amount),
-        credit_card_id: advanceForm.credit_card_id || null,
-        credit_card_name: advanceForm.credit_card_name,
-        date: advanceForm.date,
-        description: advanceForm.description.trim() || undefined,
-      });
+      if (editingAdvance) {
+        const currentPaid = Number(editingAdvance.paid_amount || 0);
+        const isFullyPaid = currentPaid >= newAmount && newAmount > 0;
+
+        await updateAdvance(editingAdvance.id, {
+          person_name: advanceForm.person_name.trim(),
+          amount: newAmount,
+          credit_card_id: advanceForm.credit_card_id || null,
+          credit_card_name: advanceForm.credit_card_name,
+          date: advanceForm.date,
+          description: advanceForm.description.trim() || null,
+          cash_received: isFullyPaid,
+        });
+        setSuccess("Advance updated successfully");
+      } else {
+        await addAdvance({
+          person_name: advanceForm.person_name.trim(),
+          amount: newAmount,
+          credit_card_id: advanceForm.credit_card_id || null,
+          credit_card_name: advanceForm.credit_card_name,
+          date: advanceForm.date,
+          description: advanceForm.description.trim() || undefined,
+        });
+        setSuccess("Advance logged successfully");
+      }
       setShowAdvanceModal(false);
-      setSuccess("Advance logged successfully");
+      setEditingAdvance(null);
       setTimeout(() => setSuccess(""), 3000);
       fetchCards();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to log advance");
+      setError(err instanceof Error ? err.message : "Failed to save advance");
     } finally {
       setSavingAdvance(false);
     }
@@ -1134,6 +1174,7 @@ const CreditCards = () => {
             advancesFilterCashStatus={advancesFilterCashStatus}
             setAdvancesFilterCashStatus={setAdvancesFilterCashStatus}
             onOpenAdvanceModal={handleOpenAdvanceModal}
+            onEditAdvance={handleOpenEditAdvance}
             onToggleReceived={handleToggleReceived}
             onDeleteAdvance={handleDeleteAdvance}
             onMoveToExpense={(adv) => setAdvanceToMove(adv)}
@@ -1187,10 +1228,14 @@ const CreditCards = () => {
           cards={cards}
           advanceForm={advanceForm}
           setAdvanceForm={setAdvanceForm}
-          onClose={() => setShowAdvanceModal(false)}
+          onClose={() => {
+            setShowAdvanceModal(false);
+            setEditingAdvance(null);
+          }}
           onSave={handleSaveAdvance}
           savingAdvance={savingAdvance}
           isDark={isDark}
+          editingAdvance={editingAdvance}
         />
 
         <CCMoveToExpenseModal

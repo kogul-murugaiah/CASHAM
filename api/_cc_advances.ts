@@ -83,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PUT → mark cash received (or update details)
     if (method === 'PUT') {
         try {
-            const { id, cash_received, cash_received_date, person_name, amount, paid_amount, repayments, description } = req.body;
+            const { id, cash_received, cash_received_date, person_name, amount, paid_amount, repayments, description, date, credit_card_id, credit_card_name } = req.body;
             if (!id) return res.status(400).json({ error: 'id is required' });
 
             const updates: any = {};
@@ -92,6 +92,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (paid_amount !== undefined) updates.paid_amount = Number(paid_amount);
             if (repayments !== undefined) updates.repayments = repayments;
             if (description !== undefined) updates.description = description?.trim() || null;
+            if (date !== undefined) updates.date = date;
+            if (credit_card_id !== undefined) updates.credit_card_id = credit_card_id || null;
+            if (credit_card_name !== undefined) updates.credit_card_name = credit_card_name;
             if (cash_received !== undefined) {
                 updates.cash_received = Boolean(cash_received);
                 updates.cash_received_date = cash_received

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight, FiDollarSign, FiClock } from "react-icons/fi";
+import { FiUsers, FiPlus, FiX, FiCreditCard, FiCheckCircle, FiTrash2, FiInfo, FiArrowUpRight, FiDollarSign, FiClock, FiEdit2 } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../../lib/formatters";
 import type { CreditCard, CCAdvance, CurrencyStyle } from "./types";
 
@@ -14,6 +14,7 @@ interface CCAdvancesLedgerProps {
   advancesFilterCashStatus: "all" | "received" | "pending" | "partial";
   setAdvancesFilterCashStatus: (status: "all" | "received" | "pending" | "partial") => void;
   onOpenAdvanceModal: () => void;
+  onEditAdvance?: (advance: CCAdvance) => void;
   onToggleReceived: (advance: CCAdvance) => void;
   onDeleteAdvance: (id: string, personName: string) => void;
   onMoveToExpense?: (advance: CCAdvance) => void;
@@ -34,6 +35,7 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
   advancesFilterCashStatus,
   setAdvancesFilterCashStatus,
   onOpenAdvanceModal,
+  onEditAdvance,
   onToggleReceived,
   onDeleteAdvance,
   onMoveToExpense,
@@ -344,6 +346,17 @@ export const CCAdvancesLedger: React.FC<CCAdvancesLedgerProps> = ({
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* Edit Advance Button */}
+                          {onEditAdvance && (
+                            <button
+                              type="button"
+                              onClick={() => onEditAdvance(advance)}
+                              className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-400 hover:text-emerald-500 transition-colors"
+                              title="Edit advance"
+                            >
+                              <FiEdit2 size={14} />
+                            </button>
+                          )}
                           {/* History / Timeline Button */}
                           {onOpenHistoryModal && (
                             <button

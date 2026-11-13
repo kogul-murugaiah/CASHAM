@@ -1,6 +1,7 @@
 import React from "react";
-import { FiUsers, FiX, FiInfo } from "react-icons/fi";
+import { FiUsers, FiX, FiInfo, FiEdit2 } from "react-icons/fi";
 import type { CreditCard, AdvanceFormState } from "./types";
+import type { CCAdvance } from "../../hooks/useCCAdvances";
 
 interface CCAdvanceModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CCAdvanceModalProps {
   onSave: (e: React.FormEvent) => void;
   savingAdvance: boolean;
   isDark: boolean;
+  editingAdvance?: CCAdvance | null;
 }
 
 export const CCAdvanceModal: React.FC<CCAdvanceModalProps> = ({
@@ -22,6 +24,7 @@ export const CCAdvanceModal: React.FC<CCAdvanceModalProps> = ({
   onSave,
   savingAdvance,
   isDark,
+  editingAdvance,
 }) => {
   if (!isOpen) return null;
 
@@ -33,12 +36,24 @@ export const CCAdvanceModal: React.FC<CCAdvanceModalProps> = ({
     ? "w-full rounded-xl border border-white/10 bg-slate-700/50 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/40 outline-none"
     : "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-emerald-500/30 outline-none";
 
+  const minAmount = editingAdvance?.paid_amount && Number(editingAdvance.paid_amount) > 0
+    ? Number(editingAdvance.paid_amount)
+    : 1;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className={`max-w-md w-full p-6 space-y-5 rounded-2xl shadow-2xl ${modalBg}`}>
         <div className={`flex items-center justify-between border-b pb-3 ${divider}`}>
           <h3 className={`text-lg font-bold flex items-center gap-2 ${textPrimary}`}>
-            <FiUsers className="text-blue-500" /> Log CC Advance
+            {editingAdvance ? (
+              <>
+                <FiEdit2 className="text-emerald-500" /> Edit CC Advance
+              </>
+            ) : (
+              <>
+                <FiUsers className="text-blue-500" /> Log CC Advance
+              </>
+            )}
           </h3>
           <button
             type="button"
@@ -68,16 +83,23 @@ export const CCAdvanceModal: React.FC<CCAdvanceModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Amount (₹) *</label>
+              <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>
+                Amount (₹) *
+              </label>
               <input
                 type="number"
                 required
-                min="1"
+                min={minAmount}
                 placeholder="e.g., 2000"
                 value={advanceForm.amount}
                 onChange={(e) => setAdvanceForm({ ...advanceForm, amount: e.target.value })}
                 className={inputClass}
               />
+              {editingAdvance && Number(editingAdvance.paid_amount || 0) > 0 && (
+                <p className="text-[10px] text-amber-500 mt-1 font-medium">
+                  Min: ₹{editingAdvance.paid_amount} (already collected)
+                </p>
+              )}
             </div>
             <div>
               <label className={`block text-xs font-medium mb-1 ${textSecondary}`}>Date *</label>
@@ -127,19 +149,34 @@ export const CCAdvanceModal: React.FC<CCAdvanceModalProps> = ({
             />
           </div>
 
-          <div
-            className={`p-3 rounded-xl text-xs flex items-start gap-2 ${
-              isDark
-                ? "bg-blue-500/10 border border-blue-500/20 text-blue-300"
-                : "bg-blue-50 border border-blue-200 text-blue-700"
-            }`}
-          >
-            <FiInfo size={13} className="flex-shrink-0 mt-0.5" />
-            <span>
-              This amount will be tracked under your CC bill but will NOT be deducted from any of your budget accounts since
-              it is not your expense.
-            </span>
-          </div>
+          {editingAdvance?.cc_bill_settled ? (
+            <div
+              className={`p-3 rounded-xl text-xs flex items-start gap-2 ${
+                isDark
+                  ? "bg-amber-500/10 border border-amber-500/20 text-amber-300"
+                  : "bg-amber-50 border border-amber-200 text-amber-800"
+              }`}
+            >
+              <FiInfo size={13} className="flex-shrink-0 mt-0.5" />
+              <span>
+                Notice: This advance is marked as settled in a past CC statement. Updating the card or amount may affect historical settlement records.
+              </span>
+            </div>
+          ) : (
+            <div
+              className={`p-3 rounded-xl text-xs flex items-start gap-2 ${
+                isDark
+                  ? "bg-blue-500/10 border border-blue-500/20 text-blue-300"
+                  : "bg-blue-50 border border-blue-200 text-blue-700"
+              }`}
+            >
+              <FiInfo size={13} className="flex-shrink-0 mt-0.5" />
+              <span>
+                This amount will be tracked under your CC bill but will NOT be deducted from any of your budget accounts since
+                it is not your expense.
+              </span>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-1">
             <button
@@ -157,11 +194,18 @@ export const CCAdvanceModal: React.FC<CCAdvanceModalProps> = ({
                 savingAdvance ||
                 !advanceForm.person_name.trim() ||
                 !advanceForm.amount ||
-                !advanceForm.credit_card_name
+                !advanceForm.credit_card_name ||
+                Number(advanceForm.amount) < minAmount
               }
-              className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-lg shadow-blue-500/20 disabled:opacity-50"
+              className={`flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-bold shadow-lg disabled:opacity-50 transition-all ${
+                editingAdvance
+                  ? "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/20"
+                  : "bg-blue-600 hover:bg-blue-500 shadow-blue-500/20"
+              }`}
             >
-              {savingAdvance ? "Logging..." : "Log Advance"}
+              {savingAdvance
+                ? editingAdvance ? "Saving Changes..." : "Logging..."
+                : editingAdvance ? "Save Changes" : "Log Advance"}
             </button>
           </div>
         </form>
